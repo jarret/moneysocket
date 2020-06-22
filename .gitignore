@@ -1,0 +1,9 @@
+*.swp
+*.pyc
+*.un~
+*~
+*.ftpconfig
+/t
+browser/htdocs/
+browser/node_modules/
+browser/package-lock.json
