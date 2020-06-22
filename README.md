@@ -16,7 +16,7 @@ There are no definitive answers here, but getting involved and having a say will
 Overview/Demo
 ===========
 
-(insert youtube video here)
+[DEMO VIDEO](https://youtu.be/WuCzikX1u_c) - a 11 minute video explaining what is here and the thought process behind it.
 
 What is provided here?
 ========================
