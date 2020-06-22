@@ -3,6 +3,7 @@
 *.un~
 *~
 *.ftpconfig
+*.autosave
 /t
 browser/htdocs/
 browser/node_modules/
