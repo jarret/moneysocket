@@ -3,7 +3,7 @@ Moneysocket
 
 A very WIP proof-of-concept for a protocol for coordinating the requesting/paying of Lightning Network bolt11s over websockets. Carries an emphasis on low-latency and micropayment use cases.
 
-Join [t.me/moneysocket](t.me/moneysocket) on Telegram as a gathering point for discussion.
+Join [t.me/moneysocket](https://t.me/moneysocket) on Telegram as a gathering point for discussion.
 
 
 ![browser](doc/img/browser-connected.png)
