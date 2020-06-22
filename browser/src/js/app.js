@@ -10,7 +10,7 @@ class App {
         var c1 = new Connection(this.section, "Moneysocket 1",
                                 "ws://192.168.0.21:5401", "left");
         var c2 = new Connection(this.section, "Moneysocket 2",
-                                "wss://localhost:5400", "right");
+                                "ws://localhost:5400", "right");
         this.connections = {"Moneysocket 1": c1,
                             "Moneysocket 2": c2};
     }
