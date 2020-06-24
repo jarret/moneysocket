@@ -57,6 +57,11 @@ revise it's behavior at any time) makes more sense than `Command` and `Status`
 As is the case with LNURL, a single piece of software can take on both the
 roles of `LN SERVICE` and `LN WALLET` simultaneously.
 
+## 2.3.0
+A `LN WALLET` or `LN SERVICE` can be implemented to either initiate outgoing or
+receive an incoming websocket connection (or both!) and that has no bearing on
+it's role as a `LN WALLET` or `LN SERVICE`.
+
 
 # Topic 3
 
