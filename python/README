@@ -1,0 +1,15 @@
+The `moneysocket` subdir is intended to be common code that is a reference implementation of the protocol and architecture model.
+
+There's three different apps build with the library here, `relay`, `junction` and `terminus`.
+
+# Relay
+
+This is meant to simply proxy connections between SERVICE and WALLET from a location that is fixed and easily routable.
+
+# Junction
+
+This is meant to represent an app which needs to present many SERVICEs and WALLETs for accomplishing what it is designed to.
+
+# Terminus
+
+This is the full implementation of a WALLET which is connected to a lightning node. There are two versions using mostly the same code, one that works as a C-Lightning plugin the other works as a LND wrapper.

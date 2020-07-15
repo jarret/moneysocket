@@ -15,7 +15,7 @@ if not os.path.exists(PLUGIN_DIR):
 
 print(PLUGIN_DIR)
 
-PLUGIN_NAME = os.path.join(PLUGIN_DIR, "moneysocket-cl-plugin.py")
+PLUGIN_NAME = os.path.join(PLUGIN_DIR, "terminus-clp-app.py")
 
 print(PLUGIN_NAME)
 
@@ -26,7 +26,7 @@ print("src_dir: %s" % SRC_DIR)
 r = subprocess.call(["lightning-cli", "plugin", "stop", PLUGIN_NAME])
 print(r)
 
-STUFF_TO_COPY = ["moneysocket", "moneysocket-cl-plugin.py"]
+STUFF_TO_COPY = ["moneysocket", "terminus", "utl", "terminus-clp-app.py"]
 
 for item in STUFF_TO_COPY:
     dst_path = os.path.join(PLUGIN_DIR, item)

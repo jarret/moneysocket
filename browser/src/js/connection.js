@@ -50,7 +50,7 @@ class Connection {
         Utils.DrawText(this.connect_div, "Disconnected");
     }
 
-    SetConnect() {
+    /*SetConnect() {
         const title = this.title;
         Utils.DeleteChildren(this.connect_div);
         Utils.DrawText(this.connect_div, "Connected");
@@ -60,6 +60,16 @@ class Connection {
             function() {window.app.PushSat(title)});
         this.pull_button = Utils.DrawButton(this.pull_button_div, "Pull 1 sat",
             function() {window.app.PullSat(title)});
+        Utils.DrawBr(this.pull_button_div);
+        Utils.DrawBr(this.pull_button_div);
+    } */
+
+    SetConnect() {
+        const title = this.title;
+        Utils.DeleteChildren(this.connect_div);
+        Utils.DrawText(this.connect_div, "Connected");
+        this.pull_button = Utils.DrawButton(this.pull_button_div, "Ping",
+            function() {window.app.Ping()});
         Utils.DrawBr(this.pull_button_div);
         Utils.DrawBr(this.pull_button_div);
     }
@@ -73,7 +83,7 @@ class Connection {
         console.log(this.input.value);
         this.ws = new WebSocket(this.input.value);
         this.ws.onmessage = function (event) {
-            console.log("ws recv: " +  event.data);
+            //console.log("ws recv: " +  event.data);
             window.app.WsIncomingEvent(title, event.data);
         }
         this.connected = true;

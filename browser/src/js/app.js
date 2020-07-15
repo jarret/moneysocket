@@ -7,12 +7,11 @@ class App {
         this.section = Utils.EmptySection(this.div);
         this.section.setAttribute("class", "container");
 
-        var c1 = new Connection(this.section, "Moneysocket 1",
-                                "ws://192.168.0.21:5401", "left");
-        var c2 = new Connection(this.section, "Moneysocket 2",
-                                "ws://localhost:5400", "right");
-        this.connections = {"Moneysocket 1": c1,
-                            "Moneysocket 2": c2};
+        var c1 = new Connection(this.section, "Service",
+                                "ws://localhost:11051", "left");
+        //var c2 = new Connection(this.section, "Moneysocket 2",
+         //                       "ws://localhost:5400", "right");
+        this.connections = {"Service": c1}
     }
 
     DrawUi() {
@@ -31,6 +30,11 @@ class App {
             }
         }
         return i;
+    }
+
+    Ping(title) {
+        console.log("sending ping....");
+        this.SendPing(this.connections['Service'])
     }
 
     PushSat(title) {
@@ -64,6 +68,11 @@ class App {
         this.RequestInvoice(payee);
     }
 
+    SendPing(connection) {
+        var r = {"request_type": "PING"};
+        connection.SendTextRequest(r);
+    }
+
     RequestInvoice(connection) {
         var r = {"request_type": "GET_INVOICE",
                  "msat_amount":  1000};
@@ -89,9 +98,18 @@ class App {
     WsIncomingEvent(title, data) {
         var connection = this.connections[title];
         const n = JSON.parse(data);
-        console.log("received: " + n);
+        console.log("received: " + data);
 
-        if (n["notification_type"] == "INVOICE") {
+        if (n["request_type"] == "PONG") {
+            console.log("got PONG");
+        } else if (n["request_type"] == "PING") {
+            console.log("got PING");
+        } else if (n["request_type"] == "ERROR") {
+            console.log("got ERROR");
+        } else {
+            console.log("got unknown");
+        }
+        /*if (n["notification_type"] == "INVOICE") {
             var payer;
             if (title == "Moneysocket 1") {
                 payer = this.connections['Moneysocket 2'];
@@ -106,6 +124,7 @@ class App {
         } else {
             console.log("unknown notification");
         }
+*/
     }
 
     /*
