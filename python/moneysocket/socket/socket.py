@@ -90,16 +90,16 @@ class MoneysocketInterconnect(object):
 
     def _new_socket(self, socket, cb_param):
         self.sockets[socket.uuid] = socket
-        if not self.new_cb:
-            logging.error("no new socket callback registered!")
-            return
+  #      if not self.new_cb:
+  #          logging.error("no new socket callback registered!")
+  #          return
         self.new_cb(socket, cb_param)
 
     def _socket_close(self, socket):
         uuid = socket.uuid
         if uuid in self.sockets.keys():
             del self.sockets[uuid]
-        if not self.close_cb:
-            logging.error("no close callback registered!")
-            return
+        #if not self.close_cb:
+        #    logging.error("no close callback registered!")
+        #    return
         self.close_cb(socket)

@@ -54,6 +54,8 @@ class WebsocketInterconnect(MoneysocketInterconnect):
             i.initiate_close()
         for o in self.outgoing:
             o.initiate_close()
+        self.incoming = {}
+        self.outgoing = []
 
 
 ###############################################################################

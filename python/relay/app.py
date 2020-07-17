@@ -71,7 +71,7 @@ class Relay(object):
         if cb_param == "service":
             if self.service is not None:
                 logging.error("got extra service socket, closing.")
-                socket.initiate_close()
+                socket.close()
                 return
             logging.info("creating Service")
             self.service = Service("relay-service")
@@ -80,7 +80,7 @@ class Relay(object):
         elif cb_param == "wallet":
             if self.wallet is not None:
                 logging.error("got extra wallet socket, closing.")
-                socket.initiate_close()
+                socket.close()
                 return
             logging.info("creating Wallet")
             self.wallet = Wallet("relay-wallet", 0)
