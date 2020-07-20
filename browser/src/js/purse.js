@@ -2,9 +2,9 @@ const Connection = require("./connection.js").Connection;
 const Utils = require('./utils.js').Utils;
 const WebsocketInterconnect = require('./moneysocket/socket/websocket.js').WebsocketInterconnect;
 
-
-class WalletConnectUi {
-    constructor(div, default_ws_url, cb_obj, cb_param) {
+class WebsocketConnectUi {
+    constructor(div, title, default_ws_url, cb_obj, cb_param) {
+        this.title = title;
         this.parent_div = div;
         this.default_ws_url = default_ws_url;
         this.my_div = null;
@@ -17,8 +17,7 @@ class WalletConnectUi {
 
     Draw(style) {
         this.my_div = document.createElement("div");
-        Utils.DrawTitle(this.my_div, "Wallet Role for Connecting to Service",
-                        "h4");
+        Utils.DrawTitle(this.my_div, this.title, "h4");
         this.my_div.setAttribute("class", style);
         this.input = Utils.DrawTextInput(this.my_div, this.default_ws_url);
         Utils.DrawBr(this.my_div);
@@ -53,54 +52,6 @@ class WalletConnectUi {
     }
 }
 
-class ServiceConnectUi {
-    constructor(div, default_ws_url, cb_obj, cb_param) {
-        this.parent_div = div;
-        this.default_ws_url = default_ws_url;
-        this.my_div = null;
-        this.input = null;
-        this.cb_obj = cb_obj;
-        console.assert(typeof cb_obj.Connect == 'function');
-        console.assert(typeof cb_obj.Disconnect == 'function');
-        this.cb_param = cb_param;
-    }
-
-    Draw(style) {
-        this.my_div = document.createElement("div");
-        Utils.DrawTitle(this.my_div, "Service Role for Connecting to Wallet",
-                        "h4");
-        this.my_div.setAttribute("class",  style);
-        this.input = Utils.DrawTextInput(this.my_div, this.default_ws_url);
-        Utils.DrawBr(this.my_div);
-        this.connect_button_div = Utils.EmptyDiv(this.my_div);
-        this.DrawConnectButton();
-        Utils.DrawBr(this.my_div);
-        this.parent_div.appendChild(this.my_div);
-    }
-
-    GetWsUrl() {
-        return this.input.value;
-    }
-
-    DrawConnectButton() {
-        Utils.DeleteChildren(this.connect_button_div);
-        Utils.DrawButton(this.connect_button_div, "Connect",
-            (function() {this.cb_obj.Connect(this.cb_param)}).bind(this));
-    }
-
-    DrawConnecting() {
-        Utils.DeleteChildren(this.connect_button_div);
-        var connect_button = Utils.DrawButton(this.connect_button_div,
-                                              "Connecting", function() {});
-        connect_button.disabled = true;
-    }
-
-    DrawDisconnectButton() {
-        Utils.DeleteChildren(this.connect_button_div);
-        Utils.DrawButton(this.connect_button_div, "Disconnect",
-            (function() {this.cb_obj.Disconnect(this.cb_param)}).bind(this));
-    }
-}
 
 class PurseStatusUi {
     constructor(div) {
@@ -214,13 +165,14 @@ class PurseApp {
         this.psu.Draw("center");
 
         Utils.DrawBr(this.my_div);
-        this.wcu = new WalletConnectUi(this.my_div, this.default_wallet_ws_url,
-                                       this, "wallet");
+        this.wcu = new WebsocketConnectUi(this.my_div, "Wallet Connect",
+                                          this.default_wallet_ws_url, this,
+                                          "wallet");
         this.wcu.Draw("left");
 
-        this.scu = new ServiceConnectUi(this.my_div,
-                                        this.default_service_ws_url, this,
-                                        "service");
+        this.scu = new WebsocketConnectUi(this.my_div, "Service Connect",
+                                          this.default_service_ws_url, this,
+                                          "service");
         this.scu.Draw("right");
         Utils.DrawBr(this.my_div);
         Utils.DrawBr(this.my_div);
