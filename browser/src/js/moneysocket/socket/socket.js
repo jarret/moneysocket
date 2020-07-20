@@ -5,9 +5,12 @@
 const Utl = require('../utl/utl.js').Utl;
 
 class MoneysocketSocket {
-    constructor() {
+    constructor(initiate_cb_obj) {
         this.uuid = Utl.uuidv4();
         this.msg_recv_cb = null;
+        console.assert(typeof initiate_cb_obj.InitiateClose == 'function');
+        console.assert(typeof initiate_cb_obj.InitiateSend == 'function');
+        this.initiate_cb_obj = initiate_cb_obj;
     }
 
     ToString() {
@@ -22,24 +25,25 @@ class MoneysocketSocket {
 
     //////////////////////////////////////////////////////////////////////////
 
-    RegisterInitiateCloseFunc(func) {
-        this.initiate_close_func = func;
-    }
-
-    RegisterInitiateSendFunc(self, func) {
-        this.initiate_send_func = func;
-    }
-
-    MsgRcev(msg_dict) {
+    MsgRecv(msg_dict) {
         this.msg_recv_cb(msg_dict);
+    }
+
+    Close() {
+        this.initiate_cb_obj.InitiateClose();
+    }
+
+    Send(msg_dict) {
+        this.initiate_cb_obj.InitiateSend(msg_dict);
     }
 }
 
 class MoneysocketInterconnect {
-    constructor(new_socket_cb, socket_close_cb) {
-        this.new_cb = new_socket_cb;
-        this.close_cb = socket_close_cb;
-        this.sockets = {}
+    constructor(cb_obj) {
+        console.assert(typeof cb_obj.NewSocket == 'function');
+        console.assert(typeof cb_obj.SocketClose == 'function');
+        this.cb_obj = cb_obj;
+        this.sockets = {};
     }
 
     Close() {
@@ -50,14 +54,14 @@ class MoneysocketInterconnect {
 
     NewSocket(socket, cb_param) {
         this.sockets[socket.uuid] = socket
-        this.new_cb(socket, cb_param);
+        this.cb_obj.NewSocket(socket, cb_param);
     }
 
     SocketClose(socket) {
-        if (this.sockets.hasKey(socket.uuid)) {
+        if (socket.uuid in this.sockets) {
             delete this.sockets[socket.uuid];
         }
-        this.close_cb(socket);
+        this.cb_obj.SocketClose(socket);
     }
 }
 

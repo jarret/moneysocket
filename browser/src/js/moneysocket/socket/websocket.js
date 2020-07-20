@@ -9,13 +9,13 @@ const MoneysocketInterconnect = require('./socket.js').MoneysocketInterconnect;
 
 class WebsocketInterconnect extends MoneysocketInterconnect {
 
-    constructor(new_socket_cb, socket_close_cb) {
-        super(new_socket_cb, socket_close_cb);
+    constructor(cb_obj) {
+        super(cb_obj);
         this.outgoing = new Array();
     }
 
     Connect(connect_ws_url, cb_param) {
-        var o = new OutgoingWebsocketInterconnect(this.new_cb, this.close_cb);
+        var o = new OutgoingWebsocketInterconnect(this.cb_obj);
         this.outgoing.push(o);
         o.Connect(connect_ws_url, cb_param);
     }
@@ -45,9 +45,7 @@ class OutgoingSocket {
         this.websocket = new WebSocket(connect_ws_url);
         this.websocket.onmessage = this.HandleMessage;
         this.websocket.onclose = this.HandleClose;
-        this.ms = new MoneysocketSocket();
-        this.ms.RegisterInitiateCloseFunc(this.InitateClose);
-        this.ms.RegisterInitiateSendFunc(this.InitateSend);
+        this.ms = new MoneysocketSocket(this);
         this.interconnect = interconnect;
         this.interconnect.NewSocket(this.ms, cb_param);
     }

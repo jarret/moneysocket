@@ -163,9 +163,9 @@ class PurseStatusUi {
         Utils.DrawColoredText(this.service_role_div, "Connecting", "orange");
     }
 
-    UpdateWalletRoleDisconnected() {
+    UpdateServiceRoleDisconnected() {
         Utils.DeleteChildren(this.service_role_div)
-        Utils.DrawText(this.service__role_div, "Service Role: ");
+        Utils.DrawText(this.service_role_div, "Service Role: ");
         Utils.DrawColoredText(this.service_role_div, "Not Connected", "red");
     }
 
@@ -200,8 +200,7 @@ class PurseApp {
          //                       "ws://localhost:5400", "right");
         //this.connections = {"Service": c1}
 
-        this.wi = new WebsocketInterconnect(this.NewSocket,
-                                            this.SocketClose);
+        this.wi = new WebsocketInterconnect(this);
     }
 
 
@@ -231,15 +230,17 @@ class PurseApp {
     NewSocket(socket, cb_param) {
         console.log("got new socket: " + socket.ToString());
         console.log("cb_param: " + cb_param);
-        console.log("this: " + this.constructor);
+        //console.log("this: " + this.constructor);
         if (cb_param == "wallet") {
             this.wallet_socket = socket;
             this.psu.UpdateWalletRoleConnected();
-            this.wcu.DrawConnected();
+            this.wcu.DrawDisconnectButton();
+            // TODO wallet role object, 
         } else if (cb_param == "service") {
             this.service_socket = socket;
             this.psu.UpdateServiceRoleConnected();
-            this.scu.DrawConnected();
+            this.scu.DrawDisconnectButton();
+            // TODO service role object, 
         } else {
             console.log("unknown cb param");
         }
@@ -247,6 +248,25 @@ class PurseApp {
 
     SocketClose(socket) {
         console.log("got socket close: " + socket.ToString());
+        if (this.wallet_socket != null &&
+            this.wallet_socket.uuid == socket.uuid)
+        {
+            console.log("got wallet socket closed");
+            this.wallet_socket = null;
+            this.psu.UpdateWalletRoleDisconnected();
+            this.wcu.DrawConnectButton();
+            // TODO wallet role object
+        } else if (this.service_socket != null &&
+                   this.service_socket.uuid == socket.uuid)
+        {
+            console.log("got service socket closed");
+            this.service_socket = null;
+            this.psu.UpdateServiceRoleDisconnected();
+            this.scu.DrawConnectButton();
+            // TODO service role object
+        } else {
+            console.log("got unknown socket closed");
+        }
     }
 
     ConnectService() {
@@ -259,10 +279,16 @@ class PurseApp {
 
     DisconnectService() {
         console.log("disconnect service");
+        if (this.service_socket != null) {
+            this.service_socket.Close();
+        }
     }
 
-    DisconnectConnectWallet() {
+    DisconnectWallet() {
         console.log("disconnect wallet");
+        if (this.wallet_socket != null) {
+            this.wallet_socket.Close();
+        }
     }
 
     ConnectWallet() {
