@@ -7,6 +7,7 @@ class WalletConnectUi {
     constructor(div, default_ws_url) {
         this.parent_div = div;
         this.my_div = null;
+        this.input = null;
         this.default_ws_url = default_ws_url;
     }
 
@@ -14,13 +15,17 @@ class WalletConnectUi {
         this.my_div = document.createElement("div");
         Utils.DrawTitle(this.my_div, "Wallet Role Connect to Service", "h4");
         this.my_div.setAttribute("class", style);
-        var w_input = Utils.DrawTextInput(this.my_div, this.default_ws_url);
+        this.input = Utils.DrawTextInput(this.my_div, this.default_ws_url);
         Utils.DrawBr(this.my_div);
         this.connect_button_div = Utils.EmptyDiv(this.my_div);
         this.DrawConnectButton();
         Utils.DrawBr(this.my_div);
 
         this.parent_div.appendChild(this.my_div);
+    }
+
+    GetWsUrl() {
+        return this.input.value;
     }
 
     DrawConnectButton() {
@@ -48,18 +53,23 @@ class ServiceConnectUi {
         this.parent_div = div;
         this.my_div = null;
         this.default_ws_url = default_ws_url;
+        this.input = null;
     }
 
     Draw(style) {
         this.my_div = document.createElement("div");
         Utils.DrawTitle(this.my_div, "Service Role Connect to Wallet", "h4");
         this.my_div.setAttribute("class",  style);
-        var w_input = Utils.DrawTextInput(this.my_div, this.default_ws_url);
+        this.input = Utils.DrawTextInput(this.my_div, this.default_ws_url);
         Utils.DrawBr(this.my_div);
         this.connect_button_div = Utils.EmptyDiv(this.my_div);
         this.DrawConnectButton();
         Utils.DrawBr(this.my_div);
         this.parent_div.appendChild(this.my_div);
+    }
+
+    GetWsUrl() {
+        return this.input.value;
     }
 
     DrawConnectButton() {
@@ -175,6 +185,9 @@ class PurseApp {
         this.wcu = null;
         this.scu = null;
 
+        this.wallet_socket = null;
+        this.service_socket = null;
+
         //this.section = Utils.EmptySection(this.div);
         //this.section.setAttribute("class", "container");
 
@@ -217,7 +230,19 @@ class PurseApp {
 
     NewSocket(socket, cb_param) {
         console.log("got new socket: " + socket.ToString());
-        console.log("cb_pram: " + cb_param);
+        console.log("cb_param: " + cb_param);
+        console.log("this: " + this.constructor);
+        if (cb_param == "wallet") {
+            this.wallet_socket = socket;
+            this.psu.UpdateWalletRoleConnected();
+            this.wcu.DrawConnected();
+        } else if (cb_param == "service") {
+            this.service_socket = socket;
+            this.psu.UpdateServiceRoleConnected();
+            this.scu.DrawConnected();
+        } else {
+            console.log("unknown cb param");
+        }
     }
 
     SocketClose(socket) {
@@ -225,9 +250,11 @@ class PurseApp {
     }
 
     ConnectService() {
-        console.log("connect service");
+        var ws_url = this.scu.GetWsUrl();
+        console.log("connect service: " + ws_url);
         this.psu.UpdateServiceRoleConnecting();
         this.scu.DrawConnecting();
+        this.wi.Connect(ws_url, "service");
     }
 
     DisconnectService() {
@@ -239,9 +266,12 @@ class PurseApp {
     }
 
     ConnectWallet() {
-        console.log("connect wallet");
+        var ws_url = this.wcu.GetWsUrl();
+        console.log("connect wallet: " + ws_url);
         this.psu.UpdateWalletRoleConnecting();
         this.wcu.DrawConnecting();
+
+        this.wi.Connect(ws_url, "wallet");
     }
 
 

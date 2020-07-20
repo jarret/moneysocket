@@ -15,9 +15,9 @@ class WebsocketInterconnect extends MoneysocketInterconnect {
     }
 
     Connect(connect_ws_url, cb_param) {
-        var o = OutgoingWebsocketInterconnect(this.new_cb, this.close_cb);
+        var o = new OutgoingWebsocketInterconnect(this.new_cb, this.close_cb);
         this.outgoing.push(o);
-        o.connect(connect_ws_url, cb_param);
+        o.Connect(connect_ws_url, cb_param);
     }
 
     InitiateClose() {
@@ -71,7 +71,10 @@ class OutgoingSocket {
 
     HandleClose() {
         console.log("closed");
-        this.interconnect.SocketClose(this.ms);
+        if (this.interconnect != null) {
+            console.log("close cb sent");
+            this.interconnect.SocketClose(this.ms);
+        }
     }
 }
 
