@@ -4,16 +4,21 @@ const WebsocketInterconnect = require('./moneysocket/socket/websocket.js').Webso
 
 
 class WalletConnectUi {
-    constructor(div, default_ws_url) {
+    constructor(div, default_ws_url, cb_obj, cb_param) {
         this.parent_div = div;
+        this.default_ws_url = default_ws_url;
         this.my_div = null;
         this.input = null;
-        this.default_ws_url = default_ws_url;
+        this.cb_obj = cb_obj;
+        console.assert(typeof cb_obj.Connect == 'function');
+        console.assert(typeof cb_obj.Disconnect == 'function');
+        this.cb_param = cb_param;
     }
 
     Draw(style) {
         this.my_div = document.createElement("div");
-        Utils.DrawTitle(this.my_div, "Wallet Role Connect to Service", "h4");
+        Utils.DrawTitle(this.my_div, "Wallet Role for Connecting to Service",
+                        "h4");
         this.my_div.setAttribute("class", style);
         this.input = Utils.DrawTextInput(this.my_div, this.default_ws_url);
         Utils.DrawBr(this.my_div);
@@ -31,7 +36,7 @@ class WalletConnectUi {
     DrawConnectButton() {
         Utils.DeleteChildren(this.connect_button_div);
         Utils.DrawButton(this.connect_button_div, "Connect",
-            function() {window.app.ConnectWallet()});
+            (function() {this.cb_obj.Connect(this.cb_param)}).bind(this));
     }
 
     DrawConnecting() {
@@ -44,21 +49,26 @@ class WalletConnectUi {
     DrawDisconnectButton() {
         Utils.DeleteChildren(this.connect_button_div);
         Utils.DrawButton(this.connect_button_div, "Disconnect",
-            function() {window.app.DisconnectWallet()});
+            (function() {this.cb_obj.Disconnect(this.cb_param)}).bind(this));
     }
 }
 
 class ServiceConnectUi {
-    constructor(div, default_ws_url) {
+    constructor(div, default_ws_url, cb_obj, cb_param) {
         this.parent_div = div;
-        this.my_div = null;
         this.default_ws_url = default_ws_url;
+        this.my_div = null;
         this.input = null;
+        this.cb_obj = cb_obj;
+        console.assert(typeof cb_obj.Connect == 'function');
+        console.assert(typeof cb_obj.Disconnect == 'function');
+        this.cb_param = cb_param;
     }
 
     Draw(style) {
         this.my_div = document.createElement("div");
-        Utils.DrawTitle(this.my_div, "Service Role Connect to Wallet", "h4");
+        Utils.DrawTitle(this.my_div, "Service Role for Connecting to Wallet",
+                        "h4");
         this.my_div.setAttribute("class",  style);
         this.input = Utils.DrawTextInput(this.my_div, this.default_ws_url);
         Utils.DrawBr(this.my_div);
@@ -75,7 +85,7 @@ class ServiceConnectUi {
     DrawConnectButton() {
         Utils.DeleteChildren(this.connect_button_div);
         Utils.DrawButton(this.connect_button_div, "Connect",
-            function() {window.app.ConnectService()});
+            (function() {this.cb_obj.Connect(this.cb_param)}).bind(this));
     }
 
     DrawConnecting() {
@@ -88,7 +98,7 @@ class ServiceConnectUi {
     DrawDisconnectButton() {
         Utils.DeleteChildren(this.connect_button_div);
         Utils.DrawButton(this.connect_button_div, "Disconnect",
-            function() {window.app.DisconnectService()});
+            (function() {this.cb_obj.Disconnect(this.cb_param)}).bind(this));
     }
 }
 
@@ -204,12 +214,13 @@ class PurseApp {
         this.psu.Draw("center");
 
         Utils.DrawBr(this.my_div);
-        this.wcu = new WalletConnectUi(this.my_div,
-                                       this.default_wallet_ws_url);
+        this.wcu = new WalletConnectUi(this.my_div, this.default_wallet_ws_url,
+                                       this, "wallet");
         this.wcu.Draw("left");
 
         this.scu = new ServiceConnectUi(this.my_div,
-                                        this.default_service_ws_url);
+                                        this.default_service_ws_url, this,
+                                        "service");
         this.scu.Draw("right");
         Utils.DrawBr(this.my_div);
         Utils.DrawBr(this.my_div);
@@ -256,37 +267,39 @@ class PurseApp {
         }
     }
 
-    ConnectService() {
-        var ws_url = this.scu.GetWsUrl();
-        console.log("connect service: " + ws_url);
-        this.psu.UpdateServiceRoleConnecting();
-        this.scu.DrawConnecting();
-        this.wi.Connect(ws_url, "service");
-    }
-
-    DisconnectService() {
-        console.log("disconnect service");
-        if (this.service_socket != null) {
-            this.service_socket.Close();
+    Connect(cb_param) {
+        if (cb_param == "wallet") {
+            var ws_url = this.wcu.GetWsUrl();
+            console.log("connect wallet: " + ws_url);
+            this.psu.UpdateWalletRoleConnecting();
+            this.wcu.DrawConnecting();
+            this.wi.Connect(ws_url, "wallet");
+        } else if (cb_param == "service") {
+            var ws_url = this.scu.GetWsUrl();
+            console.log("connect service: " + ws_url);
+            this.psu.UpdateServiceRoleConnecting();
+            this.scu.DrawConnecting();
+            this.wi.Connect(ws_url, "service");
+        } else {
+            console.log("unknown cb_param: " + cb_param);
         }
     }
 
-    DisconnectWallet() {
-        console.log("disconnect wallet");
-        if (this.wallet_socket != null) {
-            this.wallet_socket.Close();
+    Disconnect(cb_param) {
+        if (cb_param == "wallet") {
+            console.log("disconnect wallet");
+            if (this.wallet_socket != null) {
+                this.wallet_socket.Close();
+            }
+        } else if (cb_param == "service") {
+            console.log("disconnect service");
+            if (this.service_socket != null) {
+                this.service_socket.Close();
+            }
+        } else {
+            console.log("unknown cb_param: " + cb_param);
         }
     }
-
-    ConnectWallet() {
-        var ws_url = this.wcu.GetWsUrl();
-        console.log("connect wallet: " + ws_url);
-        this.psu.UpdateWalletRoleConnecting();
-        this.wcu.DrawConnecting();
-
-        this.wi.Connect(ws_url, "wallet");
-    }
-
 }
 
 window.app = new PurseApp();
