@@ -57,11 +57,11 @@ class MoneysocketInterconnect {
         this.cb_obj.NewSocket(socket, cb_param);
     }
 
-    SocketClose(socket) {
+    SocketClose(socket, cb_param) {
         if (socket.uuid in this.sockets) {
             delete this.sockets[socket.uuid];
         }
-        this.cb_obj.SocketClose(socket);
+        this.cb_obj.SocketClose(socket, cb_param);
     }
 }
 

@@ -188,17 +188,8 @@ class PurseApp {
         this.wallet_socket = null;
         this.service_socket = null;
 
-        //this.section = Utils.EmptySection(this.div);
-        //this.section.setAttribute("class", "container");
-
         this.default_wallet_ws_url = "ws://127.0.0.1:11050";
         this.default_service_ws_url = "ws://127.0.0.1:11051";
-
-        //var c1 = new Connection(this.section, "Service",
-         //                       "ws://localhost:11051", "left");
-        //var c2 = new Connection(this.section, "Moneysocket 2",
-         //                       "ws://localhost:5400", "right");
-        //this.connections = {"Service": c1}
 
         this.wi = new WebsocketInterconnect(this);
     }
@@ -230,35 +221,31 @@ class PurseApp {
     NewSocket(socket, cb_param) {
         console.log("got new socket: " + socket.ToString());
         console.log("cb_param: " + cb_param);
-        //console.log("this: " + this.constructor);
         if (cb_param == "wallet") {
             this.wallet_socket = socket;
             this.psu.UpdateWalletRoleConnected();
             this.wcu.DrawDisconnectButton();
-            // TODO wallet role object, 
+            // TODO wallet role object,
         } else if (cb_param == "service") {
             this.service_socket = socket;
             this.psu.UpdateServiceRoleConnected();
             this.scu.DrawDisconnectButton();
-            // TODO service role object, 
+            // TODO service role object,
         } else {
             console.log("unknown cb param");
         }
     }
 
-    SocketClose(socket) {
+    SocketClose(socket, cb_param) {
         console.log("got socket close: " + socket.ToString());
-        if (this.wallet_socket != null &&
-            this.wallet_socket.uuid == socket.uuid)
-        {
+        console.log("cb_param: " + cb_param);
+        if (cb_param == "wallet") {
             console.log("got wallet socket closed");
             this.wallet_socket = null;
             this.psu.UpdateWalletRoleDisconnected();
             this.wcu.DrawConnectButton();
             // TODO wallet role object
-        } else if (this.service_socket != null &&
-                   this.service_socket.uuid == socket.uuid)
-        {
+        } else if (cb_param == "service") {
             console.log("got service socket closed");
             this.service_socket = null;
             this.psu.UpdateServiceRoleDisconnected();
@@ -300,111 +287,6 @@ class PurseApp {
         this.wi.Connect(ws_url, "wallet");
     }
 
-
-    /*
-
-    DrawUi() {
-        for (var title in this.connections) {
-            this.connections[title].DrawConnectUi();
-            Utils.DrawBr(this.div);
-        }
-    }
-
-    NumConnections() {
-        var i = 0;
-
-        for (var title in this.connections) {
-            if (this.connections[title].connected) {
-                i++;
-            }
-        }
-        return i;
-    }
-
-    Ping(title) {
-        console.log("sending ping....");
-        this.SendPing(this.connections['Service'])
-    }
-
-    PushSat(title) {
-        var payee;
-
-        if (this.NumConnections() != 2) {
-            console.log("*** need to be connected to both websockets");
-            return;
-        }
-
-        if (title == "Moneysocket 1") {
-            payee = this.connections["Moneysocket 2"];
-        } else {
-            payee = this.connections["Moneysocket 1"];
-        }
-        this.RequestInvoice(payee);
-    }
-
-    PullSat(title) {
-        var payee;
-
-        if (this.NumConnections() != 2) {
-            console.log("*** need to be connected to both websockets");
-            return;
-        }
-        if (title == "Moneysocket 1") {
-            payee = this.connections["Moneysocket 1"];
-        } else {
-            payee = this.connections["Moneysocket 2"];
-        }
-        this.RequestInvoice(payee);
-    }
-
-    SendPing(connection) {
-        var r = {"request_type": "PING"};
-        connection.SendTextRequest(r);
-    }
-
-    RequestInvoice(connection) {
-        var r = {"request_type": "GET_INVOICE",
-                 "msat_amount":  1000};
-        connection.SendTextRequest(r);
-    }
-
-    PayInvoice(connection, bolt11) {
-        var r = {"request_type": "PAY_INVOICE",
-                 "bolt11":  bolt11};
-        connection.SendTextRequest(r);
-    }
-
-    ConnectSocket(title) {
-        console.log(title);
-        this.connections[title].ConnectSocket();
-    }
-
-    DisconnectSocket(title) {
-        console.log(title);
-        this.connections[title].DisconnectSocket();
-    }
-
-    WsIncomingEvent(title, data) {
-        var connection = this.connections[title];
-        const n = JSON.parse(data);
-        console.log("received: " + data);
-
-        if (n["request_type"] == "PONG") {
-            console.log("got PONG");
-        } else if (n["request_type"] == "PING") {
-            console.log("got PING");
-        } else if (n["request_type"] == "ERROR") {
-            console.log("got ERROR");
-        } else {
-            console.log("got unknown");
-        }
-    }
-
-    Handle(event) {
-        console.log("received: " + event.data);
-        const data = JSON.parse(event.data);
-    }
-*/
 }
 
 window.app = new PurseApp();
