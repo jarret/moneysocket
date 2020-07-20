@@ -26,16 +26,18 @@ class Utils {
         return b;
     }
 
-    static DrawTitle(div, titleText) {
+    static DrawTitle(div, titleText, size) {
+        var t = document.createElement(size);
         var title = document.createTextNode(titleText);
-        div.appendChild(title);
-        return title;
+        t.appendChild(title);
+        div.appendChild(t);
+        return t;
     }
 
     static DrawTextInput(div, defaultText) {
         var input = document.createElement("input");
         input.setAttribute("type", "text");
-        input.setAttribute("size", "25");
+        input.setAttribute("size", "20");
         input.setAttribute("value", defaultText);
         div.appendChild(input);
         return input;
@@ -49,10 +51,32 @@ class Utils {
         return d;
     }
 
-    static DrawBalance(div, msats) {
+    static DrawColoredText(div, text, color) {
+        var d = document.createElement("div");
+        d.style.color = color;
+        var t = document.createTextNode(text);
+        d.appendChild(t);
+        div.appendChild(d);
+        return d;
+    }
+
+    static DrawBigBalance(div, msats) {
         var d = document.createElement("div");
         d.setAttribute("class", "balance");
         var s = (msats / 1000.0).toFixed(3) + " sats";
+        var t = document.createTextNode(s);
+        d.appendChild(t);
+        div.appendChild(d);
+        return d;
+    }
+
+    static BalanceFmt(msats) {
+        return (msats / 1000.0).toFixed(3) + " sats";
+    }
+
+    static DrawBalance(div, msats) {
+        var d = document.createElement("div");
+        var s = Utils.BalanceFmt(msats);
         var t = document.createTextNode(s);
         d.appendChild(t);
         div.appendChild(d);

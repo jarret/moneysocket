@@ -45,14 +45,14 @@ gulp.task('imageMin', function imageMin(cb) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-gulp.task('javascriptFull', function () {
+gulp.task('purseFull', function () {
     var b = browserify({
-      entries: './src/js/app.js',
+      entries: './src/js/purse.js',
       debug: true
     });
 
     return b.bundle()
-      .pipe(source('./app.js'))
+      .pipe(source('./purse.js'))
       .pipe(buffer())
       .pipe(sourcemaps.init({loadMaps: true}))
       .pipe(babel({
@@ -64,14 +64,84 @@ gulp.task('javascriptFull', function () {
       .pipe(gulp.dest('./htdocs/js/'));
 });
 
-gulp.task('javascriptQuick', function () {
+gulp.task('purseQuick', function () {
     var b = browserify({
-      entries: './src/js/app.js',
+      entries: './src/js/purse.js',
       debug: true
     });
 
     return b.bundle()
-      .pipe(source('./app.js'))
+      .pipe(source('./purse.js'))
+      .pipe(buffer())
+      .pipe(sourcemaps.init({loadMaps: true}))
+      .pipe(sourcemaps.write('./'))
+      .pipe(gulp.dest('./htdocs/js/'));
+});
+
+///////////////////////////////////////////////////////////////////////////////
+
+gulp.task('buyerFull', function () {
+    var b = browserify({
+      entries: './src/js/buyer.js',
+      debug: true
+    });
+
+    return b.bundle()
+      .pipe(source('./buyer.js'))
+      .pipe(buffer())
+      .pipe(sourcemaps.init({loadMaps: true}))
+      .pipe(babel({
+          presets: ['@babel/env']
+      }))
+      .pipe(uglify())
+      .on('error', log.error)
+      .pipe(sourcemaps.write('./'))
+      .pipe(gulp.dest('./htdocs/js/'));
+});
+
+gulp.task('buyerQuick', function () {
+    var b = browserify({
+      entries: './src/js/buyer.js',
+      debug: true
+    });
+
+    return b.bundle()
+      .pipe(source('./buyer.js'))
+      .pipe(buffer())
+      .pipe(sourcemaps.init({loadMaps: true}))
+      .pipe(sourcemaps.write('./'))
+      .pipe(gulp.dest('./htdocs/js/'));
+});
+
+///////////////////////////////////////////////////////////////////////////////
+
+gulp.task('sellerFull', function () {
+    var b = browserify({
+      entries: './src/js/seller.js',
+      debug: true
+    });
+
+    return b.bundle()
+      .pipe(source('./seller.js'))
+      .pipe(buffer())
+      .pipe(sourcemaps.init({loadMaps: true}))
+      .pipe(babel({
+          presets: ['@babel/env']
+      }))
+      .pipe(uglify())
+      .on('error', log.error)
+      .pipe(sourcemaps.write('./'))
+      .pipe(gulp.dest('./htdocs/js/'));
+});
+
+gulp.task('sellerQuick', function () {
+    var b = browserify({
+      entries: './src/js/seller.js',
+      debug: true
+    });
+
+    return b.bundle()
+      .pipe(source('./seller.js'))
       .pipe(buffer())
       .pipe(sourcemaps.init({loadMaps: true}))
       .pipe(sourcemaps.write('./'))
@@ -84,7 +154,9 @@ gulp.task('full', gulp.series(['clean',
                                'copyMisc',
                                'copyHtml',
                                'imageMin',
-                               'javascriptFull',
+                               'purseFull',
+                               'buyerFull',
+                               'sellerFull',
                                ]));
 
 gulp.task('full_watch', function () {
@@ -93,14 +165,18 @@ gulp.task('full_watch', function () {
                             'copyMisc',
                             'copyHtml',
                             'imageMin',
-                            'javascriptFull',
+                            'purseFull',
+                            'buyerFull',
+                            'sellerFull',
                             ]));
 });
 
 gulp.task('quick', gulp.series(['clean',
                                'copyMisc',
                                'copyHtml',
-                               'javascriptQuick',
+                               'purseQuick',
+                               'buyerQuick',
+                               'sellerQuick',
                                ]));
 
 gulp.task('quick_watch', function () {
@@ -108,6 +184,8 @@ gulp.task('quick_watch', function () {
                gulp.series(['clean',
                             'copyMisc',
                             'copyHtml',
-                            'javascriptQuick',
+                            'purseQuick',
+                            'buyerQuick',
+                            'sellerQuick',
                             ]));
 });

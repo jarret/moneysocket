@@ -1,5 +1,6 @@
 const Connection = require("./connection.js").Connection;
 const Utils = require('./utils.js').Utils;
+const WebsocketInterconnect = require('./moneysocket/socket/websocket.js').WebsocketInterconnect;
 
 class App {
     constructor() {
@@ -12,6 +13,19 @@ class App {
         //var c2 = new Connection(this.section, "Moneysocket 2",
          //                       "ws://localhost:5400", "right");
         this.connections = {"Service": c1}
+
+        this.wi = new WebsocketInterconnect(this.NewSocket,
+                                            this.SocketClose);
+    }
+
+
+    NewSocket(socket, cb_param) {
+        console.log("got new socket: " + socket.ToString());
+        console.log("cb_pram: " + cb_param);
+    }
+
+    SocketClose(socket) {
+        console.log("got socket close: " + socket.ToString());
     }
 
     DrawUi() {
