@@ -51,6 +51,15 @@ class Utils {
         return d;
     }
 
+    static DrawBigText(div, text) {
+        var d = document.createElement("div");
+        var t = document.createTextNode(text);
+        d.setAttribute("style", "font-size: 200%");
+        d.appendChild(t);
+        div.appendChild(d);
+        return d;
+    }
+
     static DrawColoredText(div, text, color) {
         var d = document.createElement("div");
         d.style.color = color;

@@ -1,3 +1,7 @@
+// Copyright (c) 2020 Jarret Dyrbye
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php
+
 const Connection = require("./connection.js").Connection;
 const Utils = require('./utils.js').Utils;
 const WebsocketInterconnect = require('./moneysocket/socket/websocket.js').WebsocketInterconnect;
@@ -7,7 +11,10 @@ class PurseStatusUi {
     constructor(div) {
         this.parent_div = div;
         this.my_div = null;
-        this.balance_div = null;
+        this.spendable_div = null;
+        this.wallet_role_div = null;
+        this.service_role_div = null;
+        this.wallet_counterpart_div = null;
     }
 
     Draw(style) {
@@ -99,8 +106,8 @@ class PurseApp {
         this.wallet_socket = null;
         this.service_socket = null;
 
-        this.default_wallet_ws_url = "ws://127.0.0.1:11050";
-        this.default_service_ws_url = "ws://127.0.0.1:11051";
+        this.default_wallet_ws_url = "ws://127.0.0.1:11060";
+        this.default_service_ws_url = "ws://127.0.0.1:11061";
 
         this.wi = new WebsocketInterconnect(this);
     }
