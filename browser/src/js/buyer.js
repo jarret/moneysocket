@@ -1,158 +1,232 @@
+// Copyright (c) 2020 Jarret Dyrbye
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php
+
 const Connection = require("./connection.js").Connection;
 const Utils = require('./utils.js').Utils;
 const WebsocketInterconnect = require('./moneysocket/socket/websocket.js').WebsocketInterconnect;
+const WebsocketConnectUi = require('./moneysocket/socket/websocket_ui.js').WebsocketConnectUi;
 
-class App {
+class BuyerUi {
+    constructor(div) {
+        this.parent_div = div;
+        this.my_div = null;
+        this.my_seller_role_div = null;
+        this.seller_service_role_div = null;
+        this.wallet_counterpart_div = null;
+        this.opinion = "N/A";
+    }
+
+    Draw(style) {
+        this.my_div = document.createElement("div");
+        this.my_div.setAttribute("class", style);
+
+        this.opinion_div = Utils.EmptyDiv(this.my_div);
+        this.UpdateCurrentOpinion(this.opinion);
+
+        Utils.DrawBr(this.my_div);
+        Utils.DrawBr(this.my_div);
+
+        Utils.DrawButton(this.my_div, "Start",
+            (function() {this.StartBuying()}).bind(this));
+        Utils.DrawBr(this.my_div);
+        Utils.DrawButton(this.my_div, "Stop",
+            (function() {this.StopBuying()}).bind(this));
+
+        Utils.DrawBr(this.my_div);
+        Utils.DrawBr(this.my_div);
+
+        this.seller_service_role_div = Utils.EmptyDiv(this.my_div);
+        Utils.DrawText(this.seller_service_role_div, "Seller Service Role: ");
+        Utils.DrawColoredText(this.seller_service_role_div, "Not Connected", "red");
+
+        Utils.DrawBr(this.my_div);
+
+        this.my_service_role_div = Utils.EmptyDiv(this.my_div);
+        Utils.DrawText(this.my_service_role_div, "My Service Role: ");
+        Utils.DrawColoredText(this.my_service_role_div, "Not Connected", "red");
+
+        Utils.DrawBr(this.my_div);
+
+        this.parent_div.appendChild(this.my_div);
+    }
+
+    StartBuyingOpinions(opinion) {
+        console.log("starting");
+    }
+
+    StopBuyingOpinions(opinion) {
+        console.log("stopping");
+    }
+
+    UpdateCurrentOpinion(opinion) {
+        this.opinion = opinion
+        Utils.DeleteChildren(this.opinion_div)
+        Utils.DrawText(this.opinion_div, "Purchased Opinion: ");
+        Utils.DrawBr(this.opinion_div);
+        Utils.DrawBigText(this.opinion_div, opinion);
+    }
+
+    UpdateMyServiceRoleConnected() {
+        Utils.DeleteChildren(this.my_service_role_div)
+        Utils.DrawText(this.my_service_role_div, "My Service Role: ");
+        Utils.DrawColoredText(this.my_service_role_div, "Connected", "green");
+    }
+
+    UpdateMyServiceRoleConnecting() {
+        Utils.DeleteChildren(this.my_service_role_div)
+        Utils.DrawText(this.my_service_role_div, "My Service Role: ");
+        Utils.DrawColoredText(this.my_service_role_div, "Connecting", "orange");
+    }
+
+    UpdateMyServiceRoleDisconnected() {
+        Utils.DeleteChildren(this.my_service_role_div)
+        Utils.DrawText(this.my_service_role_div, "My Service Role: ");
+        Utils.DrawColoredText(this.my_service_role_div, "Not Connected", "red");
+    }
+
+    UpdateSellerServiceRoleConnected() {
+        Utils.DeleteChildren(this.seller_service_role_div)
+        Utils.DrawText(this.seller_service_role_div, "Seller Service Role: ");
+        Utils.DrawColoredText(this.seller_service_role_div, "Connected", "green");
+    }
+
+    UpdateSellerServiceRoleConnecting() {
+        Utils.DeleteChildren(this.seller_service_role_div)
+        Utils.DrawText(this.seller_service_role_div, "Seller Service Role: ");
+        Utils.DrawColoredText(this.seller_service_role_div, "Connecting", "orange");
+    }
+
+    UpdateSellerServiceRoleDisconnected() {
+        Utils.DeleteChildren(this.seller_service_role_div)
+        Utils.DrawText(this.seller_service_role_div, "Seller Service Role: ");
+        Utils.DrawColoredText(this.seller_service_role_div, "Not Connected", "red");
+    }
+}
+
+class BuyerApp {
     constructor() {
-        this.div = document.getElementById("ui");
-        this.section = Utils.EmptySection(this.div);
-        this.section.setAttribute("class", "container");
+        this.parent_div = document.getElementById("ui");
+        this.my_div = null;
+        this.psu = null;
+        this.mscu = null;
+        this.sscu = null;
 
-        var c1 = new Connection(this.section, "Service",
-                                "ws://localhost:11051", "left");
-        //var c2 = new Connection(this.section, "Moneysocket 2",
-         //                       "ws://localhost:5400", "right");
-        this.connections = {"Service": c1}
+        this.my_service_socket = null;
+        this.seller_service_socket = null;
 
-        this.wi = new WebsocketInterconnect(this.NewSocket,
-                                            this.SocketClose);
+        this.default_my_service_ws_url = "ws://127.0.0.1:11064";
+        this.default_seller_service_ws_url = "ws://127.0.0.1:11065";
+
+        this.wi = new WebsocketInterconnect(this);
+    }
+
+
+    DrawBuyerUi() {
+        this.my_div = document.createElement("div");
+        this.my_div.setAttribute("class", "bordered");
+        Utils.DrawTitle(this.my_div, "Opinion Buyer App", "h1");
+
+        this.psu = new BuyerUi(this.my_div);
+        this.psu.Draw("center");
+        Utils.DrawBr(this.my_div);
+
+        this.sscu = new WebsocketConnectUi(this.my_div,
+                                           "SERVICE Connect to Seller WALLET",
+                                           this.default_seller_service_ws_url, this,
+                                           "seller_service");
+        this.sscu.Draw("left");
+
+        this.mscu = new WebsocketConnectUi(this.my_div,
+                                           "SERVICE Connect to My WALLET",
+                                           this.default_my_service_ws_url, this,
+                                           "my_service");
+        this.mscu.Draw("right");
+        Utils.DrawBr(this.my_div);
+
+        Utils.DrawBr(this.my_div);
+
+        this.parent_div.appendChild(this.my_div);
     }
 
 
     NewSocket(socket, cb_param) {
         console.log("got new socket: " + socket.ToString());
-        console.log("cb_pram: " + cb_param);
+        console.log("cb_param: " + cb_param);
+        if (cb_param == "seller_service") {
+            this.seller_service_socket = socket;
+            this.psu.UpdateSellerServiceRoleConnected();
+            this.sscu.DrawDisconnectButton();
+            // TODO wallet role object,
+        } else if (cb_param == "my_service") {
+            this.my_service_socket = socket;
+            this.psu.UpdateMyServiceRoleConnected();
+            this.mscu.DrawDisconnectButton();
+            // TODO service role object,
+        } else {
+            console.log("unknown cb param");
+        }
     }
 
-    SocketClose(socket) {
+    SocketClose(socket, cb_param) {
         console.log("got socket close: " + socket.ToString());
-    }
-
-    DrawUi() {
-        for (var title in this.connections) {
-            this.connections[title].DrawConnectUi();
-            Utils.DrawBr(this.div);
+        console.log("cb_param: " + cb_param);
+        if (cb_param == "seller_service") {
+            console.log("got seller servce socket closed");
+            this.seller_service_socket = null;
+            this.psu.UpdateSellerServiceRoleDisconnected();
+            this.sscu.DrawConnectButton();
+            // TODO wallet role object
+        } else if (cb_param == "my_service") {
+            console.log("got my service socket closed");
+            this.my_service_socket = null;
+            this.psu.UpdateMyServiceRoleDisconnected();
+            this.mscu.DrawConnectButton();
+            // TODO service role object
+        } else {
+            console.log("got unknown socket closed");
         }
     }
 
-    NumConnections() {
-        var i = 0;
+    Connect(cb_param) {
+        if (cb_param == "seller_service") {
+            var ws_url = this.sscu.GetWsUrl();
+            console.log("connect seller service: " + ws_url);
+            this.psu.UpdateSellerServiceRoleConnecting();
+            this.sscu.DrawConnecting();
+            this.wi.Connect(ws_url, "seller_service");
+        } else if (cb_param == "my_service") {
+            var ws_url = this.mscu.GetWsUrl();
+            console.log("connect my service: " + ws_url);
+            this.psu.UpdateMyServiceRoleConnecting();
+            this.mscu.DrawConnecting();
+            this.wi.Connect(ws_url, "my_service");
+        } else {
+            console.log("unknown cb_param: " + cb_param);
+        }
+    }
 
-        for (var title in this.connections) {
-            if (this.connections[title].connected) {
-                i++;
+    Disconnect(cb_param) {
+        if (cb_param == "seller_service") {
+            console.log("disconnect wallet");
+            if (this.seller_service_socket != null) {
+                this.seller_service_socket.Close();
             }
-        }
-        return i;
-    }
-
-    Ping(title) {
-        console.log("sending ping....");
-        this.SendPing(this.connections['Service'])
-    }
-
-    PushSat(title) {
-        var payee;
-
-        if (this.NumConnections() != 2) {
-            console.log("*** need to be connected to both websockets");
-            return;
-        }
-
-        if (title == "Moneysocket 1") {
-            payee = this.connections["Moneysocket 2"];
-        } else {
-            payee = this.connections["Moneysocket 1"];
-        }
-        this.RequestInvoice(payee);
-    }
-
-    PullSat(title) {
-        var payee;
-
-        if (this.NumConnections() != 2) {
-            console.log("*** need to be connected to both websockets");
-            return;
-        }
-        if (title == "Moneysocket 1") {
-            payee = this.connections["Moneysocket 1"];
-        } else {
-            payee = this.connections["Moneysocket 2"];
-        }
-        this.RequestInvoice(payee);
-    }
-
-    SendPing(connection) {
-        var r = {"request_type": "PING"};
-        connection.SendTextRequest(r);
-    }
-
-    RequestInvoice(connection) {
-        var r = {"request_type": "GET_INVOICE",
-                 "msat_amount":  1000};
-        connection.SendTextRequest(r);
-    }
-
-    PayInvoice(connection, bolt11) {
-        var r = {"request_type": "PAY_INVOICE",
-                 "bolt11":  bolt11};
-        connection.SendTextRequest(r);
-    }
-
-    ConnectSocket(title) {
-        console.log(title);
-        this.connections[title].ConnectSocket();
-    }
-
-    DisconnectSocket(title) {
-        console.log(title);
-        this.connections[title].DisconnectSocket();
-    }
-
-    WsIncomingEvent(title, data) {
-        var connection = this.connections[title];
-        const n = JSON.parse(data);
-        console.log("received: " + data);
-
-        if (n["request_type"] == "PONG") {
-            console.log("got PONG");
-        } else if (n["request_type"] == "PING") {
-            console.log("got PING");
-        } else if (n["request_type"] == "ERROR") {
-            console.log("got ERROR");
-        } else {
-            console.log("got unknown");
-        }
-        /*if (n["notification_type"] == "INVOICE") {
-            var payer;
-            if (title == "Moneysocket 1") {
-                payer = this.connections['Moneysocket 2'];
-            } else {
-                payer = this.connections['Moneysocket 1'];
+        } else if (cb_param == "my_service") {
+            console.log("disconnect service");
+            if (this.my_service_socket != null) {
+                this.my_service_socket.Close();
             }
-            this.PayInvoice(payer, n['bolt11'])
-        } else if (n["notification_type"] == "PREIMAGE") {
-            console.log("preimage: " +  n['preimage']);
-        } else if (n["notification_type"] == "BALANCE") {
-            connection.UpdateBalance(n['msats']);
         } else {
-            console.log("unknown notification");
+            console.log("unknown cb_param: " + cb_param);
         }
-*/
     }
-
-    /*
-    Handle(event) {
-        console.log("received: " + event.data);
-        const data = JSON.parse(event.data);
-    }
-*/
 }
 
-window.app = new App();
+window.app = new BuyerApp();
 
 function DrawFirstUi() {
-    window.app.DrawUi()
+    window.app.DrawBuyerUi()
 }
 
 window.addEventListener("load", DrawFirstUi());
