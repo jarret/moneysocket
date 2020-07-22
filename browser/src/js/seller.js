@@ -114,8 +114,8 @@ class SellerApp {
         this.wallet_socket = null;
         this.service_socket = null;
 
-        this.default_wallet_ws_url = "ws://127.0.0.1:11062";
-        this.default_service_ws_url = "ws://127.0.0.1:11063";
+        this.default_wallet_ws_url = "ws://127.0.0.1:11063";
+        this.default_service_ws_url = "ws://127.0.0.1:11055";
 
         this.wi = new WebsocketInterconnect(this);
     }

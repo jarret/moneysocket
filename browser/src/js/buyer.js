@@ -115,8 +115,8 @@ class BuyerApp {
         this.my_service_socket = null;
         this.seller_service_socket = null;
 
-        this.default_my_service_ws_url = "ws://127.0.0.1:11064";
-        this.default_seller_service_ws_url = "ws://127.0.0.1:11065";
+        this.default_my_service_ws_url = "ws://127.0.0.1:11061";
+        this.default_seller_service_ws_url = "ws://127.0.0.1:11062";
 
         this.wi = new WebsocketInterconnect(this);
     }
