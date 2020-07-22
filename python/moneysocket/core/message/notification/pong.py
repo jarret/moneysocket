@@ -2,15 +2,17 @@
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
-from moneysocket.core.message.request.request import MoneysocketRequest
+from moneysocket.core.message.notification.notification import (
+    MoneysocketNotification)
 
-class RequestPing(MoneysocketRequest):
+class NotifyPong(MoneysocketNotification):
     def __init__(self):
-        super().__init__("REQUEST_PING")
+        super().__init__("NOTIFY_PONG")
+
 
     @staticmethod
     def cast_class(msg_dict):
-        c = RequestPing()
+        c = NotifyPong()
         c.update(msg_dict)
         return c
 
@@ -18,5 +20,4 @@ class RequestPing(MoneysocketRequest):
     def check_valid_msg_dict(msg_dict):
         return None
 
-
-MoneysocketRequest.REQUEST_SUBCLASSES['REQUEST_PING'] = RequestPing
+MoneysocketNotification.NOTIFICATION_SUBCLASSES['NOTIFY_PONG'] = NotifyPong

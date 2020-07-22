@@ -2,38 +2,60 @@
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
+import uuid
 
-from core.message.message import MoneysocketMessage
-
+from moneysocket.core.message.message import MoneysocketMessage
 
 
 class MoneysocketNotification(MoneysocketMessage):
     NOTIFICATION_SUBCLASSES = {}
 
-    def __init__(self, request_response_uuid=None):
+    def __init__(self, notificat_name, request_response_uuid=None):
         super().__init__("NOTIFICATION")
         self['notification_uuid'] = str(uuid.uuid4())
         self['request_reference_uuid'] = request_reverence_uuid
+        self['notification_name'] = notification_name
 
 
     @staticmethod
-    def check_valid(msg_txt):
-        return None
+    def cast_class(msg_dict):
+        notification_class = MoneysocketNotification.NOTIFICATION_SUBCLASSES[
+            msg_dict['notification_name_name']]
+        return notification_class.cast_class(msg_dict)
+
+    @staticmethod
+    def check_valid_msg_dict(msg_dict):
+        if 'notification_uuid' not in msg_dict.keys():
+            return "no notification_uuid included"
+        if type(msg_dict['notification_uuid']) != str:
+            return "unknown notification_uuid type"
+        try:
+            _ = uuid.UUID(msg_dict['notification_uuid'])
+        except:
+            return "invalid notification_uuid"
+
+        if 'request_reference_uuid' not in msg_dict.keys():
+            return "no request_reference_uuid included"
+
+        if msg_dict['request_reference_uuid'] is not None:
+            if type(msg_dict['request_reference_uuid']) != str:
+                return "unknown request_reference_uuid type"
+            try:
+                _ = uuid.UUID(msg_dict['request_reference_uuid'])
+            except:
+                return "invalid request_reference_uuid"
+
+        if 'notification_name' not in msg_dict.keys():
+            return "invalid notification_name"
+        if type(msg_dict['notification_name']) != str:
+            return "unknown notification_name type"
+        if (msg_dict['notification_name'] not in
+            MoneysocketNotification.NOTIFICATION_SUBCLASSES.keys()):
+            return "unknown notification_name: %s" % (
+                msg_dict['notification_name'])
+        subclass = MoneysocketNotification.NOTIFICATION_SUBCLASSES[
+            msg_dict['notification_name']]
+        return subclass.check_valid_msg_dict(msg_dict)
 
 
-
-NOTIFICATION_SUBCLASSES = {"NOTIFY_RENDEZVOUS":             None,
-                           "NOTIFY_INCOMPATIBLE":           None,
-                           "NOTIFY_WALLET_BECOMING_READY":  None,
-                           "NOTIFY_SERVICE_BECOMING_READY": None,
-                           "NOTIFY_SERVICE":                None,
-                           "NOTIFY_WALLET":                 None,
-                           "NOTIFY_INVOICE":                None,
-                           "NOTIFY_GIFT_INFO":              None,
-                           "NOTIFY_PREIMAGE":               None,
-                           "NOTIFY_PONG":                   None,
-                           "NOTIFY_ERROR":                  None,
-                          }
-
-MoneysocketNotification.NOTIFICATION_SUBCLASSES = NOTIFICATION_SUBCLASSES
-NOTIFICATIONS = set(NOTIFICATION_SUBCLASSES.keys())
+MoneysocketMessage.MESSAGE_SUBCLASSES['NOTIFICATION'] = MoneysocketNotification

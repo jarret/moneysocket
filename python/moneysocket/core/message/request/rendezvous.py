@@ -5,7 +5,7 @@
 import string
 import json
 
-from core.message.request.request import MoneysocketRequest
+from moneysocket.core.message.request.request import MoneysocketRequest
 
 class RequestRendezvous(MoneysocketRequest):
     def __init__(self, rendezvous_id):
@@ -13,19 +13,24 @@ class RequestRendezvous(MoneysocketRequest):
         self['rendezvous_id'] = rendezvous_id
 
     @staticmethod
-    def check_valid(msg_txt):
-        err = super().validate(msg_txt)
-        if err:
-            return err
-        msg_dict = json.loads(msg_text)
+    def cast_class(msg_dict):
+        c = RequestRendezvous(msg_dict['rendezvous_id'])
+        c.update(msg_dict)
+        return c
 
+    @staticmethod
+    def check_valid_msg_dict(msg_dict):
         if 'rendevous_id' not in msg_dict.keys():
             return "no rendezvous_id included"
         if type(msg_dict['rendezvous_id']) != str:
             return "unknown rendezvous_id type"
-
         if not all(c in string.hexdigits for c in msg_dict['rendezvous_id']):
             return "rendezvous_id not hex string"
         if len(msg_dict['rendezvous_id']) != 16:
             return "rendezvous_id not 64-bit value hex string"
+
         return None
+
+
+MoneysocketRequest.REQUEST_SUBCLASSES['REQUEST_RENDEZVOUS'] = RequestRendezvous
+
