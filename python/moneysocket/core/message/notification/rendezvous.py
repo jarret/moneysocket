@@ -37,6 +37,6 @@ class NotifyRendezvous(MoneysocketNotification):
         return None
 
 
-MoneysocketNotifcation.NOTIFICATION_SUBCLASSES['NOTIFY_RENDEZVOUS'] = (
+MoneysocketNotification.NOTIFICATION_SUBCLASSES['NOTIFY_RENDEZVOUS'] = (
     NotifyRendezvous)
 
