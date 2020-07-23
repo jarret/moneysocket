@@ -18,7 +18,8 @@ from moneysocket.core.message.notification.rendezvous_becoming_ready import (
 
 from moneysocket.core.message.message import MoneysocketMessage
 from moneysocket.core.message.crypt import MoneysocketCrypt
-from moneysocket.core.message.notification.notification import MoneysocketNotification
+from moneysocket.core.message.notification.notification import (
+    MoneysocketNotification)
 from moneysocket.core.message.request.request import MoneysocketRequest
 
 from moneysocket.core.shared_seed import SharedSeed
@@ -40,19 +41,44 @@ from moneysocket.core.shared_seed import SharedSeed
 #print(err)
 #print(d)
 
+def encode_decode(msg, ss):
+    e = MoneysocketCrypt.wire_encode(msg, shared_seed=ss)
+    print(e.hex())
+
+    d, err = MoneysocketCrypt.wire_decode(e, shared_seed=ss)
+    print(err)
+    print(d)
+    return d
+
 ss = SharedSeed()
 sss = str(ss)
 print("shared seed: %s" % sss)
+ss2 = SharedSeed.from_hex_string(sss)
+print("shared seed decoded: %s" % ss2)
+
+rid = ss2.derive_rendezvous_id()
 
 
-s2 = SharedSeed.from_hex_string(sss)
-
-print(s2)
 
 p = RequestPing()
-e = MoneysocketCrypt.wire_encode(p, shared_seed=ss)
-print(e.hex())
 
-d, err = MoneysocketCrypt.wire_decode(e, shared_seed=ss)
-print(err)
-print(d)
+p2 = encode_decode(p, ss)
+
+print("\n")
+
+o = NotifyPong(p2['request_uuid'])
+
+o2 = encode_decode(o, ss)
+
+
+rr = RequestRendezvous(rid.hex())
+
+rr2 = encode_decode(rr, ss)
+
+nrbr = NotifyRendezvousBecomingReady(rid.hex(), rr2['request_uuid'])
+
+nrbr2 = encode_decode(nrbr, ss)
+
+nr = NotifyRendezvous(rid.hex(), rr2['request_uuid'])
+
+nr2 = encode_decode(nr, ss)

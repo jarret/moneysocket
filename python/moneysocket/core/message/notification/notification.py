@@ -13,14 +13,14 @@ class MoneysocketNotification(MoneysocketMessage):
     def __init__(self, notification_name, request_reference_uuid=None):
         super().__init__("NOTIFICATION")
         self['notification_uuid'] = str(uuid.uuid4())
-        self['request_reponse_uuid'] = request_reference_uuid
+        self['request_reference_uuid'] = request_reference_uuid
         self['notification_name'] = notification_name
 
 
     @staticmethod
     def cast_class(msg_dict):
         notification_class = MoneysocketNotification.NOTIFICATION_SUBCLASSES[
-            msg_dict['notification_name_name']]
+            msg_dict['notification_name']]
         return notification_class.cast_class(msg_dict)
 
     @staticmethod

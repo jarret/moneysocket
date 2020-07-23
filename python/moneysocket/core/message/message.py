@@ -29,7 +29,6 @@ class MoneysocketMessage(dict):
         self['timestamp'] = time.time()
         self['protocol'] = PROTOCOL
         self['protocol_version'] = VERSION
-        self['message_uuid'] = str(uuid.uuid4())
         self['message_class'] = message_class
 
     def to_json(self, quick=False):
@@ -73,15 +72,6 @@ class MoneysocketMessage(dict):
             return "no protocol_version declared"
         if type(msg_dict['protocol_version']) != str:
             return "unknown protocol type"
-
-        if 'message_uuid' not in msg_dict.keys():
-            return "message_uuid declared"
-        if type(msg_dict['message_uuid']) != str:
-            return "unknown message_uuid type"
-        try:
-            uuid.UUID(msg_dict['message_uuid'])
-        except:
-            return "unknown message_uuid type"
 
         subclass = MoneysocketMessage.MESSAGE_SUBCLASSES[
             msg_dict['message_class']]

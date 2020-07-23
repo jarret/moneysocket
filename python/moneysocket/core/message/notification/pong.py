@@ -6,13 +6,14 @@ from moneysocket.core.message.notification.notification import (
     MoneysocketNotification)
 
 class NotifyPong(MoneysocketNotification):
-    def __init__(self):
-        super().__init__("NOTIFY_PONG")
+    def __init__(self, request_reference_uuid):
+        super().__init__("NOTIFY_PONG",
+                         request_reference_uuid=request_reference_uuid)
 
 
     @staticmethod
     def cast_class(msg_dict):
-        c = NotifyPong()
+        c = NotifyPong(msg_dict['request_reference_uuid'])
         c.update(msg_dict)
         return c
 

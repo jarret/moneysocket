@@ -25,14 +25,14 @@ class NotifyRendezvousBecomingReady(MoneysocketNotification):
 
     @staticmethod
     def check_valid_msg_dict(msg_dict):
-        if 'rendevous_id' not in msg_dict.keys():
+        if 'rendezvous_id' not in msg_dict.keys():
             return "no rendezvous_id included"
         if type(msg_dict['rendezvous_id']) != str:
             return "unknown rendezvous_id type"
         if not all(c in string.hexdigits for c in msg_dict['rendezvous_id']):
             return "rendezvous_id not hex string"
-        if len(msg_dict['rendezvous_id']) != 16:
-            return "rendezvous_id not 64-bit value hex string"
+        if len(msg_dict['rendezvous_id']) != 64:
+            return "rendezvous_id not 256-bit value hex string"
 
         return None
 
