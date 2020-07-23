@@ -22,6 +22,7 @@ VERSION = ".".join(str(v) for v in [VERSION_MAJOR, VERSION_MINOR,
 
 class MoneysocketMessage(dict):
     MESSAGE_SUBCLASSES = {}
+    MUST_BE_CLEARTEXT = False
 
     def __init__(self, message_class):
         super().__init__()

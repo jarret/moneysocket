@@ -10,10 +10,10 @@ from moneysocket.core.message.message import MoneysocketMessage
 class MoneysocketNotification(MoneysocketMessage):
     NOTIFICATION_SUBCLASSES = {}
 
-    def __init__(self, notificat_name, request_response_uuid=None):
+    def __init__(self, notification_name, request_reference_uuid=None):
         super().__init__("NOTIFICATION")
         self['notification_uuid'] = str(uuid.uuid4())
-        self['request_reference_uuid'] = request_reverence_uuid
+        self['request_reponse_uuid'] = request_reference_uuid
         self['notification_name'] = notification_name
 
 

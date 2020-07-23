@@ -5,18 +5,21 @@
 import string
 import json
 
-from moneysocket.core.message.request.request import MoneysocketRequest
+from moneysocket.core.message.notification.notification import (
+    MoneysocketNotification)
 
-class RequestRendezvous(MoneysocketRequest):
+class NotifyRendezvous(MoneysocketNotification):
     MUST_BE_CLEARTEXT = True
 
-    def __init__(self, rendezvous_id):
-        super().__init__("REQUEST_RENDEZVOUS")
+    def __init__(self, rendezvous_id, request_reference_uuid):
+        super().__init__("NOTIFY_RENDEZVOUS_BECOMING_READY",
+                         request_reference_uuid=request_reference_uuid)
         self['rendezvous_id'] = rendezvous_id
 
     @staticmethod
     def cast_class(msg_dict):
-        c = RequestRendezvous(msg_dict['rendezvous_id'])
+        c = NotifyRendezvousBecomingReady(msg_dict['rendezvous_id'],
+                                          msg_dict['request_reference_uuid'])
         c.update(msg_dict)
         return c
 
@@ -34,5 +37,6 @@ class RequestRendezvous(MoneysocketRequest):
         return None
 
 
-MoneysocketRequest.REQUEST_SUBCLASSES['REQUEST_RENDEZVOUS'] = RequestRendezvous
+MoneysocketNotifcation.NOTIFICATION_SUBCLASSES['NOTIFY_RENDEZVOUS'] = (
+    NotifyRendezvous)
 

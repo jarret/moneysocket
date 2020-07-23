@@ -4,3 +4,6 @@
 
 # import to register subclasses with superclass
 from moneysocket.core.message.notification.pong import NotifyPong
+from moneysocket.core.message.notification.rendezvous_becoming_ready import (
+    NotifyRendezvousBecomingReady)
+from moneysocket.core.message.notification.rendezvous import NotifyRendezvous
