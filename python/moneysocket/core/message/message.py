@@ -57,8 +57,6 @@ class MoneysocketMessage(dict):
         if 'timestamp' not in msg_dict.keys():
             return "no timestamp included"
 
-        print(msg_dict['timestamp'])
-        print(type(msg_dict['timestamp']))
         if type(msg_dict['timestamp']) not in {int, float}:
             return "could not understand timestamp"
         if msg_dict['timestamp'] < 0:
