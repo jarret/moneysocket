@@ -50,9 +50,9 @@ s2 = SharedSeed.from_hex_string(sss)
 print(s2)
 
 p = RequestPing()
-e = MoneysocketCrypt.encode(p, shared_seed=ss)
+e = MoneysocketCrypt.wire_encode(p, shared_seed=ss)
 print(e.hex())
 
-d, err = MoneysocketCrypt.decode(e, shared_seed=ss)
+d, err = MoneysocketCrypt.wire_decode(e, shared_seed=ss)
 print(err)
 print(d)

@@ -55,7 +55,7 @@ class MoneysocketCrypt():
         return re.sub(b'\x00*$', b'', decrypted)
 
     @staticmethod
-    def encode(msg, shared_seed=None):
+    def wire_encode(msg, shared_seed=None):
         msg_bytes = json.dumps(msg).encode("utf8")
         if msg.MUST_BE_CLEARTEXT:
             return msg_bytes
@@ -64,7 +64,7 @@ class MoneysocketCrypt():
         return MoneysocketCrypt.encrypt(msg_bytes, shared_seed)
 
     @staticmethod
-    def decode(msg_bytes, shared_seed=None):
+    def wire_decode(msg_bytes, shared_seed=None):
         is_cyphertext = MoneysocketCrypt.is_cyphertext(msg_bytes)
         if is_cyphertext and shared_seed is None:
             return None, "no seed to decrypt cyphertext"
