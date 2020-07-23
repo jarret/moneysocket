@@ -6,7 +6,7 @@ import json
 
 from binascii import hexlify, unhexlify
 
-from moneysocket.utl.third_party.lnaddr import lndecode
+from moneysocket.utl.third_party.lightning_payencode.lnaddr import lndecode
 
 
 MSATOSHIS_PER_BTC = 100000000000

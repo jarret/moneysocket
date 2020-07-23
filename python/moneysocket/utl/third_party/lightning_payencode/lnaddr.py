@@ -12,8 +12,8 @@ import secp256k1
 import sys
 import time
 
-from moneysocket.utl.third_party.bech32 import bech32_encode
-from moneysocket.utl.third_party.bech32 import bech32_decode, CHARSET
+from moneysocket.utl.third_party.lightning_payencode.bech32 import bech32_encode
+from moneysocket.utl.third_party.lightning_payencode.bech32 import bech32_decode, CHARSET
 
 
 # BOLT #11:
