@@ -11,8 +11,6 @@ from moneysocket.utl.bech32 import bech32_encode
 from moneysocket.utl.bech32 import bech32_decode
 
 
-
-
 class SharedSeed():
     def __init__(self, seed_bytes=None):
         self.seed_bytes = (seed_bytes if seed_bytes is not None else

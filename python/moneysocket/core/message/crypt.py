@@ -16,23 +16,6 @@ from moneysocket.core.message.message import MoneysocketMessage
 class MoneysocketCrypt():
 
     @staticmethod
-    def sha256(input_bytes):
-        return hashlib.sha256(input_bytes).digest()
-
-    @staticmethod
-    def double_sha256(input_bytes):
-        return MoneysocketCrypt.sha256(MoneysocketCrypt.sha256(input_bytes))
-
-    @staticmethod
-    def derive_aes256_key(shared_seed):
-        return MoneysocketCrypt.double_sha256(shared_seed)
-
-    @staticmethod
-    def derive_rendezvous_id(shared_seed):
-        aes256_key = MoneysocketCrypt.derive_aes256_key(shared_seed)
-        return MoneysocketCrypt.double_sha256(aes256_key)
-
-    @staticmethod
     def is_clear(msg_bytes):
         try:
             msg_text = msg_bytes.decode("utf8", errors="strict")
@@ -57,7 +40,7 @@ class MoneysocketCrypt():
 
     @staticmethod
     def encrypt(msg_bytes, shared_seed):
-        aes256_key = MoneysocketCrypt.derive_aes256_key(shared_seed)
+        aes256_key = shared_seed.derive_aes256_key()
         raw = MoneysocketCrypt.pad(msg_bytes)
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(aes256_key, AES.MODE_CBC, iv)
@@ -65,7 +48,7 @@ class MoneysocketCrypt():
 
     @staticmethod
     def decrypt(msg_bytes, shared_seed):
-        aes256_key = MoneysocketCrypt.derive_aes256_key(shared_seed)
+        aes256_key = shared_seed.derive_aes256_key()
         iv = msg_bytes[:16]
         cipher = AES.new(aes256_key, AES.MODE_CBC, iv)
         decrypted = cipher.decrypt(msg_bytes[16:])

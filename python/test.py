@@ -28,7 +28,6 @@ from moneysocket.core.shared_seed import SharedSeed
 #print(MoneysocketRequest.REQUEST_SUBCLASSES)
 
 #key = os.urandom(16)
-#p = RequestPing()
 #
 #print(key)
 #
@@ -49,3 +48,11 @@ print("shared seed: %s" % sss)
 s2 = SharedSeed.from_hex_string(sss)
 
 print(s2)
+
+p = RequestPing()
+e = MoneysocketCrypt.encode(p, shared_seed=ss)
+print(e.hex())
+
+d, err = MoneysocketCrypt.decode(e, shared_seed=ss)
+print(err)
+print(d)
