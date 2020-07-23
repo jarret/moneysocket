@@ -46,6 +46,6 @@ sss = str(ss)
 print("shared seed: %s" % sss)
 
 
-s2 = SharedSeed.from_string(sss)
+s2 = SharedSeed.from_hex_string(sss)
 
 print(s2)
