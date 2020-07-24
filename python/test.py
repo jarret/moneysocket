@@ -22,7 +22,7 @@ from moneysocket.core.message.notification.notification import (
     MoneysocketNotification)
 from moneysocket.core.message.request.request import MoneysocketRequest
 
-from moneysocket.core.shared_seed import SharedSeed
+from moneysocket.beacon.shared_seed import SharedSeed
 
 #print(MoneysocketMessage.MESSAGE_SUBCLASSES)
 #print(MoneysocketNotification.NOTIFICATION_SUBCLASSES)
