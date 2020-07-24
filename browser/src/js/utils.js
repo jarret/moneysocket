@@ -43,12 +43,19 @@ class Utils {
         return input;
     }
 
+    static DrawTextArea(div) {
+        var ta = document.createElement("textarea");
+        ta.setAttribute("class", "nice");
+        div.appendChild(ta);
+        return ta;
+    }
+
     static DrawText(div, text) {
         var d = document.createElement("div");
         var t = document.createTextNode(text);
         d.appendChild(t);
         div.appendChild(d);
-        return d;
+        return t;
     }
 
     static DrawBigText(div, text) {
@@ -57,7 +64,7 @@ class Utils {
         d.setAttribute("style", "font-size: 200%");
         d.appendChild(t);
         div.appendChild(d);
-        return d;
+        return t;
     }
 
     static DrawColoredText(div, text, color) {
