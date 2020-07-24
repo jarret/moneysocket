@@ -46,7 +46,7 @@ class MoneysocketBeacon():
                      location_count_encoded).encode()
         encoded += lc_tlv
         for location in self.locations:
-            location_encoded = location.encode_tlvs()
+            location_encoded = location.encode_tlv()
             encoded += location_encoded
         return Tlv(MoneysocketBeacon.LOCATION_LIST_TLV_TYPE, encoded).encode()
 
@@ -59,7 +59,7 @@ class MoneysocketBeacon():
 
     @staticmethod
     def decode_tlvs(tlv_bytes):
-        beacon_tlv, _, err = Tlv.pop(encoded)
+        beacon_tlv, _, err = Tlv.pop(tlv_bytes)
         if err:
             return None, None, err
 
@@ -106,7 +106,7 @@ class MoneysocketBeacon():
                 location, err = BluetoothLocation.from_tlv(l_tlv)
                 if err:
                     return None, None, err
-            elif l_tlv.t == NfcLocation.NFCLOCATION_TLV_TYPE:
+            elif l_tlv.t == NfcLocation.NFC_LOCATION_TLV_TYPE:
                 location, err = NfcLocation.from_tlv(l_tlv)
                 if err:
                     return None, None, err
@@ -121,16 +121,18 @@ class MoneysocketBeacon():
 
     def to_bech32_str(self):
         encoded_bytes = self.encode_tlvs()
-        return Bech32.encode_bytes(encoded, "msbeacon")
+        return Bech32.encode_bytes(encoded_bytes, "moneysocket")
 
     @staticmethod
-    def from_bech32_str(self, beacon_str):
+    def from_bech32_str(beacon_str):
         try:
             hrp, decoded_bytes = Bech32.decode_bytes(beacon_str)
         except:
             return None, "could not decode bech32 string"
         if not hrp or not decoded_bytes:
             return None, "could not decode bech32 string"
+        if hrp != 'moneysocket':
+            return None, "string is not a moneysocket beacon"
 
         shared_seed, locations, err = MoneysocketBeacon.decode_tlvs(
             decoded_bytes)

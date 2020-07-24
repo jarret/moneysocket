@@ -15,7 +15,9 @@ class NfcLocation():
         self.placeholder_string = placeholder_string
 
     def to_dict(self):
-        return {'placeholder_string': self.placeholder_string}
+        return {'type':              "NFC",
+                'placeholder_string': self.placeholder_string}
+
 
     @staticmethod
     def from_tlv(tlv):
@@ -27,7 +29,7 @@ class NfcLocation():
             ps = tlvs[PLACEHOLDER_TLV_TYPE].v.decode("utf8", errors="strict")
         except:
             return None, "error decoding placeholder string"
-        return BluetoothLocation(placeholder_string=ps), None
+        return NfcLocation(placeholder_string=ps), None
 
     def encode_tlv(self):
         encoded = Tlv(PLACEHOLDER_TLV_TYPE,

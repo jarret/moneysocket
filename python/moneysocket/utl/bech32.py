@@ -16,7 +16,7 @@ class Bech32():
     @staticmethod
     def decode_bytes(bech32_string):
         try:
-            hrp, data = bech32_decode(bech32_str)
+            hrp, data = bech32_decode(bech32_string)
         except:
             return None, None
         if not hrp:

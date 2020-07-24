@@ -25,7 +25,8 @@ class WebsocketLocation():
                                        DEFAULT_NO_TLS_PORT)
 
     def to_dict(self):
-        return {'host':    self.host,
+        return {'type':    "WebSocket",
+                'host':    self.host,
                 'port':    self.port,
                 'use_tls': self.use_tls}
 
@@ -43,7 +44,10 @@ class WebsocketLocation():
         if USE_TLS_TLV_TYPE not in tlvs.keys():
             use_tls = True
         else:
-            enum_value = BigSize.pop(tlvs[USE_TLS_TLV_TYPE].v)
+            enum_value, remainder, err = BigSize.pop(tlvs[USE_TLS_TLV_TYPE].v)
+            if err:
+                return None, err
+            print("enum_value: %s" % enum_value)
             if enum_value not in USE_TLS_ENUM_VALUE.keys():
                 return None, "error decoding use_tls setting"
             use_tls = USE_TLS_ENUM_VALUE[enum_value]
@@ -51,14 +55,15 @@ class WebsocketLocation():
         if PORT_TLV_TYPE not in tlvs.keys():
             port = DEFAULT_TLS_PORT if use_tls else DEFAULT_NO_TLS_PORT
         else:
-            port = BigSize.pop(tlvs[PORT_TLV_TYPE].v)
-
+            port, _, err = BigSize.pop(tlvs[PORT_TLV_TYPE].v)
+            if err:
+                return None, err
         return WebsocketLocation(host, port=port, use_tls=use_tls), None
 
     def encode_tlv(self):
         encoded = Tlv(HOST_TLV_TYPE, self.host.encode("utf8")).encode()
         if not self.use_tls:
-            encode += Tlv(USE_TLS_TLV_TYPE, BigSize.encode(0)).encode()
+            encoded += Tlv(USE_TLS_TLV_TYPE, BigSize.encode(0)).encode()
             if self.port != DEFAULT_NO_TLS_PORT:
                 encoded += Tlv(PORT_TLV_TYPE,
                                BigSize.encode(self.port)).encode()

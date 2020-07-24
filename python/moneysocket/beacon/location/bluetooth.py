@@ -15,8 +15,8 @@ class BluetoothLocation():
         self.placeholder_string = placeholder_string
 
     def to_dict(self):
-        return {'placeholder_string': self.placeholder_string}
-
+        return {'type':              "Bluetooth",
+                'placeholder_string': self.placeholder_string}
     @staticmethod
     def from_tlv(tlv):
         assert tlv.t == BluetoothLocation.BLUETOOTH_LOCATION_TLV_TYPE

@@ -15,7 +15,8 @@ class WebRtcLocation():
         self.placeholder_string = placeholder_string
 
     def to_dict(self):
-        return {'placeholder_string': self.placeholder_string}
+        return {'type':              "WebRTC",
+                'placeholder_string': self.placeholder_string}
 
     @staticmethod
     def from_tlv(tlv):
