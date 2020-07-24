@@ -150,6 +150,41 @@ gulp.task('sellerQuick', function () {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+gulp.task('encodeDecodeFull', function () {
+    var b = browserify({
+      entries: './src/js/encode-decode.js',
+      debug: true
+    });
+
+    return b.bundle()
+      .pipe(source('./encode-decode.js'))
+      .pipe(buffer())
+      .pipe(sourcemaps.init({loadMaps: true}))
+      .pipe(babel({
+          presets: ['@babel/env']
+      }))
+      .pipe(uglify())
+      .on('error', log.error)
+      .pipe(sourcemaps.write('./'))
+      .pipe(gulp.dest('./htdocs/js/'));
+});
+
+gulp.task('encodeDecodeQuick', function () {
+    var b = browserify({
+      entries: './src/js/encode-decode.js',
+      debug: true
+    });
+
+    return b.bundle()
+      .pipe(source('./encode-decode.js'))
+      .pipe(buffer())
+      .pipe(sourcemaps.init({loadMaps: true}))
+      .pipe(sourcemaps.write('./'))
+      .pipe(gulp.dest('./htdocs/js/'));
+});
+
+///////////////////////////////////////////////////////////////////////////////
+
 gulp.task('full', gulp.series(['clean',
                                'copyMisc',
                                'copyHtml',
@@ -157,6 +192,7 @@ gulp.task('full', gulp.series(['clean',
                                'purseFull',
                                'buyerFull',
                                'sellerFull',
+                               'encodeDecodeFull',
                                ]));
 
 gulp.task('full_watch', function () {
@@ -168,6 +204,7 @@ gulp.task('full_watch', function () {
                             'purseFull',
                             'buyerFull',
                             'sellerFull',
+                            'encodeDecodeFull',
                             ]));
 });
 
@@ -177,6 +214,7 @@ gulp.task('quick', gulp.series(['clean',
                                'purseQuick',
                                'buyerQuick',
                                'sellerQuick',
+                               'encodeDecodeQuick',
                                ]));
 
 gulp.task('quick_watch', function () {
@@ -187,5 +225,6 @@ gulp.task('quick_watch', function () {
                             'purseQuick',
                             'buyerQuick',
                             'sellerQuick',
+                            'encodeDecodeQuick',
                             ]));
 });

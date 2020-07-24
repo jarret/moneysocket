@@ -8,26 +8,43 @@ file LICENSE or http://www.opensource.org/licenses/mit-license.php -->
 <head>
 <style>
     .container {
-      width: 90%;
+      width: 98%;
       margin: auto;
-      padding: 10px;
+      padding: 5px;
+    }
+    .bordered {
+        border: 2px solid blue ;
+        text-align: center;
+        box-sizing: border-box;
+        float:left;
+        padding: 5px;
+        width: 98%;
     }
     .left {
         border: 1px solid blue ;
-        width: 50%;
+        width: 48%;
         text-align: center;
         float: left;
+        padding: 5px;
     }
     .right {
         border: 1px solid blue ;
-        width: 45%;
+        width: 48%;
         text-align: center;
-        margin-left: "15pm";
         float: right;
+        padding: 5px;
+    }
+    .center {
+        border: 1px solid blue ;
+        width: 60%;
+        text-align: center;
+        float: center;
+        padding: 5px;
     }
     .balance {
         font-size: 200%;
     }
+
     div {
     }
     form {
@@ -35,11 +52,8 @@ file LICENSE or http://www.opensource.org/licenses/mit-license.php -->
 </style>
 </head>
 <body>
-    Example Moneysocket Browser Apps: <br> <br>
-    <a href="purse.html">Purse App</a> <br> <br>
-    <a href="buyer.html">Buyer App</a> <br> <br>
-    <a href="seller.html">Seller App</a> <br> <br>
-    <a href="encode-decode.html">Beacon Encoder/Decoder App</a> <br> <br>
+    <div id="ui"></div>
 </body>
 
+<script type="module" src="js/encode-decode.js"></script>
 </html>
