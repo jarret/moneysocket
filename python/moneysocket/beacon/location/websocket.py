@@ -37,7 +37,7 @@ class WebsocketLocation():
             return None, "no host tlv given"
         try:
             host = tlvs[HOST_TLV_TYPE].v.decode("utf8", errors="strict")
-        else:
+        except:
             return None, "error decoding host string"
 
         if USE_TLS_TLV_TYPE not in tlvs.keys():
@@ -59,11 +59,11 @@ class WebsocketLocation():
         encoded = Tlv(HOST_TLV_TYPE, self.host.encode("utf8")).encode()
         if not self.use_tls:
             encode += Tlv(USE_TLS_TLV_TYPE, BigSize.encode(0)).encode()
-            if self.port not DEFAULT_NO_TLS_PORT:
+            if self.port != DEFAULT_NO_TLS_PORT:
                 encoded += Tlv(PORT_TLV_TYPE,
                                BigSize.encode(self.port)).encode()
         else:
-            if self.port not DEFAULT_TLS_PORT:
+            if self.port != DEFAULT_TLS_PORT:
                 encoded += Tlv(PORT_TLV_TYPE,
                                BigSize.encode(self.port)).encode()
 

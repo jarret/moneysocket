@@ -5,7 +5,7 @@
 from moneysocket.beacon.beacon import MoneysocketBeacon
 
 from moneysocket.beacon.location.websocket import WebsocketLocation
-from moneysocket.beacon.location.webrtc import WebRrtLocation
+from moneysocket.beacon.location.webrtc import WebRtcLocation
 from moneysocket.beacon.location.bluetooth import BluetoothLocation
 from moneysocket.beacon.location.nfc import NfcLocation
 
@@ -35,7 +35,7 @@ MoneysocketBeacon.LOCATION_LIST_TLV_TYPE = TLV_TYPE_START + 6
 WebsocketLocation.WEBSOCKET_LOCATION_TLV_TYPE = TLV_TYPE_START + 8
 
 # TODO - figure out the data in the WebRTC 'signal' and how to encode it
-WebRrtLocation.WEBRTC_LOCATION_TLV_TYPE = TLV_TYPE_START + 10
+WebRtcLocation.WEBRTC_LOCATION_TLV_TYPE = TLV_TYPE_START + 10
 
 # TODO - does this even make sense for bluetooth? some sort of device ID is
 # probably needed.

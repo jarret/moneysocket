@@ -25,7 +25,7 @@ class WebRtcLocation():
             return None, "no placeholder tlv given"
         try:
             ps = tlvs[PLACEHOLDER_TLV_TYPE].v.decode("utf8", errors="strict")
-        else:
+        except:
             return None, "error decoding placeholder string"
         return WebRtcLocation(placeholder_string=ps), None
 

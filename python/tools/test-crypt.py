@@ -7,6 +7,8 @@ import json
 import sys
 import os
 
+sys.path.insert(1, os.path.realpath(os.path.pardir))
+
 #print(sys.modules)
 
 from moneysocket.core.message.request.ping import RequestPing

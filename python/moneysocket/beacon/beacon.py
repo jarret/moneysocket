@@ -9,7 +9,7 @@ from moneysocket.utl.bech32 import Bech32
 from moneysocket.beacon.shared_seed import SharedSeed
 
 from moneysocket.beacon.location.websocket import WebsocketLocation
-from moneysocket.beacon.location.webrtc import WebRrtLocation
+from moneysocket.beacon.location.webrtc import WebRtcLocation
 from moneysocket.beacon.location.bluetooth import BluetoothLocation
 from moneysocket.beacon.location.nfc import NfcLocation
 
