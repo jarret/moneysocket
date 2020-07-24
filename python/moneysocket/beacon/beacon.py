@@ -21,11 +21,17 @@ class MoneysocketBeacon():
     LOCATION_LIST_TLV_TYPE = None
 
     def __init__(self, shared_seed=None):
-        self.locations = []
         self.shared_seed = shared_seed if shared_seed else SharedSeed()
+        self.locations = []
 
     def __str__(self):
         return self.to_bech32_str()
+
+    def to_dict(self):
+        return {'shared_seed': str(self.shared_seed),
+                'locations':   [l.to_dict() for l in self.locations]}
+
+    ###########################################################################
 
     def add_location(self, location):
         self.locations.append(location)

@@ -44,4 +44,3 @@ class SharedSeed():
         aes256_key = self.derive_aes256_key()
         return self.double_sha256(aes256_key)
 
-

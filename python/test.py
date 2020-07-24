@@ -24,23 +24,6 @@ from moneysocket.core.message.request.request import MoneysocketRequest
 
 from moneysocket.beacon.shared_seed import SharedSeed
 
-#print(MoneysocketMessage.MESSAGE_SUBCLASSES)
-#print(MoneysocketNotification.NOTIFICATION_SUBCLASSES)
-#print(MoneysocketRequest.REQUEST_SUBCLASSES)
-
-#key = os.urandom(16)
-#
-#print(key)
-#
-#e = MoneysocketCrypt.encode(p, shared_seed=key)
-#
-#print(e.hex())
-#
-#d, err = MoneysocketCrypt.decode(e, shared_seed=key)
-#
-#print(err)
-#print(d)
-
 def encode_decode(msg, ss):
     e = MoneysocketCrypt.wire_encode(msg, shared_seed=ss)
     print(e.hex())
@@ -57,8 +40,6 @@ ss2 = SharedSeed.from_hex_string(sss)
 print("shared seed decoded: %s" % ss2)
 
 rid = ss2.derive_rendezvous_id()
-
-
 
 p = RequestPing()
 

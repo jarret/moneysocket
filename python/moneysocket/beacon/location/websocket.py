@@ -24,6 +24,11 @@ class WebsocketLocation():
         self.port = port if port else (DEFAULT_TLS_PORT if use_tls else
                                        DEFAULT_NO_TLS_PORT)
 
+    def to_dict(self):
+        return {'host':    self.host,
+                'port':    self.port,
+                'use_tls': self.use_tls}
+
     @staticmethod
     def from_tlv(tlv):
         assert tlv.t == WebsocketLocation.WEBSOCKET_LOCATION_TLV_TYPE
@@ -48,7 +53,7 @@ class WebsocketLocation():
         else:
             port = BigSize.pop(tlvs[PORT_TLV_TYPE].v)
 
-        return WebsocketLocation(host, port=port, use_tls=use_tls)
+        return WebsocketLocation(host, port=port, use_tls=use_tls), None
 
     def encode_tlv(self):
         encoded = Tlv(HOST_TLV_TYPE, self.host.encode("utf8")).encode()
