@@ -1,3 +1,7 @@
+// Copyright (c) 2020 Jarret Dyrbye
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php
+
 class Utils {
     static DeleteChildren(n) {
         n.innerHTML = "";
@@ -55,7 +59,7 @@ class Utils {
         var t = document.createTextNode(text);
         d.appendChild(t);
         div.appendChild(d);
-        return t;
+        return d;
     }
 
     static DrawBigText(div, text) {
@@ -64,7 +68,7 @@ class Utils {
         d.setAttribute("style", "font-size: 200%");
         d.appendChild(t);
         div.appendChild(d);
-        return t;
+        return d;
     }
 
     static DrawColoredText(div, text, color) {

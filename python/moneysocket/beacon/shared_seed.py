@@ -4,11 +4,6 @@
 
 import os
 import hashlib
-import base64
-import bitstring
-
-from moneysocket.utl.bech32 import bech32_encode
-from moneysocket.utl.bech32 import bech32_decode
 
 
 class SharedSeed():

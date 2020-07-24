@@ -2,8 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
-const Utils = require('./utils.js').Utils;
 const Crypto = require('crypto');
+
+const Utils = require('./utils.js').Utils;
+const SharedSeed = require('./moneysocket/beacon/shared_seed.js').SharedSeed;
 
 class EncodeApp {
     constructor(div) {
@@ -44,12 +46,14 @@ class EncodeApp {
 
         Utils.DrawText(this.my_div, "Host: ");
         this.host_in = Utils.DrawTextInput(this.my_div, "relay.socket.money");
+        this.host_in.setAttribute("size", "15")
 
         Utils.DrawBr(this.my_div);
         Utils.DrawBr(this.my_div);
 
         Utils.DrawText(this.my_div, "Port: ");
         this.port_in = Utils.DrawTextInput(this.my_div, "443");
+        this.port_in.setAttribute("size", "4")
 
         Utils.DrawBr(this.my_div);
         Utils.DrawBr(this.my_div);
@@ -70,7 +74,6 @@ class EncodeApp {
     }
 
     GenerateSharedSeed() {
-        console.log("new seed");
         Utils.DeleteChildren(this.shared_seed_div);
         Utils.DeleteChildren(this.shared_seed_button_div);
 
@@ -82,6 +85,10 @@ class EncodeApp {
         Utils.DrawButton(this.shared_seed_button_div,
                          "Generate New Random Seed",
                          (function() {this.GenerateSharedSeed()}).bind(this));
+
+        var sso = SharedSeed.FromHexStr(shared_seed);
+        console.log("shared seed: " + sso.ToString());
+        console.log("hash: " + sso.DeriveAes256Key());
     }
 
     SetUseTlsTrue() {
