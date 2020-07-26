@@ -30,17 +30,17 @@ class MoneysocketBeacon {
     }
 
     static FromBech32Str(beacon_str) {
-        var {hrp, bytes} = Bech32.DecodeBytes(beacon_str);
+        var [hrp, bytes] = Bech32.DecodeBytes(beacon_str);
 
         if (hrp != BEACON_HRP) {
-            return {'beacon': null, 'err': "got unexpected hrp"};
+            return [null, "got unexpected hrp"];
         }
         console.log("data: " + BinUtl.ToHexString(bytes));
 
         // TODO decode locations
 
         var beacon = new MoneysocketBeacon(new SharedSeed(bytes));
-        return {'beacon': beacon, 'err': null};
+        return [beacon, null];
     }
 }
 

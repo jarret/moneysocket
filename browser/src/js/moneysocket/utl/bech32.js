@@ -18,7 +18,7 @@ class Bech32 {
         try {
             d = bech32.decode(bech32_str, BECH32_LIMIT);
         } catch(err) {
-            return {'hrp': null, 'bytes': null};
+            return [null, null];
         }
 
         var words = d.words;
@@ -28,9 +28,9 @@ class Bech32 {
         try {
             bytes = bech32.fromWords(words);
         } catch(err) {
-            return {'hrp': null, 'bytes': null};
+            return [null, null];
         }
-        return {'hrp': hrp, 'bytes': bytes};
+        return [hrp, bytes];
 
 //        try:
  //           hrp, data = b32.decode(bech32_string)

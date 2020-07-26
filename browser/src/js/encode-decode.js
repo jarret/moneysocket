@@ -133,9 +133,9 @@ class EncodeApp {
         console.log("beacon: " + beacon_str);
         this.ta_out.value = beacon_str;
 
-        var {beacon, err} = MoneysocketBeacon.FromBech32Str(beacon_str);
+        var [b2, err] = MoneysocketBeacon.FromBech32Str(beacon_str);
 
-        console.log("beacon2: " + beacon.ToBech32Str());
+        console.log("beacon2: " + b2.ToBech32Str());
         console.log("err: " + err);
     }
 }
