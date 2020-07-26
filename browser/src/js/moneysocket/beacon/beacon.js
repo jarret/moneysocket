@@ -15,8 +15,13 @@ class MoneysocketBeacon {
         } else {
             this.shared_seed = SharedSeed();
         }
+        this.locations = [];
     }
 
+    ToDict() {
+        return {'shared_seed': BinUtl.ToHexString(this.shared_seed.GetBytes()),
+                'locations':   this.locations}
+    }
 
     EncodeTlvs() {
         // TODO encode locations

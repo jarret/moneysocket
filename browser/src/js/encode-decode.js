@@ -177,9 +177,18 @@ class DecodeApp {
     }
 
     Decode() {
+        var out_text = '';
         var text = this.ta_in.value;
         console.log("decode: " + text);
-        this.ta_out.value = text;
+
+        var [beacon, err] = MoneysocketBeacon.FromBech32Str(text);
+        if (err != null) {
+            out_text = err;
+        } else {
+            out_text = JSON.stringify(beacon.ToDict());
+        }
+
+        this.ta_out.value = out_text;
     }
 }
 
