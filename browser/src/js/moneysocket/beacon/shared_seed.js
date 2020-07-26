@@ -3,20 +3,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
 const Crypto = require('crypto');
-
-function toByteArray(hexString) {
-    var result = [];
-    for (var i = 0; i < hexString.length; i += 2) {
-        result.push(parseInt(hexString.substr(i, 2), 16));
-    }
-    return result;
-}
-
-function toHexString(byteArray) {
-    return Array.prototype.map.call(byteArray, function(byte) {
-        return ('0' + (byte & 0xFF).toString(16)).slice(-2);
-    }).join('');
-}
+const BinUtl = require('../utl/bin.js').BinUtl;
 
 const SHARED_SEED_LEN = 16;
 
@@ -33,11 +20,11 @@ class SharedSeed {
         if (hex_str.length != SHARED_SEED_LEN * 2) {
             return null;
         }
-        return new SharedSeed(toByteArray(hex_str));
+        return new SharedSeed(BinUtl.ToByteArray(hex_str));
     }
 
     ToString() {
-        return toHexString(this.seed_bytes);
+        return BinUtl.ToHexString(this.seed_bytes);
     }
 
     GetBytes() {
