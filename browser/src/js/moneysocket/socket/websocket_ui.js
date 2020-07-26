@@ -12,20 +12,20 @@ class WebsocketConnectUi {
         this.my_div = null;
         this.input = null;
         this.cb_obj = cb_obj;
-        console.assert(typeof cb_obj.Connect == 'function');
-        console.assert(typeof cb_obj.Disconnect == 'function');
+        console.assert(typeof cb_obj.connect == 'function');
+        console.assert(typeof cb_obj.disconnect == 'function');
         this.cb_param = cb_param;
     }
 
-    Draw(style) {
+    draw(style) {
         this.my_div = document.createElement("div");
-        DomUtl.DrawTitle(this.my_div, this.title, "h4");
+        DomUtl.drawTitle(this.my_div, this.title, "h4");
         this.my_div.setAttribute("class", style);
-        this.input = DomUtl.DrawTextInput(this.my_div, this.default_ws_url);
-        DomUtl.DrawBr(this.my_div);
-        this.connect_button_div = DomUtl.EmptyDiv(this.my_div);
-        this.DrawConnectButton();
-        DomUtl.DrawBr(this.my_div);
+        this.input = DomUtl.drawTextInput(this.my_div, this.default_ws_url);
+        DomUtl.drawBr(this.my_div);
+        this.connect_button_div = DomUtl.emptyDiv(this.my_div);
+        this.drawConnectButton();
+        DomUtl.drawBr(this.my_div);
 
         this.parent_div.appendChild(this.my_div);
     }
@@ -34,23 +34,23 @@ class WebsocketConnectUi {
         return this.input.value;
     }
 
-    DrawConnectButton() {
-        DomUtl.DeleteChildren(this.connect_button_div);
-        DomUtl.DrawButton(this.connect_button_div, "Connect",
-            (function() {this.cb_obj.Connect(this.cb_param)}).bind(this));
+    drawConnectButton() {
+        DomUtl.deleteChildren(this.connect_button_div);
+        DomUtl.drawButton(this.connect_button_div, "Connect",
+            (function() {this.cb_obj.connect(this.cb_param)}).bind(this));
     }
 
-    DrawConnecting() {
-        DomUtl.DeleteChildren(this.connect_button_div);
-        var connect_button = DomUtl.DrawButton(this.connect_button_div,
+    drawConnecting() {
+        DomUtl.deleteChildren(this.connect_button_div);
+        var connect_button = DomUtl.drawButton(this.connect_button_div,
                                               "Connecting", function() {});
         connect_button.disabled = true;
     }
 
-    DrawDisconnectButton() {
-        DomUtl.DeleteChildren(this.connect_button_div);
-        DomUtl.DrawButton(this.connect_button_div, "Disconnect",
-            (function() {this.cb_obj.Disconnect(this.cb_param)}).bind(this));
+    drawDisconnectButton() {
+        DomUtl.deleteChildren(this.connect_button_div);
+        DomUtl.drawButton(this.connect_button_div, "Disconnect",
+            (function() {this.cb_obj.disconnect(this.cb_param)}).bind(this));
     }
 }
 

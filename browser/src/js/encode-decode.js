@@ -26,101 +26,101 @@ class EncodeApp {
         this.ta_out = null;
     }
 
-    Draw(style) {
+    draw(style) {
         this.my_div = document.createElement("div");
         this.my_div.setAttribute("class", style);
 
-        DomUtl.DrawTitle(this.my_div, "Encode Beacon", "h1");
+        DomUtl.drawTitle(this.my_div, "Encode Beacon", "h1");
 
-        DomUtl.DrawText(this.my_div, "Shared Seed: ")
-        this.shared_seed_div = DomUtl.EmptyDiv(this.my_div);
-        this.shared_seed_button_div = DomUtl.EmptyDiv(this.my_div);
+        DomUtl.drawText(this.my_div, "Shared Seed: ")
+        this.shared_seed_div = DomUtl.emptyDiv(this.my_div);
+        this.shared_seed_button_div = DomUtl.emptyDiv(this.my_div);
 
-        this.GenerateSharedSeed();
+        this.generateSharedSeed();
 
-        DomUtl.DrawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
 
-        DomUtl.DrawText(this.my_div, "Use TLS: ");
-        this.use_tls_div = DomUtl.EmptyDiv(this.my_div);
-        this.use_tls_button_div = DomUtl.EmptyDiv(this.my_div);
+        DomUtl.drawText(this.my_div, "Use TLS: ");
+        this.use_tls_div = DomUtl.emptyDiv(this.my_div);
+        this.use_tls_button_div = DomUtl.emptyDiv(this.my_div);
 
-        this.SetUseTlsTrue();
+        this.setUseTlsTrue();
 
-        DomUtl.DrawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
 
-        DomUtl.DrawText(this.my_div, "Host: ");
-        this.host_in = DomUtl.DrawTextInput(this.my_div, "relay.socket.money");
+        DomUtl.drawText(this.my_div, "Host: ");
+        this.host_in = DomUtl.drawTextInput(this.my_div, "relay.socket.money");
         this.host_in.setAttribute("size", "15")
 
-        DomUtl.DrawBr(this.my_div);
-        DomUtl.DrawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
 
-        DomUtl.DrawText(this.my_div, "Port: ");
-        this.port_in = DomUtl.DrawTextInput(this.my_div, "443");
+        DomUtl.drawText(this.my_div, "Port: ");
+        this.port_in = DomUtl.drawTextInput(this.my_div, "443");
         this.port_in.setAttribute("size", "4")
 
-        DomUtl.DrawBr(this.my_div);
-        DomUtl.DrawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
 
-        DomUtl.DrawButton(this.my_div, "Encode",
-            (function() {this.Encode()}).bind(this)
+        DomUtl.drawButton(this.my_div, "Encode",
+            (function() {this.encode()}).bind(this)
             );
 
-        DomUtl.DrawBr(this.my_div);
-        DomUtl.DrawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
 
-        this.ta_out = DomUtl.DrawTextArea(this.my_div);
+        this.ta_out = DomUtl.drawTextArea(this.my_div);
         this.ta_out.setAttribute("readonly", "");
-        DomUtl.DrawBr(this.my_div);
-        DomUtl.DrawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
 
         this.parent_div.appendChild(this.my_div);
     }
 
-    GenerateSharedSeed() {
-        DomUtl.DeleteChildren(this.shared_seed_div);
-        DomUtl.DeleteChildren(this.shared_seed_button_div);
+    generateSharedSeed() {
+        DomUtl.deleteChildren(this.shared_seed_div);
+        DomUtl.deleteChildren(this.shared_seed_button_div);
 
 
         var shared_seed = Crypto.randomBytes(16).toString("hex");
-        this.shared_seed_in = DomUtl.DrawTextInput(this.shared_seed_div,
+        this.shared_seed_in = DomUtl.drawTextInput(this.shared_seed_div,
                                                   shared_seed);
         this.shared_seed_in.setAttribute("size", "30")
-        DomUtl.DrawButton(this.shared_seed_button_div,
+        DomUtl.drawButton(this.shared_seed_button_div,
                          "Generate New Random Seed",
-                         (function() {this.GenerateSharedSeed()}).bind(this));
+                         (function() {this.generateSharedSeed()}).bind(this));
 
-        var sso = SharedSeed.FromHexStr(shared_seed);
-        console.log("shared seed: " + sso.ToString());
-        console.log("hash: " + sso.DeriveAes256Key());
-        console.log("rdv id: " + sso.DeriveRendezvousId());
-        console.log("bytes: " + sso.GetBytes());
+        var sso = SharedSeed.fromHexStr(shared_seed);
+        console.log("shared seed: " + sso.toString());
+        console.log("hash: " + sso.deriveAes256Key());
+        console.log("rdv id: " + sso.deriveRendezvousId());
+        console.log("bytes: " + sso.getBytes());
     }
 
-    SetUseTlsTrue() {
-        DomUtl.DeleteChildren(this.use_tls_div);
-        DomUtl.DeleteChildren(this.use_tls_button_div);
+    setUseTlsTrue() {
+        DomUtl.deleteChildren(this.use_tls_div);
+        DomUtl.deleteChildren(this.use_tls_button_div);
 
         this.use_tls = true;
-        DomUtl.DrawBigText(this.use_tls_div, "True");
-        DomUtl.DrawButton(this.use_tls_button_div, "Set False",
-                         (function() {this.SetUseTlsFalse()}).bind(this));
+        DomUtl.drawBigText(this.use_tls_div, "True");
+        DomUtl.drawButton(this.use_tls_button_div, "Set False",
+                         (function() {this.setUseTlsFalse()}).bind(this));
     }
 
-    SetUseTlsFalse() {
-        DomUtl.DeleteChildren(this.use_tls_div);
-        DomUtl.DeleteChildren(this.use_tls_button_div);
+    setUseTlsFalse() {
+        DomUtl.deleteChildren(this.use_tls_div);
+        DomUtl.deleteChildren(this.use_tls_button_div);
 
         this.use_tls = false;
-        DomUtl.DrawBigText(this.use_tls_div, "False");
-        DomUtl.DrawButton(this.use_tls_button_div, "Set True",
-                         (function() {this.SetUseTlsTrue()}).bind(this));
+        DomUtl.drawBigText(this.use_tls_div, "False");
+        DomUtl.drawButton(this.use_tls_button_div, "Set True",
+                         (function() {this.setUseTlsTrue()}).bind(this));
     }
 
-    Encode() {
+    encode() {
         var shared_seed_str = this.shared_seed_in.value;
 
-        var shared_seed = new SharedSeed(BinUtl.ToByteArray(shared_seed_str));
+        var shared_seed = new SharedSeed(BinUtl.toByteArray(shared_seed_str));
         var host = this.host_in.value;
         var port = this.port_in.value;
         console.log("shared_seed: " + shared_seed);
@@ -129,13 +129,13 @@ class EncodeApp {
         console.log("port: " + port);
 
         var b = new MoneysocketBeacon(shared_seed);
-        var beacon_str = b.ToBech32Str();
+        var beacon_str = b.toBech32Str();
         console.log("beacon: " + beacon_str);
         this.ta_out.value = beacon_str;
 
-        var [b2, err] = MoneysocketBeacon.FromBech32Str(beacon_str);
+        var [b2, err] = MoneysocketBeacon.fromBech32Str(beacon_str);
 
-        console.log("beacon2: " + b2.ToBech32Str());
+        console.log("beacon2: " + b2.toBech32Str());
         console.log("err: " + err);
     }
 }
@@ -150,42 +150,42 @@ class DecodeApp {
         this.ta_out = null;
     }
 
-    Draw(style) {
+    draw(style) {
         this.my_div = document.createElement("div");
         this.my_div.setAttribute("class", style);
 
-        DomUtl.DrawTitle(this.my_div, "Decode Beacon", "h1");
+        DomUtl.drawTitle(this.my_div, "Decode Beacon", "h1");
 
-        this.ta_in = DomUtl.DrawTextArea(this.my_div);
+        this.ta_in = DomUtl.drawTextArea(this.my_div);
 
-        DomUtl.DrawBr(this.my_div);
-        DomUtl.DrawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
 
-        DomUtl.DrawButton(this.my_div, "Decode",
-            (function() {this.Decode()}).bind(this)
+        DomUtl.drawButton(this.my_div, "Decode",
+            (function() {this.decode()}).bind(this)
             );
 
-        DomUtl.DrawBr(this.my_div);
-        DomUtl.DrawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
 
-        this.ta_out = DomUtl.DrawTextArea(this.my_div);
+        this.ta_out = DomUtl.drawTextArea(this.my_div);
         this.ta_out.setAttribute("readonly", "");
-        DomUtl.DrawBr(this.my_div);
-        DomUtl.DrawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
 
         this.parent_div.appendChild(this.my_div);
     }
 
-    Decode() {
+    decode() {
         var out_text = '';
         var text = this.ta_in.value;
         console.log("decode: " + text);
 
-        var [beacon, err] = MoneysocketBeacon.FromBech32Str(text);
+        var [beacon, err] = MoneysocketBeacon.fromBech32Str(text);
         if (err != null) {
             out_text = err;
         } else {
-            out_text = JSON.stringify(beacon.ToDict());
+            out_text = JSON.stringify(beacon.toDict());
         }
 
         this.ta_out.value = out_text;
@@ -203,17 +203,17 @@ class EncodeDecodeApp {
     }
 
 
-    Draw() {
+    draw() {
         this.my_div = document.createElement("div");
         this.my_div.setAttribute("class", "bordered");
 
         this.ea = new EncodeApp(this.my_div);
-        this.ea.Draw("center");
-        DomUtl.DrawBr(this.my_div);
+        this.ea.draw("center");
+        DomUtl.drawBr(this.my_div);
         this.da = new DecodeApp(this.my_div);
-        this.da.Draw("center");
+        this.da.draw("center");
 
-        DomUtl.DrawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
         this.parent_div.appendChild(this.my_div);
     }
 }
@@ -222,8 +222,8 @@ class EncodeDecodeApp {
 
 window.app = new EncodeDecodeApp();
 
-function DrawFirstUi() {
-    window.app.Draw()
+function drawFirstUi() {
+    window.app.draw()
 }
 
-window.addEventListener("load", DrawFirstUi());
+window.addEventListener("load", drawFirstUi());

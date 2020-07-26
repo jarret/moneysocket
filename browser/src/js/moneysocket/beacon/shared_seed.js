@@ -16,39 +16,39 @@ class SharedSeed {
         }
     }
 
-    static FromHexStr(hex_str) {
+    static fromHexStr(hex_str) {
         if (hex_str.length != SHARED_SEED_LEN * 2) {
             return null;
         }
-        return new SharedSeed(BinUtl.ToByteArray(hex_str));
+        return new SharedSeed(BinUtl.toByteArray(hex_str));
     }
 
-    ToString() {
-        return BinUtl.ToHexString(this.seed_bytes);
+    toString() {
+        return BinUtl.toHexString(this.seed_bytes);
     }
 
-    GetBytes() {
+    getBytes() {
         return this.seed_bytes;
     }
 
-    Sha256(input_bytes) {
+    sha256(input_bytes) {
         const hash = Crypto.createHash('sha256');
 
         hash.update(input_bytes);
         return hash.digest();
     }
 
-    DoubleSha256(input_bytes) {
-        return this.Sha256(this.Sha256(input_bytes));
+    doubleSha256(input_bytes) {
+        return this.sha256(this.sha256(input_bytes));
     }
 
-    DeriveAes256Key() {
-        return this.DoubleSha256(this.seed_bytes);
+    deriveAes256Key() {
+        return this.doubleSha256(this.seed_bytes);
     }
 
-    DeriveRendezvousId() {
-        var aes256_key = this.DeriveAes256Key();
-        return this.DoubleSha256(aes256_key);
+    deriveRendezvousId() {
+        var aes256_key = this.deriveAes256Key();
+        return this.doubleSha256(aes256_key);
     }
 }
 

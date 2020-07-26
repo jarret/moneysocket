@@ -8,21 +8,20 @@ const MoneysocketInterconnect = require('./socket.js').MoneysocketInterconnect;
 
 
 class WebsocketInterconnect extends MoneysocketInterconnect {
-
     constructor(cb_obj) {
         super(cb_obj);
         this.outgoing = new Array();
     }
 
-    Connect(connect_ws_url, cb_param) {
+    connect(connect_ws_url, cb_param) {
         var o = new OutgoingWebsocketInterconnect(this.cb_obj);
         this.outgoing.push(o);
-        o.Connect(connect_ws_url, cb_param);
+        o.connect(connect_ws_url, cb_param);
     }
 
-    InitiateClose() {
+    initiateClose() {
         for (var i = 0; i < this.outgoing.length; i++) {
-            this.outgoing[i].InitiateClose();
+            this.outgoing[i].initiateClose();
             // TODO - remove from dict
         }
     }
@@ -30,7 +29,7 @@ class WebsocketInterconnect extends MoneysocketInterconnect {
 
 
 class OutgoingWebsocketInterconnect extends MoneysocketInterconnect {
-    Connect(connect_ws_url, cb_param) {
+    connect(connect_ws_url, cb_param) {
         var ws = new OutgoingSocket(connect_ws_url, this, cb_param);
         // TODO - handle failure.
     }
@@ -46,44 +45,44 @@ class OutgoingSocket {
         this.cb_param = cb_param;
 
         this.websocket.onmessage = (function(event) {
-            this.HandleMessage(event);
+            this.handleMessage(event);
         }).bind(this);
 
         this.websocket.onopen = (function(event) {
-            this.HandleOpen(event);
+            this.handleOpen(event);
         }).bind(this);
 
         this.websocket.onclose = (function(event) {
-            this.HandleClose(event);
+            this.handleClose(event);
         }).bind(this);
 
         this.ms = new MoneysocketSocket(this);
         this.interconnect = interconnect;
     }
 
-    InitiateClose() {
+    initiateClose() {
         this.websocket.close();
         // TODO - handle close
-        this.interconnect.SocketClose(this.ms);
+        this.interconnect.socketClose(this.ms);
     }
 
-    InitiateSend(msg_dict) {
+    initiateSend(msg_dict) {
         this.websocket.send(JSON.stringify(msg_dict));
     }
 
-    HandleOpen(event) {
+    handleOpen(event) {
         console.log("websocket open: " + event);
-        this.interconnect.NewSocket(this.ms, this.cb_param);
+        this.interconnect.newSocket(this.ms, this.cb_param);
     }
 
-    HandleMessage(event) {
+    handleMessage(event) {
         console.log("ws recv: " + event.data);
         // TODO - binary message?
         // TODO - unparsable?
-        this.ms.MsgRecv(JSON.parse(event.data));
+        this.ms.msgRecv(JSON.parse(event.data));
     }
 
-    HandleClose(event) {
+    handleClose(event) {
         console.log("closed");
         console.log("event: " + event);
         console.log("event.code: " + event.code);
@@ -93,7 +92,7 @@ class OutgoingSocket {
         console.log("ms: " + this.ms);
         if (this.interconnect != null) {
             console.log("close cb sent");
-            this.interconnect.SocketClose(this.ms, this.cb_param);
+            this.interconnect.socketClose(this.ms, this.cb_param);
         }
     }
 }

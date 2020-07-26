@@ -18,29 +18,29 @@ class MoneysocketBeacon {
         this.locations = [];
     }
 
-    ToDict() {
-        return {'shared_seed': BinUtl.ToHexString(this.shared_seed.GetBytes()),
+    toDict() {
+        return {'shared_seed': BinUtl.toHexString(this.shared_seed.getBytes()),
                 'locations':   this.locations}
     }
 
-    EncodeTlvs() {
+    encodeTlvs() {
         // TODO encode locations
-        return this.shared_seed.GetBytes();
+        return this.shared_seed.getBytes();
     }
 
 
-    ToBech32Str() {
-        var encoded_bytes = this.EncodeTlvs();
-        return Bech32.EncodeBytes(encoded_bytes, BEACON_HRP);
+    toBech32Str() {
+        var encoded_bytes = this.encodeTlvs();
+        return Bech32.encodeBytes(encoded_bytes, BEACON_HRP);
     }
 
-    static FromBech32Str(beacon_str) {
-        var [hrp, bytes] = Bech32.DecodeBytes(beacon_str);
+    static fromBech32Str(beacon_str) {
+        var [hrp, bytes] = Bech32.decodeBytes(beacon_str);
 
         if (hrp != BEACON_HRP) {
             return [null, "got unexpected hrp"];
         }
-        console.log("data: " + BinUtl.ToHexString(bytes));
+        console.log("data: " + BinUtl.toHexString(bytes));
 
         // TODO decode locations
 

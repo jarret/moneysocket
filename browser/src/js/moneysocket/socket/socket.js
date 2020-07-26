@@ -8,60 +8,60 @@ class MoneysocketSocket {
     constructor(initiate_cb_obj) {
         this.uuid = Uuid.uuidv4();
         this.msg_recv_cb = null;
-        console.assert(typeof initiate_cb_obj.InitiateClose == 'function');
-        console.assert(typeof initiate_cb_obj.InitiateSend == 'function');
+        console.assert(typeof initiate_cb_obj.initiateClose == 'function');
+        console.assert(typeof initiate_cb_obj.initiateSend == 'function');
         this.initiate_cb_obj = initiate_cb_obj;
     }
 
-    ToString() {
+    toString() {
         return "<socket uuid=" + this.uuid + ">";
     }
 
     //////////////////////////////////////////////////////////////////////////
 
-    RegisterRecvCb(cb) {
+    registerRecvCb(cb) {
         this.msg_recv_cb = cb;
     }
 
     //////////////////////////////////////////////////////////////////////////
 
-    MsgRecv(msg_dict) {
+    msgRecv(msg_dict) {
         this.msg_recv_cb(msg_dict);
     }
 
-    Close() {
-        this.initiate_cb_obj.InitiateClose();
+    close() {
+        this.initiate_cb_obj.initiateClose();
     }
 
-    Send(msg_dict) {
-        this.initiate_cb_obj.InitiateSend(msg_dict);
+    send(msg_dict) {
+        this.initiate_cb_obj.initiateSend(msg_dict);
     }
 }
 
 class MoneysocketInterconnect {
     constructor(cb_obj) {
-        console.assert(typeof cb_obj.NewSocket == 'function');
-        console.assert(typeof cb_obj.SocketClose == 'function');
+        console.assert(typeof cb_obj.newSocket == 'function');
+        console.assert(typeof cb_obj.socketClose == 'function');
         this.cb_obj = cb_obj;
         this.sockets = {};
     }
 
-    Close() {
+    close() {
         for (var uuid in this.sockets) {
             this.sockets[uuid].close();
         }
     }
 
-    NewSocket(socket, cb_param) {
+    newSocket(socket, cb_param) {
         this.sockets[socket.uuid] = socket
-        this.cb_obj.NewSocket(socket, cb_param);
+        this.cb_obj.newSocket(socket, cb_param);
     }
 
-    SocketClose(socket, cb_param) {
+    socketClose(socket, cb_param) {
         if (socket.uuid in this.sockets) {
             delete this.sockets[socket.uuid];
         }
-        this.cb_obj.SocketClose(socket, cb_param);
+        this.cb_obj.socketClose(socket, cb_param);
     }
 }
 

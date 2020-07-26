@@ -3,17 +3,17 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
 class DomUtl {
-    static DeleteChildren(n) {
+    static deleteChildren(n) {
         n.innerHTML = "";
     }
 
-    static DrawBr(div) {
+    static drawBr(div) {
         var br = document.createElement("br");
         div.appendChild(br);
         return br;
     }
 
-    static DrawNote(div, msg) {
+    static drawNote(div, msg) {
         var h = document.createElement("h3");
         var t = document.createTextNode(msg);
         h.appendChild(t);
@@ -21,7 +21,7 @@ class DomUtl {
         return h;
     }
 
-    static DrawButton(div, label, func) {
+    static drawButton(div, label, func) {
         var b = document.createElement("button");
         var t = document.createTextNode(label);
         b.appendChild(t);
@@ -30,7 +30,7 @@ class DomUtl {
         return b;
     }
 
-    static DrawTitle(div, titleText, size) {
+    static drawTitle(div, titleText, size) {
         var t = document.createElement(size);
         var title = document.createTextNode(titleText);
         t.appendChild(title);
@@ -38,7 +38,7 @@ class DomUtl {
         return t;
     }
 
-    static DrawTextInput(div, defaultText) {
+    static drawTextInput(div, defaultText) {
         var input = document.createElement("input");
         input.setAttribute("type", "text");
         input.setAttribute("size", "20");
@@ -47,14 +47,14 @@ class DomUtl {
         return input;
     }
 
-    static DrawTextArea(div) {
+    static drawTextArea(div) {
         var ta = document.createElement("textarea");
         ta.setAttribute("class", "nice");
         div.appendChild(ta);
         return ta;
     }
 
-    static DrawText(div, text) {
+    static drawText(div, text) {
         var d = document.createElement("div");
         var t = document.createTextNode(text);
         d.appendChild(t);
@@ -62,7 +62,7 @@ class DomUtl {
         return d;
     }
 
-    static DrawBigText(div, text) {
+    static drawBigText(div, text) {
         var d = document.createElement("div");
         var t = document.createTextNode(text);
         d.setAttribute("style", "font-size: 200%");
@@ -71,7 +71,7 @@ class DomUtl {
         return d;
     }
 
-    static DrawColoredText(div, text, color) {
+    static drawColoredText(div, text, color) {
         var d = document.createElement("div");
         d.style.color = color;
         var t = document.createTextNode(text);
@@ -80,7 +80,7 @@ class DomUtl {
         return d;
     }
 
-    static DrawBigBalance(div, msats) {
+    static drawBigBalance(div, msats) {
         var d = document.createElement("div");
         d.setAttribute("class", "balance");
         var s = (msats / 1000.0).toFixed(3) + " sats";
@@ -90,26 +90,26 @@ class DomUtl {
         return d;
     }
 
-    static BalanceFmt(msats) {
+    static balanceFmt(msats) {
         return (msats / 1000.0).toFixed(3) + " sats";
     }
 
-    static DrawBalance(div, msats) {
+    static brawBalance(div, msats) {
         var d = document.createElement("div");
-        var s = DomUtl.BalanceFmt(msats);
+        var s = DomUtl.balanceFmt(msats);
         var t = document.createTextNode(s);
         d.appendChild(t);
         div.appendChild(d);
         return d;
     }
 
-    static EmptyDiv(div) {
+    static emptyDiv(div) {
         var d = document.createElement("div");
         div.appendChild(d);
         return d;
     }
 
-    static EmptySection(div) {
+    static emptySection(div) {
         var s = document.createElement("section");
         div.appendChild(s);
         return s;

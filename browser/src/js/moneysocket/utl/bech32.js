@@ -7,13 +7,13 @@ const bech32 = require('bech32');
 const BECH32_LIMIT = 20000;
 
 class Bech32 {
-    static EncodeBytes(bytes, hrp) {
+    static encodeBytes(bytes, hrp) {
         var words = bech32.toWords(bytes);
         console.log(words);
         return bech32.encode(hrp, words, BECH32_LIMIT);
     }
 
-    static DecodeBytes(bech32_str) {
+    static decodeBytes(bech32_str) {
         var d;
         try {
             d = bech32.decode(bech32_str, BECH32_LIMIT);
@@ -31,17 +31,6 @@ class Bech32 {
             return [null, null];
         }
         return [hrp, bytes];
-
-//        try:
- //           hrp, data = b32.decode(bech32_string)
-  //      except:
-   //         return None, None
-    //    if not hrp:
-   //         return None, None
-   //     deconverted = convertbits(data, 5, 8, False)
-  //      assert deconverted
-  //      decoded = bytes(deconverted)
-  //      return hrp, decoded
     }
 }
 
