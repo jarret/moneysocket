@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
-const Utl = require('../utl/utl.js').Utl;
+const Uuid = require('../utl/uuid.js').Uuid;
 
 class MoneysocketSocket {
     constructor(initiate_cb_obj) {
-        this.uuid = Utl.uuidv4();
+        this.uuid = Uuid.uuidv4();
         this.msg_recv_cb = null;
         console.assert(typeof initiate_cb_obj.InitiateClose == 'function');
         console.assert(typeof initiate_cb_obj.InitiateSend == 'function');

@@ -6,7 +6,8 @@ const Crypto = require('crypto');
 
 const DomUtl = require('./domutl.js').DomUtl;
 const SharedSeed = require('./moneysocket/beacon/shared_seed.js').SharedSeed;
-
+const BinUtl = require('./moneysocket/utl/bin.js').BinUtl;
+const MoneysocketBeacon = require('./moneysocket/beacon/beacon.js').MoneysocketBeacon;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -117,13 +118,25 @@ class EncodeApp {
     }
 
     Encode() {
-        var shared_seed = this.shared_seed_in.value;
+        var shared_seed_str = this.shared_seed_in.value;
+
+        var shared_seed = new SharedSeed(BinUtl.ToByteArray(shared_seed_str));
         var host = this.host_in.value;
         var port = this.port_in.value;
         console.log("shared_seed: " + shared_seed);
         console.log("use_tls: " + this.use_tls);
         console.log("host: " + host);
         console.log("port: " + port);
+
+        var b = new MoneysocketBeacon(shared_seed);
+        var beacon_str = b.ToBech32Str();
+        console.log("beacon: " + beacon_str);
+        this.ta_out.value = beacon_str;
+
+        var {beacon, err} = MoneysocketBeacon.FromBech32Str(beacon_str);
+
+        console.log("beacon2: " + beacon.ToBech32Str());
+        console.log("err: " + err);
     }
 }
 
