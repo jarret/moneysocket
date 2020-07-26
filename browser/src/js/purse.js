@@ -3,7 +3,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
 const Connection = require("./connection.js").Connection;
-const Utils = require('./utils.js').Utils;
+const DomUtl = require('./domutl.js').DomUtl;
 const WebsocketInterconnect = require('./moneysocket/socket/websocket.js').WebsocketInterconnect;
 const WebsocketConnectUi = require('./moneysocket/socket/websocket_ui.js').WebsocketConnectUi;
 
@@ -21,76 +21,76 @@ class PurseStatusUi {
         this.my_div = document.createElement("div");
         this.my_div.setAttribute("class", style);
 
-        this.spendable_div = Utils.EmptyDiv(this.my_div);
-        Utils.DrawBigBalance(this.spendable_div, 0.0);
-        Utils.DrawBr(this.my_div);
+        this.spendable_div = DomUtl.EmptyDiv(this.my_div);
+        DomUtl.DrawBigBalance(this.spendable_div, 0.0);
+        DomUtl.DrawBr(this.my_div);
 
-        this.wallet_role_div = Utils.EmptyDiv(this.my_div);
-        Utils.DrawText(this.wallet_role_div, "Wallet Role: ");
-        Utils.DrawColoredText(this.wallet_role_div, "Not Connected", "red");
+        this.wallet_role_div = DomUtl.EmptyDiv(this.my_div);
+        DomUtl.DrawText(this.wallet_role_div, "Wallet Role: ");
+        DomUtl.DrawColoredText(this.wallet_role_div, "Not Connected", "red");
 
-        Utils.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
 
-        this.service_role_div = Utils.EmptyDiv(this.my_div);
-        Utils.DrawText(this.service_role_div, "Service Role: ");
-        Utils.DrawColoredText(this.service_role_div, "Not Connected", "red");
+        this.service_role_div = DomUtl.EmptyDiv(this.my_div);
+        DomUtl.DrawText(this.service_role_div, "Service Role: ");
+        DomUtl.DrawColoredText(this.service_role_div, "Not Connected", "red");
 
-        Utils.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
 
-        this.wallet_counterpart_div = Utils.EmptyDiv(this.my_div);
-        Utils.DrawText(this.wallet_counterpart_div,
+        this.wallet_counterpart_div = DomUtl.EmptyDiv(this.my_div);
+        DomUtl.DrawText(this.wallet_counterpart_div,
                       "Wallet Counterpart Balance: N/A");
 
-        Utils.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
 
         this.parent_div.appendChild(this.my_div);
     }
 
     UpdateSpendable(new_spendable) {
-        Utils.DeleteChildren(this.spendable_div)
-        Utils.DrawBigBalance(this.spendable_div, 0.0);
+        DomUtl.DeleteChildren(this.spendable_div)
+        DomUtl.DrawBigBalance(this.spendable_div, 0.0);
     }
 
     UpdateWalletRoleConnected() {
-        Utils.DeleteChildren(this.wallet_role_div)
-        Utils.DrawText(this.wallet_role_div, "Wallet Role: ");
-        Utils.DrawColoredText(this.wallet_role_div, "Connected", "green");
+        DomUtl.DeleteChildren(this.wallet_role_div)
+        DomUtl.DrawText(this.wallet_role_div, "Wallet Role: ");
+        DomUtl.DrawColoredText(this.wallet_role_div, "Connected", "green");
     }
 
     UpdateWalletRoleConnecting() {
-        Utils.DeleteChildren(this.wallet_role_div)
-        Utils.DrawText(this.wallet_role_div, "Wallet Role: ");
-        Utils.DrawColoredText(this.wallet_role_div, "Connecting", "orange");
+        DomUtl.DeleteChildren(this.wallet_role_div)
+        DomUtl.DrawText(this.wallet_role_div, "Wallet Role: ");
+        DomUtl.DrawColoredText(this.wallet_role_div, "Connecting", "orange");
     }
 
     UpdateWalletRoleDisconnected() {
-        Utils.DeleteChildren(this.wallet_role_div)
-        Utils.DrawText(this.wallet_role_div, "Wallet Role: ");
-        Utils.DrawColoredText(this.wallet_role_div, "Not Connected", "red");
+        DomUtl.DeleteChildren(this.wallet_role_div)
+        DomUtl.DrawText(this.wallet_role_div, "Wallet Role: ");
+        DomUtl.DrawColoredText(this.wallet_role_div, "Not Connected", "red");
     }
 
     UpdateServiceRoleConnected() {
-        Utils.DeleteChildren(this.service_role_div)
-        Utils.DrawText(this.service_role_div, "Service Role: ");
-        Utils.DrawColoredText(this.service_role_div, "Connected", "green");
+        DomUtl.DeleteChildren(this.service_role_div)
+        DomUtl.DrawText(this.service_role_div, "Service Role: ");
+        DomUtl.DrawColoredText(this.service_role_div, "Connected", "green");
     }
 
     UpdateServiceRoleConnecting() {
-        Utils.DeleteChildren(this.service_role_div)
-        Utils.DrawText(this.service_role_div, "Service Role: ");
-        Utils.DrawColoredText(this.service_role_div, "Connecting", "orange");
+        DomUtl.DeleteChildren(this.service_role_div)
+        DomUtl.DrawText(this.service_role_div, "Service Role: ");
+        DomUtl.DrawColoredText(this.service_role_div, "Connecting", "orange");
     }
 
     UpdateServiceRoleDisconnected() {
-        Utils.DeleteChildren(this.service_role_div)
-        Utils.DrawText(this.service_role_div, "Service Role: ");
-        Utils.DrawColoredText(this.service_role_div, "Not Connected", "red");
+        DomUtl.DeleteChildren(this.service_role_div)
+        DomUtl.DrawText(this.service_role_div, "Service Role: ");
+        DomUtl.DrawColoredText(this.service_role_div, "Not Connected", "red");
     }
 
     UpdateWalletCounterpartBalance(msats) {
-        Utils.DeleteChildren(this.wallet_counterpart_div)
-        Utils.DrawText(this.wallet_counterpart_div,
-                      "Wallet Counterpart Balance: " + Utils.BalanceFmt(msats));
+        DomUtl.DeleteChildren(this.wallet_counterpart_div)
+        DomUtl.DrawText(this.wallet_counterpart_div,
+                      "Wallet Counterpart Balance: " + DomUtl.BalanceFmt(msats));
     }
 
 }
@@ -116,12 +116,12 @@ class PurseApp {
     DrawPurseUi() {
         this.my_div = document.createElement("div");
         this.my_div.setAttribute("class", "bordered");
-        Utils.DrawTitle(this.my_div, "Purse App", "h1");
+        DomUtl.DrawTitle(this.my_div, "Purse App", "h1");
 
         this.psu = new PurseStatusUi(this.my_div);
         this.psu.Draw("center");
 
-        Utils.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
         this.wcu = new WebsocketConnectUi(this.my_div,
                                           "WALLET Connect to External SERVICE",
                                           this.default_wallet_ws_url, this,
@@ -133,8 +133,8 @@ class PurseApp {
                                           this.default_service_ws_url, this,
                                           "service");
         this.scu.Draw("right");
-        Utils.DrawBr(this.my_div);
-        Utils.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
 
         this.parent_div.appendChild(this.my_div);
     }

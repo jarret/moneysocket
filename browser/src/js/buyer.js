@@ -3,7 +3,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
 const Connection = require("./connection.js").Connection;
-const Utils = require('./utils.js').Utils;
+const DomUtl = require('./domutl.js').DomUtl;
 const WebsocketInterconnect = require('./moneysocket/socket/websocket.js').WebsocketInterconnect;
 const WebsocketConnectUi = require('./moneysocket/socket/websocket_ui.js').WebsocketConnectUi;
 
@@ -21,32 +21,32 @@ class BuyerUi {
         this.my_div = document.createElement("div");
         this.my_div.setAttribute("class", style);
 
-        this.opinion_div = Utils.EmptyDiv(this.my_div);
+        this.opinion_div = DomUtl.EmptyDiv(this.my_div);
         this.UpdateCurrentOpinion(this.opinion);
 
-        Utils.DrawBr(this.my_div);
-        Utils.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
 
-        Utils.DrawButton(this.my_div, "Start",
+        DomUtl.DrawButton(this.my_div, "Start",
             (function() {this.StartBuying()}).bind(this));
-        Utils.DrawBr(this.my_div);
-        Utils.DrawButton(this.my_div, "Stop",
+        DomUtl.DrawBr(this.my_div);
+        DomUtl.DrawButton(this.my_div, "Stop",
             (function() {this.StopBuying()}).bind(this));
 
-        Utils.DrawBr(this.my_div);
-        Utils.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
 
-        this.seller_service_role_div = Utils.EmptyDiv(this.my_div);
-        Utils.DrawText(this.seller_service_role_div, "Seller Service Role: ");
-        Utils.DrawColoredText(this.seller_service_role_div, "Not Connected", "red");
+        this.seller_service_role_div = DomUtl.EmptyDiv(this.my_div);
+        DomUtl.DrawText(this.seller_service_role_div, "Seller Service Role: ");
+        DomUtl.DrawColoredText(this.seller_service_role_div, "Not Connected", "red");
 
-        Utils.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
 
-        this.my_service_role_div = Utils.EmptyDiv(this.my_div);
-        Utils.DrawText(this.my_service_role_div, "My Service Role: ");
-        Utils.DrawColoredText(this.my_service_role_div, "Not Connected", "red");
+        this.my_service_role_div = DomUtl.EmptyDiv(this.my_div);
+        DomUtl.DrawText(this.my_service_role_div, "My Service Role: ");
+        DomUtl.DrawColoredText(this.my_service_role_div, "Not Connected", "red");
 
-        Utils.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
 
         this.parent_div.appendChild(this.my_div);
     }
@@ -61,46 +61,46 @@ class BuyerUi {
 
     UpdateCurrentOpinion(opinion) {
         this.opinion = opinion
-        Utils.DeleteChildren(this.opinion_div)
-        Utils.DrawText(this.opinion_div, "Purchased Opinion: ");
-        Utils.DrawBr(this.opinion_div);
-        Utils.DrawBigText(this.opinion_div, opinion);
+        DomUtl.DeleteChildren(this.opinion_div)
+        DomUtl.DrawText(this.opinion_div, "Purchased Opinion: ");
+        DomUtl.DrawBr(this.opinion_div);
+        DomUtl.DrawBigText(this.opinion_div, opinion);
     }
 
     UpdateMyServiceRoleConnected() {
-        Utils.DeleteChildren(this.my_service_role_div)
-        Utils.DrawText(this.my_service_role_div, "My Service Role: ");
-        Utils.DrawColoredText(this.my_service_role_div, "Connected", "green");
+        DomUtl.DeleteChildren(this.my_service_role_div)
+        DomUtl.DrawText(this.my_service_role_div, "My Service Role: ");
+        DomUtl.DrawColoredText(this.my_service_role_div, "Connected", "green");
     }
 
     UpdateMyServiceRoleConnecting() {
-        Utils.DeleteChildren(this.my_service_role_div)
-        Utils.DrawText(this.my_service_role_div, "My Service Role: ");
-        Utils.DrawColoredText(this.my_service_role_div, "Connecting", "orange");
+        DomUtl.DeleteChildren(this.my_service_role_div)
+        DomUtl.DrawText(this.my_service_role_div, "My Service Role: ");
+        DomUtl.DrawColoredText(this.my_service_role_div, "Connecting", "orange");
     }
 
     UpdateMyServiceRoleDisconnected() {
-        Utils.DeleteChildren(this.my_service_role_div)
-        Utils.DrawText(this.my_service_role_div, "My Service Role: ");
-        Utils.DrawColoredText(this.my_service_role_div, "Not Connected", "red");
+        DomUtl.DeleteChildren(this.my_service_role_div)
+        DomUtl.DrawText(this.my_service_role_div, "My Service Role: ");
+        DomUtl.DrawColoredText(this.my_service_role_div, "Not Connected", "red");
     }
 
     UpdateSellerServiceRoleConnected() {
-        Utils.DeleteChildren(this.seller_service_role_div)
-        Utils.DrawText(this.seller_service_role_div, "Seller Service Role: ");
-        Utils.DrawColoredText(this.seller_service_role_div, "Connected", "green");
+        DomUtl.DeleteChildren(this.seller_service_role_div)
+        DomUtl.DrawText(this.seller_service_role_div, "Seller Service Role: ");
+        DomUtl.DrawColoredText(this.seller_service_role_div, "Connected", "green");
     }
 
     UpdateSellerServiceRoleConnecting() {
-        Utils.DeleteChildren(this.seller_service_role_div)
-        Utils.DrawText(this.seller_service_role_div, "Seller Service Role: ");
-        Utils.DrawColoredText(this.seller_service_role_div, "Connecting", "orange");
+        DomUtl.DeleteChildren(this.seller_service_role_div)
+        DomUtl.DrawText(this.seller_service_role_div, "Seller Service Role: ");
+        DomUtl.DrawColoredText(this.seller_service_role_div, "Connecting", "orange");
     }
 
     UpdateSellerServiceRoleDisconnected() {
-        Utils.DeleteChildren(this.seller_service_role_div)
-        Utils.DrawText(this.seller_service_role_div, "Seller Service Role: ");
-        Utils.DrawColoredText(this.seller_service_role_div, "Not Connected", "red");
+        DomUtl.DeleteChildren(this.seller_service_role_div)
+        DomUtl.DrawText(this.seller_service_role_div, "Seller Service Role: ");
+        DomUtl.DrawColoredText(this.seller_service_role_div, "Not Connected", "red");
     }
 }
 
@@ -125,11 +125,11 @@ class BuyerApp {
     DrawBuyerUi() {
         this.my_div = document.createElement("div");
         this.my_div.setAttribute("class", "bordered");
-        Utils.DrawTitle(this.my_div, "Opinion Buyer App", "h1");
+        DomUtl.DrawTitle(this.my_div, "Opinion Buyer App", "h1");
 
         this.psu = new BuyerUi(this.my_div);
         this.psu.Draw("center");
-        Utils.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
 
         this.sscu = new WebsocketConnectUi(this.my_div,
                                            "SERVICE Connect to Seller WALLET",
@@ -142,9 +142,9 @@ class BuyerApp {
                                            this.default_my_service_ws_url, this,
                                            "my_service");
         this.mscu.Draw("right");
-        Utils.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
 
-        Utils.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
 
         this.parent_div.appendChild(this.my_div);
     }

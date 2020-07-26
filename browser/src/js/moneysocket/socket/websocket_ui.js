@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
-const Utils = require('../../utils.js').Utils;
+const DomUtl = require('../../domutl.js').DomUtl;
 
 class WebsocketConnectUi {
     constructor(div, title, default_ws_url, cb_obj, cb_param) {
@@ -19,13 +19,13 @@ class WebsocketConnectUi {
 
     Draw(style) {
         this.my_div = document.createElement("div");
-        Utils.DrawTitle(this.my_div, this.title, "h4");
+        DomUtl.DrawTitle(this.my_div, this.title, "h4");
         this.my_div.setAttribute("class", style);
-        this.input = Utils.DrawTextInput(this.my_div, this.default_ws_url);
-        Utils.DrawBr(this.my_div);
-        this.connect_button_div = Utils.EmptyDiv(this.my_div);
+        this.input = DomUtl.DrawTextInput(this.my_div, this.default_ws_url);
+        DomUtl.DrawBr(this.my_div);
+        this.connect_button_div = DomUtl.EmptyDiv(this.my_div);
         this.DrawConnectButton();
-        Utils.DrawBr(this.my_div);
+        DomUtl.DrawBr(this.my_div);
 
         this.parent_div.appendChild(this.my_div);
     }
@@ -35,21 +35,21 @@ class WebsocketConnectUi {
     }
 
     DrawConnectButton() {
-        Utils.DeleteChildren(this.connect_button_div);
-        Utils.DrawButton(this.connect_button_div, "Connect",
+        DomUtl.DeleteChildren(this.connect_button_div);
+        DomUtl.DrawButton(this.connect_button_div, "Connect",
             (function() {this.cb_obj.Connect(this.cb_param)}).bind(this));
     }
 
     DrawConnecting() {
-        Utils.DeleteChildren(this.connect_button_div);
-        var connect_button = Utils.DrawButton(this.connect_button_div,
+        DomUtl.DeleteChildren(this.connect_button_div);
+        var connect_button = DomUtl.DrawButton(this.connect_button_div,
                                               "Connecting", function() {});
         connect_button.disabled = true;
     }
 
     DrawDisconnectButton() {
-        Utils.DeleteChildren(this.connect_button_div);
-        Utils.DrawButton(this.connect_button_div, "Disconnect",
+        DomUtl.DeleteChildren(this.connect_button_div);
+        DomUtl.DrawButton(this.connect_button_div, "Disconnect",
             (function() {this.cb_obj.Disconnect(this.cb_param)}).bind(this));
     }
 }

@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
-class Utils {
+class DomUtl {
     static DeleteChildren(n) {
         n.innerHTML = "";
     }
@@ -96,7 +96,7 @@ class Utils {
 
     static DrawBalance(div, msats) {
         var d = document.createElement("div");
-        var s = Utils.BalanceFmt(msats);
+        var s = DomUtl.BalanceFmt(msats);
         var t = document.createTextNode(s);
         d.appendChild(t);
         div.appendChild(d);
@@ -116,4 +116,4 @@ class Utils {
     }
 }
 
-exports.Utils = Utils;
+exports.DomUtl = DomUtl;

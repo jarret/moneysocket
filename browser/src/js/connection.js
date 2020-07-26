@@ -1,4 +1,4 @@
-const Utils = require('./utils.js').Utils;
+const DomUtl = require('./domutl.js').DomUtl;
 
 class Connection {
     constructor(div, title, defaultWsUri, div_class) {
@@ -18,60 +18,60 @@ class Connection {
         const title = this.title;
         this.ui_div = document.createElement("div");
         this.ui_div.setAttribute("class", this.div_class);
-        Utils.DrawTitle(this.ui_div, this.title);
-        Utils.DrawBr(this.ui_div);
-        this.input = Utils.DrawTextInput(this.ui_div, this.defaultWsUri);
-        this.connect_button = Utils.DrawButton(this.ui_div, "Connect",
+        DomUtl.DrawTitle(this.ui_div, this.title);
+        DomUtl.DrawBr(this.ui_div);
+        this.input = DomUtl.DrawTextInput(this.ui_div, this.defaultWsUri);
+        this.connect_button = DomUtl.DrawButton(this.ui_div, "Connect",
             function() {window.app.ConnectSocket(title)});
-        this.disconnect_button = Utils.DrawButton(this.ui_div, "Disconnect",
+        this.disconnect_button = DomUtl.DrawButton(this.ui_div, "Disconnect",
             function() {window.app.DisconnectSocket(title)});
-        Utils.DrawBr(this.ui_div);
-        Utils.DrawBr(this.ui_div);
-        this.connect_div = Utils.EmptyDiv(this.ui_div);
-        Utils.DrawText(this.connect_div, "Disconnected");
-        Utils.DrawBr(this.ui_div);
-        this.balance_div = Utils.EmptyDiv(this.ui_div);
-        this.push_button_div = Utils.EmptyDiv(this.ui_div);
-        this.pull_button_div = Utils.EmptyDiv(this.ui_div);
+        DomUtl.DrawBr(this.ui_div);
+        DomUtl.DrawBr(this.ui_div);
+        this.connect_div = DomUtl.EmptyDiv(this.ui_div);
+        DomUtl.DrawText(this.connect_div, "Disconnected");
+        DomUtl.DrawBr(this.ui_div);
+        this.balance_div = DomUtl.EmptyDiv(this.ui_div);
+        this.push_button_div = DomUtl.EmptyDiv(this.ui_div);
+        this.pull_button_div = DomUtl.EmptyDiv(this.ui_div);
         this.div.appendChild(this.ui_div);
     }
 
     UpdateBalance(msats) {
-        Utils.DeleteChildren(this.balance_div);
-        Utils.DrawBalance(this.balance_div, msats);
-        Utils.DrawBr(this.balance_div);
+        DomUtl.DeleteChildren(this.balance_div);
+        DomUtl.DrawBalance(this.balance_div, msats);
+        DomUtl.DrawBr(this.balance_div);
     }
 
     SetDisconnect() {
-        Utils.DeleteChildren(this.connect_div);
-        Utils.DeleteChildren(this.balance_div);
-        Utils.DeleteChildren(this.push_button_div);
-        Utils.DeleteChildren(this.pull_button_div);
-        Utils.DrawText(this.connect_div, "Disconnected");
+        DomUtl.DeleteChildren(this.connect_div);
+        DomUtl.DeleteChildren(this.balance_div);
+        DomUtl.DeleteChildren(this.push_button_div);
+        DomUtl.DeleteChildren(this.pull_button_div);
+        DomUtl.DrawText(this.connect_div, "Disconnected");
     }
 
     /*SetConnect() {
         const title = this.title;
-        Utils.DeleteChildren(this.connect_div);
-        Utils.DrawText(this.connect_div, "Connected");
-        Utils.DrawBalance(this.balance_div, 0.0);
-        Utils.DrawBr(this.balance_div);
-        this.push_button = Utils.DrawButton(this.push_button_div, "Push 1 sat",
+        DomUtl.DeleteChildren(this.connect_div);
+        DomUtl.DrawText(this.connect_div, "Connected");
+        DomUtl.DrawBalance(this.balance_div, 0.0);
+        DomUtl.DrawBr(this.balance_div);
+        this.push_button = DomUtl.DrawButton(this.push_button_div, "Push 1 sat",
             function() {window.app.PushSat(title)});
-        this.pull_button = Utils.DrawButton(this.pull_button_div, "Pull 1 sat",
+        this.pull_button = DomUtl.DrawButton(this.pull_button_div, "Pull 1 sat",
             function() {window.app.PullSat(title)});
-        Utils.DrawBr(this.pull_button_div);
-        Utils.DrawBr(this.pull_button_div);
+        DomUtl.DrawBr(this.pull_button_div);
+        DomUtl.DrawBr(this.pull_button_div);
     } */
 
     SetConnect() {
         const title = this.title;
-        Utils.DeleteChildren(this.connect_div);
-        Utils.DrawText(this.connect_div, "Connected");
-        this.pull_button = Utils.DrawButton(this.pull_button_div, "Ping",
+        DomUtl.DeleteChildren(this.connect_div);
+        DomUtl.DrawText(this.connect_div, "Connected");
+        this.pull_button = DomUtl.DrawButton(this.pull_button_div, "Ping",
             function() {window.app.Ping()});
-        Utils.DrawBr(this.pull_button_div);
-        Utils.DrawBr(this.pull_button_div);
+        DomUtl.DrawBr(this.pull_button_div);
+        DomUtl.DrawBr(this.pull_button_div);
     }
 
     ConnectSocket() {
