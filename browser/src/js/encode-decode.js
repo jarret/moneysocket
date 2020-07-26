@@ -89,6 +89,8 @@ class EncodeApp {
         var sso = SharedSeed.FromHexStr(shared_seed);
         console.log("shared seed: " + sso.ToString());
         console.log("hash: " + sso.DeriveAes256Key());
+        console.log("rdv id: " + sso.DeriveRendezvousId());
+        console.log("bytes: " + sso.GetBytes());
     }
 
     SetUseTlsTrue() {
