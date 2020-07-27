@@ -9,6 +9,8 @@ const SharedSeed = require('./moneysocket/beacon/shared_seed.js').SharedSeed;
 const BinUtl = require('./moneysocket/utl/bin.js').BinUtl;
 const MoneysocketBeacon = require(
     './moneysocket/beacon/beacon.js').MoneysocketBeacon;
+const WebsocketLocation = require(
+    './moneysocket/beacon/location/websocket.js').WebsocketLocation;
 const BigSize = require('./moneysocket/utl/bolt/bigsize.js').BigSize;
 const UInt64 = require('./moneysocket/utl/uint64.js').UInt64;
 
@@ -131,22 +133,25 @@ class EncodeApp {
         console.log("host: " + host);
         console.log("port: " + port);
 
-        var b = new MoneysocketBeacon(shared_seed);
-        var beacon_str = b.toBech32Str();
+        var location = new WebsocketLocation(host, port, this.use_tls);
+        var beacon = new MoneysocketBeacon(shared_seed);
+
+        var beacon_str = beacon.toBech32Str();
         console.log("beacon: " + beacon_str);
         this.ta_out.value = beacon_str;
 
-        var [b2, err] = MoneysocketBeacon.fromBech32Str(beacon_str);
 
-        console.log("beacon2: " + b2.toBech32Str());
-        console.log("err: " + err);
+//        var [b2, err] = MoneysocketBeacon.fromBech32Str(beacon_str);
+//
+ //       console.log("beacon2: " + b2.toBech32Str());
+  //      console.log("err: " + err);
+//
 
-
-        var ib = BinUtl.i2b(0xaabbccdd, 4);
-        console.log("ib: " + ib);
-        var bi = BinUtl.b2i(ib);
-        console.log("bi: " + bi);
-        console.log("bi: " + bi.toString(16));
+ //       var ib = BinUtl.i2b(0xaabbccdd, 4);
+  //      console.log("ib: " + ib);
+ //       var bi = BinUtl.b2i(ib);
+  //      console.log("bi: " + bi);
+   //     console.log("bi: " + bi.toString(16));
 
     }
 }
@@ -235,8 +240,8 @@ window.app = new EncodeDecodeApp();
 
 function drawFirstUi() {
     window.app.draw();
-    BigSize.encodeTests();
-    BigSize.decodeTests();
+    //BigSize.encodeTests();
+    //BigSize.decodeTests();
     //var v = UInt64.fromHex("1234567890abcdef");
     //console.log("v: " + v.toHex());
 }

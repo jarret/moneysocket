@@ -6,7 +6,48 @@ const SharedSeed = require('./shared_seed.js').SharedSeed;
 const Bech32 = require('../utl/bech32.js').Bech32;
 const BinUtl = require('../utl/bin.js').BinUtl;
 
+const Tlv = require('../utl/bolt/tlv.js').Tlv;
 const BigSize = require('../utl/bolt/bigsize.js').BigSize;
+
+
+
+/* According to BOLT 1, extension TLVs must be greater than 2^16. Odd types
+ * allow the TLV to be ignored if it isn't understood.  This starting value is
+ * chosen to be 2^16 + 443 and will increment by 2 to define these 'type'
+ * values
+ */
+
+const TLV_TYPE_START = 65979;
+
+
+/* Set up the 'Type' integer value for the needed fields.  These values need to
+ * be standardized and stable and hopefully recognized by the larger LN
+ * ecosystem and hopefully officially defined in BOLT. Lower 'official' integer
+ * values would also slightly improve the encoded byte size
+ *
+ * Also, wondering if a block of 'reserved' values makes sense for later
+ * extensions.
+ */
+
+const BEACON_TLV_TYPE = TLV_TYPE_START;
+const SHARED_SEED_TLV_TYPE = TLV_TYPE_START + 2;
+const LOCATION_COUNT_TLV_TYPE = TLV_TYPE_START + 4;
+const LOCATION_LIST_TLV_TYPE = TLV_TYPE_START + 6;
+
+
+const WEBSOCKET_LOCATION_TLV_TYPE = TLV_TYPE_START + 8;
+
+// TODO - figure out the data in the WebRTC 'signal' and how to encode it
+const WEBRTC_LOCATION_TLV_TYPE = TLV_TYPE_START + 10;
+
+// TODO - does this even make sense for bluetooth? some sort of device ID is
+// probably needed.
+const BLUETOOTH_LOCATION_TLV_TYPE = TLV_TYPE_START + 12;
+
+// TODO - does this even make sense for nfc? some sort of device ID is probably
+// needed.
+const NFC_LOCATION_TLV_TYPE = TLV_TYPE_START + 14;
+
 
 const BEACON_HRP = "moneysocket";
 
@@ -20,16 +61,50 @@ class MoneysocketBeacon {
         this.locations = [];
     }
 
+    toString() {
+        return this.toBech32Str();
+    }
+
     toDict() {
         return {'shared_seed': BinUtl.toHexString(this.shared_seed.getBytes()),
                 'locations':   this.locations}
     }
 
-    encodeTlvs() {
-        // TODO encode locations
-        return this.shared_seed.getBytes();
+    ///////////////////////////////////////////////////////////////////////////
+
+    addLocation(location) {
+        this.locations.push(location);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    encodeLocationListTlv() {
+        var encoded;
+        var location_count = this.locations.length;
+        var location_count_encoded = BigSize.encode(location_count);
+        var lc_tlv = new Tlv(LOCATION_COUNT_TLV_TYPE, location_count_encoded);
+        encoded = lc_tlv.encode();
+        this.locations.forEach(location => {
+            var location_encoded = location.encodeTlv();
+            encoded = BinUtl.arrayConcat(encoded, location_encoded);
+        });
+        return new Tlv(LOCATION_LIST_TLV_TYPE, encoded).encode();
+    }
+
+    encodeTlvs() {
+        var ss_encoded = new Tlv(SHARED_SEED_TLV_TYPE,
+                                 this.shared_seed.getBytes()).encode();
+        var ll_encoded = this.encodeLocationListTlv();
+        var encoded = BinUtl.arrayConcat(ss_encoded, ll_encoded);
+        return new Tlv(BEACON_TLV_TYPE, encoded).encode();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    static decodeTlvs(byte_array) {
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
 
     toBech32Str() {
         var encoded_bytes = this.encodeTlvs();
