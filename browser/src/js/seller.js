@@ -5,8 +5,7 @@
 const DomUtl = require('./domutl.js').DomUtl;
 const WebsocketInterconnect = require(
     './moneysocket/socket/websocket.js').WebsocketInterconnect;
-const WebsocketConnectUi = require(
-    './moneysocket/socket/websocket_ui.js').WebsocketConnectUi;
+const BeaconUi = require('./beacon_ui.js').BeaconUi;
 
 class OpinionUi {
     constructor(div) {
@@ -117,8 +116,6 @@ class SellerApp {
         this.wallet_socket = null;
         this.service_socket = null;
 
-        this.default_wallet_ws_url = "ws://127.0.0.1:11063";
-        this.default_service_ws_url = "ws://127.0.0.1:11055";
 
         this.wi = new WebsocketInterconnect(this);
     }
@@ -133,16 +130,13 @@ class SellerApp {
         this.psu.draw("center");
         DomUtl.drawBr(this.my_div);
 
-        this.scu = new WebsocketConnectUi(this.my_div,
-                                          "SERVICE Connect to External WALLET",
-                                          this.default_service_ws_url, this,
-                                          "service");
+        this.scu = new BeaconUi(this.my_div,
+                                "SERVICE Connect to External WALLET",
+                                this, "service");
         this.scu.draw("left");
 
-        this.wcu = new WebsocketConnectUi(this.my_div,
-                                          "WALLET Connect to Buyer SERVICE",
-                                          this.default_wallet_ws_url, this,
-                                          "wallet");
+        this.wcu = new BeaconUi(this.my_div, "WALLET Connect to Buyer SERVICE",
+                                this, "wallet");
         this.wcu.draw("right");
         DomUtl.drawBr(this.my_div);
 
@@ -192,13 +186,13 @@ class SellerApp {
 
     connect(cb_param) {
         if (cb_param == "wallet") {
-            var ws_url = this.wcu.GetWsUrl();
+            var ws_url = this.wcu.getWsUrl();
             console.log("connect wallet: " + ws_url);
             this.psu.updateWalletRoleConnecting();
             this.wcu.drawConnecting();
             this.wi.connect(ws_url, "wallet");
         } else if (cb_param == "service") {
-            var ws_url = this.scu.GetWsUrl();
+            var ws_url = this.scu.getWsUrl();
             console.log("connect service: " + ws_url);
             this.psu.updateServiceRoleConnecting();
             this.scu.drawConnecting();

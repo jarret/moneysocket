@@ -5,8 +5,7 @@
 const DomUtl = require('./domutl.js').DomUtl;
 const WebsocketInterconnect = require(
     './moneysocket/socket/websocket.js').WebsocketInterconnect;
-const WebsocketConnectUi = require(
-    './moneysocket/socket/websocket_ui.js').WebsocketConnectUi;
+const BeaconUi = require('./beacon_ui.js').BeaconUi;
 
 class BuyerUi {
     constructor(div) {
@@ -122,9 +121,6 @@ class BuyerApp {
         this.my_service_socket = null;
         this.seller_service_socket = null;
 
-        this.default_my_service_ws_url = "ws://127.0.0.1:11061";
-        this.default_seller_service_ws_url = "ws://127.0.0.1:11062";
-
         this.wi = new WebsocketInterconnect(this);
     }
 
@@ -138,16 +134,13 @@ class BuyerApp {
         this.psu.draw("center");
         DomUtl.drawBr(this.my_div);
 
-        this.sscu = new WebsocketConnectUi(this.my_div,
-                                           "SERVICE Connect to Seller WALLET",
-                                           this.default_seller_service_ws_url,
-                                           this, "seller_service");
+        this.sscu = new BeaconUi(this.my_div,
+                                 "SERVICE Connect to Seller WALLET",
+                                 this, "seller_service");
         this.sscu.draw("left");
 
-        this.mscu = new WebsocketConnectUi(this.my_div,
-                                           "SERVICE Connect to My WALLET",
-                                           this.default_my_service_ws_url, this,
-                                           "my_service");
+        this.mscu = new BeaconUi(this.my_div, "SERVICE Connect to My WALLET",
+                                 this, "my_service");
         this.mscu.draw("right");
         DomUtl.drawBr(this.my_div);
 
@@ -181,7 +174,7 @@ class BuyerApp {
         if (cb_param == "seller_service") {
             console.log("got seller servce socket closed");
             this.seller_service_socket = null;
-            this.psu.dpdateSellerServiceRoleDisconnected();
+            this.psu.updateSellerServiceRoleDisconnected();
             this.sscu.drawConnectButton();
             // TODO wallet role object
         } else if (cb_param == "my_service") {
@@ -203,7 +196,7 @@ class BuyerApp {
             this.sscu.drawConnecting();
             this.wi.connect(ws_url, "seller_service");
         } else if (cb_param == "my_service") {
-            var ws_url = this.mscu.GetWsUrl();
+            var ws_url = this.mscu.getWsUrl();
             console.log("connect my service: " + ws_url);
             this.psu.updateMyServiceRoleConnecting();
             this.mscu.drawConnecting();

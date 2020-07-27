@@ -120,18 +120,30 @@ class DomUtl {
     }
 
     static qrCode(div, bech32str, protocol_prefix) {
+        var copy_str = bech32str;
         var b32 = bech32str.toUpperCase();
-        var a = document.createElement("a");
-        a.setAttribute("href", protocol_prefix + bech32str);
+        var b = document.createElement("div");
+        var copied = document.createElement("div");
         var qr = Kjua({
             ecLevel: "M",
             render:  "canvas",
-            size:    150,
+            size:    200,
             text:    b32,
+            quiet:   0,
         });
-        a.appendChild(qr);
-        div.appendChild(a);
+
+        b.onclick = function copyToClipboard() {
+            //window.clipboardData.setData("Text", copy_str);
+            navigator.clipboard.writeText(copy_str);
+            DomUtl.deleteChildren(copied);
+            var t = document.createTextNode("copied!");
+            copied.appendChild(t);
+        };
+        b.appendChild(qr);
+        b.appendChild(copied);
+        div.appendChild(b);
     }
+
 }
 
 exports.DomUtl = DomUtl;

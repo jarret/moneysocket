@@ -105,10 +105,17 @@ class BeaconUi {
             (function() {this.doModeEnter()}).bind(this));
     }
 
+    doConnect() {
+        if (this.getWsUrl() == '') {
+            return
+        }
+        this.cb_obj.connect(this.cb_param);
+    }
+
     drawConnectButton() {
         DomUtl.deleteChildren(this.connect_button_div);
         DomUtl.drawButton(this.connect_button_div, "Connect",
-            (function() {this.cb_obj.connect(this.cb_param)}).bind(this));
+            (function() {this.doConnect()}).bind(this));
     }
 
     drawConnecting() {
