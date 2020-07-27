@@ -82,6 +82,8 @@ class MoneysocketBeacon():
         shared_seed = SharedSeed(seed_bytes=ss_tlv.v)
 
         lc_tlv, remainder, err = Tlv.pop(ll_tlv.v)
+        if err:
+            return None, None, err
         if lc_tlv.t != MoneysocketBeacon.LOCATION_COUNT_TLV_TYPE:
             return None, None, "got unexpected location count tlv type"
 

@@ -8,7 +8,8 @@ class StringUtl {
         return byte_array;
     }
     static fromUtf8(byte_array) {
-        var decoded = new TextDecoder("utf-8").decode(byte_array);
+        var a = new Uint8Array(byte_array);
+        var decoded = new TextDecoder("utf-8").decode(a);
         return decoded;
     }
 }

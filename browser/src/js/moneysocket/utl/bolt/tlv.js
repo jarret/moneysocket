@@ -22,11 +22,11 @@ class Tlv {
     }
 
     static peek(byte_array) {
-        var [t, remainder, err] = BigSize.peek(byte_array);
+        var [t, remainder, err] = BigSize.pop(byte_array);
         if (err != null) {
             return [null, "could not get type: " + err];
         }
-        var [l, remainder, err] = BigSize.peek(remainder);
+        var [l, remainder, err] = BigSize.pop(remainder);
         if (err != null) {
             return [null, "could not get length: " + err];
         }
@@ -37,11 +37,11 @@ class Tlv {
     }
 
     static pop(byte_array) {
-        var [t, remainder, err] = BigSize.peek(byte_array);
+        var [t, remainder, err] = BigSize.pop(byte_array);
         if (err != null) {
             return [null, null, "could not get type: " + err];
         }
-        var [l, remainder, err] = BigSize.peek(remainder);
+        var [l, remainder, err] = BigSize.pop(remainder);
         if (err != null) {
             return [null, null, "could not get length: " + err];
         }

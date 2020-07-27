@@ -8,10 +8,9 @@ const BinUtl = require('../../utl/bin.js').BinUtl;
 const StringUtl = require('../../utl/string.js').StringUtl;
 
 
-
+// This must match values in beacon.js
 const TLV_TYPE_START = 65979
 const WEBSOCKET_LOCATION_TLV_TYPE = TLV_TYPE_START + 8
-
 
 const HOST_TLV_TYPE = 0;
 const USE_TLS_TLV_TYPE = 1;
@@ -51,10 +50,11 @@ class WebsocketLocation {
             host = StringUtl.fromUtf8(tlvs[HOST_TLV_TYPE].v);
         }
         catch(err) {
+            console.log(err);
             return [null, "error decoding host string"];
         }
         var use_tls;
-        if (! (HOST_TLV_TYPE in tlvs)) {
+        if (! (USE_TLS_TLV_TYPE in tlvs)) {
             use_tls = true;
         } else {
             var [enum_value, remainder, err] = BigSize.pop(
@@ -79,24 +79,26 @@ class WebsocketLocation {
         return [new WebsocketLocation(host, port, use_tls), null];
     }
 
-    static encodeTlv() {
-        var encoded = Tlv(HOST_TLV_TYPE, StringUtl.toUtf8(host)).encode();
-
+    encodeTlv() {
+        var encoded = new Tlv(HOST_TLV_TYPE,
+                              StringUtl.toUtf8(this.host)).encode();
         if (! this.use_tls) {
-            encoded += Tlv(USE_TLS_TLV_TYPE, BigSize.encode(0)).encode();
+            encoded = BinUtl.arrayConcat(encoded,
+                new Tlv(USE_TLS_TLV_TYPE, BigSize.encode(0)).encode(),
+                );
             if (this.port != DEFAULT_NO_TLS_PORT) {
-                var encoded_port = Tlv(PORT_TLV_TYPE,
-                                       BigSize.encode(this.port)).encode();
+                var encoded_port = new Tlv(PORT_TLV_TYPE,
+                                           BigSize.encode(this.port)).encode();
                 encoded = BinUtl.arrayConcat(encoded, encoded_port);
             }
         } else {
-            if (port != DEFAULT_TLS_PORT) {
-                var encoded_port = Tlv(PORT_TLV_TYPE,
-                                       BigSize.encode(this.port)).encode();
+            if (this.port != DEFAULT_TLS_PORT) {
+                var encoded_port = new Tlv(PORT_TLV_TYPE,
+                                           BigSize.encode(this.port)).encode();
                 encoded = BinUtl.arrayConcat(encoded, encoded_port);
             }
         }
-        return Tlv(WEBSOCKET_LOCATION_TLV_TYPE, encoded).encode();
+        return new Tlv(WEBSOCKET_LOCATION_TLV_TYPE, encoded).encode();
     }
 }
 

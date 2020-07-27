@@ -135,24 +135,16 @@ class EncodeApp {
 
         var location = new WebsocketLocation(host, port, this.use_tls);
         var beacon = new MoneysocketBeacon(shared_seed);
+        console.log("pushing: " + (location instanceof WebsocketLocation));
+        beacon.addLocation(location);
 
         var beacon_str = beacon.toBech32Str();
         console.log("beacon: " + beacon_str);
         this.ta_out.value = beacon_str;
 
-
-//        var [b2, err] = MoneysocketBeacon.fromBech32Str(beacon_str);
-//
- //       console.log("beacon2: " + b2.toBech32Str());
-  //      console.log("err: " + err);
-//
-
- //       var ib = BinUtl.i2b(0xaabbccdd, 4);
-  //      console.log("ib: " + ib);
- //       var bi = BinUtl.b2i(ib);
-  //      console.log("bi: " + bi);
-   //     console.log("bi: " + bi.toString(16));
-
+        var [beacon2, err] = MoneysocketBeacon.fromBech32Str(beacon_str);
+        console.log("err: " + err);
+        console.log("beacon2: " + beacon2.toBech32Str());
     }
 }
 

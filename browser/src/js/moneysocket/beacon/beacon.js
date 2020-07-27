@@ -8,6 +8,7 @@ const BinUtl = require('../utl/bin.js').BinUtl;
 
 const Tlv = require('../utl/bolt/tlv.js').Tlv;
 const BigSize = require('../utl/bolt/bigsize.js').BigSize;
+const WebsocketLocation = require('./location/websocket.js').WebsocketLocation;
 
 
 
@@ -73,6 +74,7 @@ class MoneysocketBeacon {
     ///////////////////////////////////////////////////////////////////////////
 
     addLocation(location) {
+        console.log("pushing: " + (location instanceof WebsocketLocation));
         this.locations.push(location);
     }
 
@@ -85,7 +87,9 @@ class MoneysocketBeacon {
         var lc_tlv = new Tlv(LOCATION_COUNT_TLV_TYPE, location_count_encoded);
         encoded = lc_tlv.encode();
         this.locations.forEach(location => {
+            console.log("location: + " + (location instanceof WebsocketLocation));
             var location_encoded = location.encodeTlv();
+            console.log("encoding location");
             encoded = BinUtl.arrayConcat(encoded, location_encoded);
         });
         return new Tlv(LOCATION_LIST_TLV_TYPE, encoded).encode();
@@ -102,6 +106,73 @@ class MoneysocketBeacon {
     ///////////////////////////////////////////////////////////////////////////
 
     static decodeTlvs(byte_array) {
+        var [beacon_tlv, discard, err] = Tlv.pop(byte_array);
+        if (err != null) {
+            return [null, null, err];
+        }
+        if (beacon_tlv.t != BEACON_TLV_TYPE) {
+            return [null, null, "got unexpected tlv type"];
+        }
+        var [ss_tlv, remainder, err] = Tlv.pop(beacon_tlv.v);
+        if (err != null) {
+            return [null, null, err];
+        }
+        if (ss_tlv.t != SHARED_SEED_TLV_TYPE) {
+            return [null, null, "got unexpected shared seed tlv type"];
+        }
+        var [ll_tlv, remainder, err] = Tlv.pop(remainder)
+        if (err != null) {
+            return [null, null, err];
+        }
+        if (ll_tlv.t != LOCATION_LIST_TLV_TYPE) {
+            return [null, null, "got unexpected location list tlv type"];
+        }
+        var shared_seed = new SharedSeed(ss_tlv.v);
+
+        var [lc_tlv, remainder, err] = Tlv.pop(ll_tlv.v);
+        if (err != null) {
+            return [null, null, err];
+        }
+        if (lc_tlv.t != LOCATION_COUNT_TLV_TYPE) {
+            return [null, null, "got unexpected location count tlv type"];
+        }
+        var [location_count, discard, err] = BigSize.pop(lc_tlv.v);
+        if (err != null) {
+            return [null, null, err];
+        }
+        var locations = [];
+        for (var i=0; i < location_count; i++) {
+            var [l_tlv, remainder, err] = Tlv.pop(remainder);
+            if (err != null) {
+                return [null, null, err];
+            }
+            if (l_tlv.t == WEBSOCKET_LOCATION_TLV_TYPE) {
+                var [location, err] = WebsocketLocation.fromTlv(l_tlv);
+                if (err != null) {
+                    return [null, null, err];
+                }
+            } else if (l_tlv.t == WEBRTC_LOCATION_TLV_TYPE) {
+                var [location, err] = WebRtcLocation.fromTlv(l_tlv);
+                if (err != null) {
+                    return [null, null, err];
+                }
+            } else if (l_tlv.t == BLUETOOTH_LOCATION_TLV_TYPE) {
+                var [location, err] = BluetoothLocation.fromTlv(l_tlv);
+                if (err != null) {
+                    return [null, null, err];
+                }
+            } else if (l_tlv.t == NFC_LOCATION_TLV_TYPE) {
+                var [location, err] = NfcLocation.fromTlv(l_tlv);
+                if (err != null) {
+                    return [null, null, err];
+                }
+            } else {
+                // TODO tolerate this with `continue`?
+                return [null, null, "unknown location type"];
+            }
+            locations.push(location);
+        }
+        return [shared_seed, locations, null];
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -119,9 +190,16 @@ class MoneysocketBeacon {
         }
         console.log("data: " + BinUtl.toHexString(bytes));
 
-        // TODO decode locations
-
-        var beacon = new MoneysocketBeacon(new SharedSeed(bytes));
+        var [shared_seed, locations, err] = MoneysocketBeacon.decodeTlvs(bytes);
+        if (err != null) {
+            return [null, err];
+        }
+        var beacon = new MoneysocketBeacon(shared_seed);
+        console.log("locations: " + locations);
+        locations.forEach(location => {
+            console.log("adding location");
+            beacon.addLocation(location);
+        });
         return [beacon, null];
     }
 }
