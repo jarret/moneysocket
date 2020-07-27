@@ -68,15 +68,17 @@ class EncodeApp {
         DomUtl.drawBr(this.my_div);
 
         DomUtl.drawText(this.my_div, "Host: ");
-        this.host_in = DomUtl.drawTextInput(this.my_div, DEFAULT_PORT);
+        this.host_in_div = DomUtl.drawTextInput(this.my_div, DEFAULT_HOST);
+        this.host_in = this.host_in_div.firstChild;
         this.host_in.setAttribute("size", "15")
 
         DomUtl.drawBr(this.my_div);
         DomUtl.drawBr(this.my_div);
 
         DomUtl.drawText(this.my_div, "Port: ");
-        this.port_in = DomUtl.drawTextInput(this.my_div,
-                                            DEFAULT_PORT.toString());
+        this.port_in_div = DomUtl.drawTextInput(this.my_div,
+                                                DEFAULT_PORT.toString());
+        this.port_in = this.port_in_div.firstChild;
         this.port_in.setAttribute("size", "4")
 
         DomUtl.drawBr(this.my_div);
@@ -108,8 +110,9 @@ class EncodeApp {
 
 
         var shared_seed = Crypto.randomBytes(16).toString("hex");
-        this.shared_seed_in = DomUtl.drawTextInput(this.shared_seed_div,
-                                                  shared_seed);
+        this.shared_seed_div = DomUtl.drawTextInput(this.shared_seed_div,
+                                                    shared_seed);
+        this.shared_seed_in = this.shared_seed_div.firstChild;
         this.shared_seed_in.setAttribute("size", "30")
         DomUtl.drawButton(this.shared_seed_button_div,
                          "Generate New Random Seed",
