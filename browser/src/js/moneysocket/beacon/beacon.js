@@ -6,6 +6,8 @@ const SharedSeed = require('./shared_seed.js').SharedSeed;
 const Bech32 = require('../utl/bech32.js').Bech32;
 const BinUtl = require('../utl/bin.js').BinUtl;
 
+const BigSize = require('../utl/bolt/bigsize.js').BigSize;
+
 const BEACON_HRP = "moneysocket";
 
 class MoneysocketBeacon {

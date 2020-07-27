@@ -7,7 +7,10 @@ const Crypto = require('crypto');
 const DomUtl = require('./domutl.js').DomUtl;
 const SharedSeed = require('./moneysocket/beacon/shared_seed.js').SharedSeed;
 const BinUtl = require('./moneysocket/utl/bin.js').BinUtl;
-const MoneysocketBeacon = require('./moneysocket/beacon/beacon.js').MoneysocketBeacon;
+const MoneysocketBeacon = require(
+    './moneysocket/beacon/beacon.js').MoneysocketBeacon;
+const BigSize = require('./moneysocket/utl/bolt/bigsize.js').BigSize;
+const UInt64 = require('./moneysocket/utl/uint64.js').UInt64;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -137,6 +140,14 @@ class EncodeApp {
 
         console.log("beacon2: " + b2.toBech32Str());
         console.log("err: " + err);
+
+
+        var ib = BinUtl.i2b(0xaabbccdd, 4);
+        console.log("ib: " + ib);
+        var bi = BinUtl.b2i(ib);
+        console.log("bi: " + bi);
+        console.log("bi: " + bi.toString(16));
+
     }
 }
 
@@ -223,7 +234,11 @@ class EncodeDecodeApp {
 window.app = new EncodeDecodeApp();
 
 function drawFirstUi() {
-    window.app.draw()
+    window.app.draw();
+    BigSize.encodeTests();
+    BigSize.decodeTests();
+    //var v = UInt64.fromHex("1234567890abcdef");
+    //console.log("v: " + v.toHex());
 }
 
 window.addEventListener("load", drawFirstUi());

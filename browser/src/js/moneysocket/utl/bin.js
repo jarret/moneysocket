@@ -1,7 +1,7 @@
 // Copyright (c) 2020 Jarret Dyrbye
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
-
+const UInt64 = require('../utl/uint64.js').UInt64;
 
 class BinUtl {
     static toByteArray(hex_string) {
@@ -39,6 +39,18 @@ class BinUtl {
             value = (value - byte) / 256;
         } while(i);
         return bytes;
+    }
+
+    static b2i64(byte_array) {
+        console.assert(byte_array.length > 4,
+                       "only works for greater than 32bit");
+        console.assert(byte_array.length <= 8,
+                       "only works for 64 bit values");
+        var lo_bytes = byte_array.slice(-4);
+        var hi_bytes = byte_array.slice(0, -4);
+        var lo = BinUtl.b2i(lo_bytes);
+        var hi = BinUtl.b2i(hi_bytes);
+        return new UInt64(hi, lo);
     }
 
     static b2i(byte_array) {

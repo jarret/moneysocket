@@ -3,6 +3,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
 const BinUtl = require('../bin.js').BinUtl;
+const UInt64 = require('../uint64.js').UInt64;
 
 /*
 For encoding/decoding values to/from BigSize byte strings as defined in:
@@ -10,13 +11,11 @@ https://github.com/lightningnetwork/lightning-rfc/blob/master/01-messaging.md#ap
 */
 
 class BigSize {
-
     static peek8(byte_array) {
         if (byte_array.length < 1) {
             return [null, "underrun while peeking a uint8"];
         }
         var slice = byte_array.slice(0, 1)
-        console.log("peek8 slice: " + slice);
         return [BinUtl.b2i(slice), null];
     }
 
@@ -35,7 +34,7 @@ class BigSize {
         if (byte_array.length < 4) {
             return [null, "underrun while peeking a uint32"];
         }
-        var val = BinUtl.b2i(byte_array.slice(0,4));
+        var val = BinUtl.b2i(byte_array.slice(0, 4));
         if (val < 0x10000) {
             return [null, "not a minimally encoded uint32"];
         }
@@ -44,7 +43,14 @@ class BigSize {
 
     static peek64(byte_array) {
         // TODO what to do about 64 bit?
-        return [null, "can't deal with 64 bit yet"];
+        if (byte_array.length < 8) {
+            return [null, "underrun while peeking a uint64"];
+        }
+        var val = BinUtl.b2i64(byte_array.slice(0, 8));
+        if (val.hi == 0) {
+            return [null, "not a minimally encoded uint64"];
+        }
+        return [val, null];
     }
 
     static peek(byte_array) {
@@ -68,7 +74,7 @@ class BigSize {
             }
             return [val, null];
         } else if (head == 0xff) {
-            val, err = BigSize.peek4(byte_array);
+            val, err = BigSize.peek64(byte_array);
             if (err != null) {
                 return [null, err];
             }
@@ -105,6 +111,11 @@ class BigSize {
 
     static pop64(byte_array) {
         // TODO what to do about 64 bit?
+        var [val, err] = BigSize.peek64(byte_array);
+        if (err != null) {
+            return [null, null, err];
+        }
+        return [val, byte_array.slice(8), null];
     }
 
     static pop(byte_array) {
@@ -129,30 +140,44 @@ class BigSize {
             }
             return [val, byte_array, null];
         } else if (head == 0xff) {
-            // TODO what to do about 64 bit?
-            return [null, null, "whoops, can't deal with 64 bit vals yet"];
+            var [val, byte_array, err] = BigSize.pop64(byte_array);
+            if (err != null) {
+                return [null, null, err];
+            }
+            return [val, byte_array, null];
         }
         return [head, byte_array, null];
     }
 
     ///////////////////////////////////////////////////////////////////////////
 
+    static encode64(val) {
+        if (val.hi == 0) {
+            return BigSize.encode(val.lo);
+        }
+        var b1 = BinUtl.i2b(0xff, 1);
+        var lo_bytes = BinUtl.i2b(val.lo, 4);
+        var hi_bytes = BinUtl.i2b(val.hi, 4);
+        return BinUtl.arrayConcat(b1, BinUtl.arrayConcat(hi_bytes, lo_bytes));
+    }
+
     static encode(val) {
+        if (val instanceof UInt64) {
+            return BigSize.encode64(val);
+        }
+        //console.log("val: " + val);
         console.assert(val <= 0xffffffff, "cannot encode bigger than uint32");
         if (val < 0xfd) {
             return BinUtl.i2b(val, 1);
-        }
-        if (val < 0x10000) {
+        } else if (val < 0x10000) {
             var b1 = BinUtl.i2b(0xfd, 1);
             var b2 = BinUtl.i2b(val, 2);
             return BinUtl.arrayConcat(b1, b2);
-        }
-        if (val < 0x100000000) {
+        } else if (val < 0x100000000) {
             var b1 = BinUtl.i2b(0xfe, 1);
             var b2 = BinUtl.i2b(val, 4);
             return BinUtl.arrayConcat(b1, b2);
         }
-        // TODO what to do about 64 bit?
         return null;
     }
 
@@ -191,12 +216,14 @@ class BigSize {
             },
             {
                 "name": "eight byte low",
-                "value": 4294967296,
+                //"value": 4294967296,
+                "value": new UInt64(0x1, 0x00000000),
                 "bytes": "ff0000000100000000"
             },
             {
                 "name": "eight byte high",
-                "value": 18446744073709551615,
+                //"value": 18446744073709551615,
+                "value": new UInt64(0xffffffff, 0xffffffff),
                 "bytes": "ffffffffffffffffff"
             },
             {
@@ -260,21 +287,23 @@ class BigSize {
                 "exp_error": "unexpected EOF"
             }
         ];
-
         tests.forEach(test => {
-            console.log(test);
-            if (test.bytes.length > 8) {
-                console.log("skipping: " + test.bytes);
-                return;
-            }
+            //console.log(test);
+            //console.log("name: " + test.name +
+            //            " value: " + test.value.toString());
             var [value, remainder, err] = BigSize.pop(BinUtl.h2b(test.bytes));
             if (err != null) {
                 console.assert('exp_error' in test, "unexpected failure");
-                console.log("error reported as: " + err);
+                //console.log("error reported as: " + err);
                 return;
             }
-            console.assert(value == test.value,
-                           "got unexpected value: " + value);
+            if (value instanceof UInt64) {
+                console.assert(value.equals(test.value),
+                               "got unexpected value: " + value.toString());
+            } else {
+                console.assert(value == test.value,
+                               "got unexpected value: " + value);
+            }
         });
 
     }
@@ -313,22 +342,20 @@ class BigSize {
             },
             {
                 "name": "eight byte low",
-                "value": 4294967296,
+                //"value": 4294967296,
+                "value": new UInt64(0x1, 0x00000000),
                 "bytes": "ff0000000100000000"
             },
             {
                 "name": "eight byte high",
-                "value": 18446744073709551615,
+                //"value": 18446744073709551615,
+                "value": new UInt64(0xffffffff, 0xffffffff),
                 "bytes": "ffffffffffffffffff"
             }
         ];
 
         tests.forEach(test => {
-            console.log(test);
-            if (test.bytes.length > 8) {
-                console.log("skipping: " + test.bytes);
-                return;
-            }
+            ////console.log(test);
             var bytes = BigSize.encode(test.value);
             console.assert(BinUtl.b2h(bytes) == test.bytes,
                            "got unexpected bytes: " + bytes);
