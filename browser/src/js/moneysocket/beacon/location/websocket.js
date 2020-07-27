@@ -33,7 +33,7 @@ class WebsocketLocation {
         return {'type':    "WebSocket",
                 'host':    this.host,
                 'port':    this.port,
-                'use_tls': this.us_tls};
+                'use_tls': this.use_tls};
     }
 
     static fromTlv(tlv) {

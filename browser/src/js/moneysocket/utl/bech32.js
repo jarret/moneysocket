@@ -9,7 +9,6 @@ const BECH32_LIMIT = 20000;
 class Bech32 {
     static encodeBytes(bytes, hrp) {
         var words = bech32.toWords(bytes);
-        console.log(words);
         return bech32.encode(hrp, words, BECH32_LIMIT);
     }
 

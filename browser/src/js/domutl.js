@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
+const Kjua = require('kjua');
+
 class DomUtl {
     static deleteChildren(n) {
         n.innerHTML = "";
@@ -113,6 +115,17 @@ class DomUtl {
         var s = document.createElement("section");
         div.appendChild(s);
         return s;
+    }
+
+    static qrCode(div, bech32str) {
+        var b32 = bech32str.toUpperCase();
+        var qr = Kjua({
+            ecLevel: "M",
+            render:  "canvas",
+            size:    300,
+            text:    b32,
+        });
+        div.appendChild(qr);
     }
 }
 

@@ -3,6 +3,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
 const Crypto = require('crypto');
+const Kjua = require('kjua');
 
 const DomUtl = require('./domutl.js').DomUtl;
 const SharedSeed = require('./moneysocket/beacon/shared_seed.js').SharedSeed;
@@ -13,6 +14,8 @@ const WebsocketLocation = require(
     './moneysocket/beacon/location/websocket.js').WebsocketLocation;
 const BigSize = require('./moneysocket/utl/bolt/bigsize.js').BigSize;
 const UInt64 = require('./moneysocket/utl/uint64.js').UInt64;
+
+
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -28,6 +31,7 @@ class EncodeApp {
         this.shared_seed_div = null;
         this.shared_seed_in = null;
         this.shared_seed_button_div = null;
+        this.qr_div = null;
         this.ta_out = null;
     }
 
@@ -73,11 +77,16 @@ class EncodeApp {
 
         DomUtl.drawBr(this.my_div);
         DomUtl.drawBr(this.my_div);
+        this.qr_div = DomUtl.emptyDiv(this.my_div);
+
+        DomUtl.drawBr(this.my_div);
+        DomUtl.drawBr(this.my_div);
 
         this.ta_out = DomUtl.drawTextArea(this.my_div);
         this.ta_out.setAttribute("readonly", "");
         DomUtl.drawBr(this.my_div);
         DomUtl.drawBr(this.my_div);
+
 
         this.parent_div.appendChild(this.my_div);
     }
@@ -96,10 +105,10 @@ class EncodeApp {
                          (function() {this.generateSharedSeed()}).bind(this));
 
         var sso = SharedSeed.fromHexStr(shared_seed);
-        console.log("shared seed: " + sso.toString());
-        console.log("hash: " + sso.deriveAes256Key());
-        console.log("rdv id: " + sso.deriveRendezvousId());
-        console.log("bytes: " + sso.getBytes());
+        //console.log("shared seed: " + sso.toString());
+        //console.log("hash: " + sso.deriveAes256Key());
+        //console.log("rdv id: " + sso.deriveRendezvousId());
+        //console.log("bytes: " + sso.getBytes());
     }
 
     setUseTlsTrue() {
@@ -122,29 +131,30 @@ class EncodeApp {
                          (function() {this.setUseTlsTrue()}).bind(this));
     }
 
+    setEncoded(beacon_str) {
+        DomUtl.deleteChildren(this.qr_div);
+        this.ta_out.value = beacon_str;
+        DomUtl.qrCode(this.qr_div, beacon_str);
+    }
+
     encode() {
         var shared_seed_str = this.shared_seed_in.value;
 
         var shared_seed = new SharedSeed(BinUtl.toByteArray(shared_seed_str));
         var host = this.host_in.value;
         var port = this.port_in.value;
-        console.log("shared_seed: " + shared_seed);
-        console.log("use_tls: " + this.use_tls);
-        console.log("host: " + host);
-        console.log("port: " + port);
+        //console.log("shared_seed: " + shared_seed);
+        //console.log("use_tls: " + this.use_tls);
+        //console.log("host: " + host);
+        //console.log("port: " + port);
 
         var location = new WebsocketLocation(host, port, this.use_tls);
         var beacon = new MoneysocketBeacon(shared_seed);
-        console.log("pushing: " + (location instanceof WebsocketLocation));
+        //console.log("pushing: " + (location instanceof WebsocketLocation));
         beacon.addLocation(location);
 
-        var beacon_str = beacon.toBech32Str();
-        console.log("beacon: " + beacon_str);
-        this.ta_out.value = beacon_str;
+        this.setEncoded(beacon.toBech32Str());
 
-        var [beacon2, err] = MoneysocketBeacon.fromBech32Str(beacon_str);
-        console.log("err: " + err);
-        console.log("beacon2: " + beacon2.toBech32Str());
     }
 }
 
@@ -187,13 +197,13 @@ class DecodeApp {
     decode() {
         var out_text = '';
         var text = this.ta_in.value;
-        console.log("decode: " + text);
+        //console.log("decode: " + text);
 
         var [beacon, err] = MoneysocketBeacon.fromBech32Str(text);
         if (err != null) {
             out_text = err;
         } else {
-            out_text = JSON.stringify(beacon.toDict());
+            out_text = JSON.stringify(beacon.toDict(), null, ' ');
         }
 
         this.ta_out.value = out_text;
