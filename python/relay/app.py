@@ -16,12 +16,9 @@ class Relay(object):
         self.config = config
         self.interconnect = WebsocketInterconnect(self.new_socket_cb,
                                                   self.socket_close_cb)
-        self.service_listen_url = self.get_listen_url(self.config['Service'])
-        self.service_tls_info = self.get_tls_info(self.config['Service'])
-        self.wallet_listen_url = self.get_listen_url(self.config['Wallet'])
-        self.wallet_tls_info = self.get_tls_info(self.config['Wallet'])
-        self.service = None
-        self.wallet = None
+        self.sockets = {}
+        self.listen_url = self.get_listen_url(self.config['Relay'])
+        self.tls_info = self.get_tls_info(self.config['Relay'])
 
     ###########################################################################
 
@@ -44,23 +41,9 @@ class Relay(object):
 
     ###########################################################################
 
-    def wallet_recv_cb(self, socket, msg_dict):
+    def recv_cb(self, socket, msg_dict):
         if msg_dict['request_type'] in {"PING", "PONG", "ERROR"}:
-            if not self.service or not self.service.has_socket():
-                socket.write({'request_type': "ERROR"})
-                return
-            fwd_socket = self.service.get_socket()
-            fwd_socket.write(msg_dict)
-        else:
-            logging.error("unknown message: %s" % msg_dict)
-
-    def service_recv_cb(self, socket, msg_dict):
-        if msg_dict['request_type'] in {"PING", "PONG", "ERROR"}:
-            if not self.wallet or not self.wallet.has_socket():
-                socket.write({'request_type': "ERROR"})
-                return
-            fwd_socket = self.wallet.get_socket()
-            fwd_socket.write(msg_dict)
+            print("got: %s" % msg_dict)
         else:
             logging.error("unknown message: %s" % msg_dict)
 
@@ -68,44 +51,14 @@ class Relay(object):
 
     def new_socket_cb(self, socket, cb_param):
         logging.info("got new socket: %s %s" % (socket, cb_param))
-        if cb_param == "service":
-            if self.service is not None:
-                logging.error("got extra service socket, closing.")
-                socket.close()
-                return
-            logging.info("creating Service")
-            self.service = Service("relay-service")
-            socket.register_recv_cb(self.service_recv_cb)
-            self.service.add_socket(socket)
-        elif cb_param == "wallet":
-            if self.wallet is not None:
-                logging.error("got extra wallet socket, closing.")
-                socket.close()
-                return
-            logging.info("creating Wallet")
-            self.wallet = Wallet("relay-wallet", 0)
-            socket.register_recv_cb(self.wallet_recv_cb)
-            self.wallet.add_socket(socket)
-        else:
-            logging.error("unknown param: %s" % cb_param)
+        self.sockets[socket.uuid] = socket
+        socket.register_recv_cb(self.recv_cb)
 
     def socket_close_cb(self, socket):
         logging.info("got socket close: %s" % (socket))
-        if self.service and self.service.has_this_socket(socket):
-            self.service.remove_socket()
-            self.service = None
-            return
-        if self.wallet and self.wallet.has_this_socket(socket):
-            self.wallet.remove_socket()
-            self.wallet = None
-            return
+        if socket.uuid in self.sockets.keys():
+            del self.sockets[socket.uuid];
 
     def run_app(self):
-        print("listening as service at: %s" % self.service_listen_url)
-        self.interconnect.listen(self.service_listen_url,
-                                 tls_info=self.service_tls_info,
-                                 cb_param="service")
-        print("listening as wallet at: %s" % self.wallet_listen_url)
-        self.interconnect.listen(self.wallet_listen_url,
-                                 tls_info=self.wallet_tls_info,
-                                 cb_param="wallet")
+        print("listening at: %s" % self.listen_url)
+        self.interconnect.listen(self.listen_url, tls_info=self.tls_info)
