@@ -16,6 +16,12 @@ const BigSize = require('./moneysocket/utl/bolt/bigsize.js').BigSize;
 const UInt64 = require('./moneysocket/utl/uint64.js').UInt64;
 
 
+const PROTOCOL_PREFIX = "moneysocket:"
+
+
+const DEFAULT_HOST = "relay.socket.money";
+const DEFAULT_PORT = 443;
+const DEFAULT_USE_TLS = true;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -53,19 +59,24 @@ class EncodeApp {
         this.use_tls_div = DomUtl.emptyDiv(this.my_div);
         this.use_tls_button_div = DomUtl.emptyDiv(this.my_div);
 
-        this.setUseTlsTrue();
+        if (DEFAULT_USE_TLS) {
+            this.setUseTlsTrue();
+        } else {
+            this.setUseTlsFalse();
+        }
 
         DomUtl.drawBr(this.my_div);
 
         DomUtl.drawText(this.my_div, "Host: ");
-        this.host_in = DomUtl.drawTextInput(this.my_div, "relay.socket.money");
+        this.host_in = DomUtl.drawTextInput(this.my_div, DEFAULT_PORT);
         this.host_in.setAttribute("size", "15")
 
         DomUtl.drawBr(this.my_div);
         DomUtl.drawBr(this.my_div);
 
         DomUtl.drawText(this.my_div, "Port: ");
-        this.port_in = DomUtl.drawTextInput(this.my_div, "443");
+        this.port_in = DomUtl.drawTextInput(this.my_div,
+                                            DEFAULT_PORT.toString());
         this.port_in.setAttribute("size", "4")
 
         DomUtl.drawBr(this.my_div);
@@ -134,7 +145,7 @@ class EncodeApp {
     setEncoded(beacon_str) {
         DomUtl.deleteChildren(this.qr_div);
         this.ta_out.value = beacon_str;
-        DomUtl.qrCode(this.qr_div, beacon_str);
+        DomUtl.qrCode(this.qr_div, beacon_str, PROTOCOL_PREFIX);
     }
 
     encode() {
@@ -198,6 +209,9 @@ class DecodeApp {
         var out_text = '';
         var text = this.ta_in.value;
         //console.log("decode: " + text);
+        if (text.startsWith(PROTOCOL_PREFIX)) {
+            text = text.slice(PROTOCOL_PREFIX.length);
+        }
 
         var [beacon, err] = MoneysocketBeacon.fromBech32Str(text);
         if (err != null) {

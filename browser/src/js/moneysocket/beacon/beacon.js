@@ -61,7 +61,7 @@ class MoneysocketBeacon {
         if (shared_seed != null) {
             this.shared_seed = shared_seed;
         } else {
-            this.shared_seed = SharedSeed();
+            this.shared_seed = new SharedSeed();
         }
         this.locations = [];
     }

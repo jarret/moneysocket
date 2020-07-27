@@ -41,12 +41,14 @@ class DomUtl {
     }
 
     static drawTextInput(div, defaultText) {
-        var input = document.createElement("input");
-        input.setAttribute("type", "text");
-        input.setAttribute("size", "20");
-        input.setAttribute("value", defaultText);
-        div.appendChild(input);
-        return input;
+        var d = document.createElement("div");
+        var i = document.createElement("input");
+        i.setAttribute("type", "text");
+        i.setAttribute("size", "20");
+        i.setAttribute("value", defaultText);
+        d.appendChild(i);
+        div.appendChild(d);
+        return d;
     }
 
     static drawTextArea(div) {
@@ -117,15 +119,18 @@ class DomUtl {
         return s;
     }
 
-    static qrCode(div, bech32str) {
+    static qrCode(div, bech32str, protocol_prefix) {
         var b32 = bech32str.toUpperCase();
+        var a = document.createElement("a");
+        a.setAttribute("href", protocol_prefix + bech32str);
         var qr = Kjua({
             ecLevel: "M",
             render:  "canvas",
-            size:    300,
+            size:    150,
             text:    b32,
         });
-        div.appendChild(qr);
+        a.appendChild(qr);
+        div.appendChild(a);
     }
 }
 

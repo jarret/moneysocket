@@ -5,8 +5,7 @@
 const DomUtl = require('./domutl.js').DomUtl;
 const WebsocketInterconnect = require(
     './moneysocket/socket/websocket.js').WebsocketInterconnect;
-const WebsocketConnectUi = require(
-    './moneysocket/socket/websocket_ui.js').WebsocketConnectUi;
+const BeaconUi = require('./beacon_ui.js').BeaconUi;
 
 class PurseStatusUi {
     constructor(div) {
@@ -101,14 +100,11 @@ class PurseApp {
         this.parent_div = document.getElementById("ui");
         this.my_div = null;
         this.psu = null;
-        this.wcu = null;
-        this.scu = null;
+        this.wbu = null;
+        this.sbu = null;
 
         this.wallet_socket = null;
         this.service_socket = null;
-
-        this.default_wallet_ws_url = "ws://127.0.0.1:11060";
-        this.default_service_ws_url = "ws://192.168.0.21:11058";
 
         this.wi = new WebsocketInterconnect(this);
     }
@@ -123,17 +119,13 @@ class PurseApp {
         this.psu.draw("center");
 
         DomUtl.drawBr(this.my_div);
-        this.wcu = new WebsocketConnectUi(this.my_div,
-                                          "WALLET Connect to External SERVICE",
-                                          this.default_wallet_ws_url, this,
-                                          "wallet");
-        this.wcu.draw("left");
+        var wtitle = "WALLET Connect to External SERVICE";
+        this.wbu = new BeaconUi(this.my_div, wtitle, this, "wallet");
+        this.wbu.draw("left");
 
-        this.scu = new WebsocketConnectUi(this.my_div,
-                                          "SERVICE Connect to External WALLET",
-                                          this.default_service_ws_url, this,
-                                          "service");
-        this.scu.draw("right");
+        var stitle = "SERVICE Connect to External WALLET";
+        this.sbu = new BeaconUi(this.my_div, stitle, this, "service");
+        this.sbu.draw("right");
         DomUtl.drawBr(this.my_div);
         DomUtl.drawBr(this.my_div);
 
@@ -147,12 +139,12 @@ class PurseApp {
         if (cb_param == "wallet") {
             this.wallet_socket = socket;
             this.psu.updateWalletRoleConnected();
-            this.wcu.drawDisconnectButton();
+            this.wbu.drawDisconnectButton();
             // TODO wallet role object,
         } else if (cb_param == "service") {
             this.service_socket = socket;
             this.psu.updateServiceRoleConnected();
-            this.scu.drawDisconnectButton();
+            this.sbu.drawDisconnectButton();
             // TODO service role object,
         } else {
             console.log("unknown cb param");
@@ -166,13 +158,13 @@ class PurseApp {
             console.log("got wallet socket closed");
             this.wallet_socket = null;
             this.psu.updateWalletRoleDisconnected();
-            this.wcu.drawConnectButton();
+            this.wbu.drawConnectButton();
             // TODO wallet role object
         } else if (cb_param == "service") {
             console.log("got service socket closed");
             this.service_socket = null;
             this.psu.updateServiceRoleDisconnected();
-            this.scu.drawConnectButton();
+            this.sbu.drawConnectButton();
             // TODO service role object
         } else {
             console.log("got unknown socket closed");
@@ -181,16 +173,16 @@ class PurseApp {
 
     connect(cb_param) {
         if (cb_param == "wallet") {
-            var ws_url = this.wcu.GetWsUrl();
+            var ws_url = this.wbu.getWsUrl();
             console.log("connect wallet: " + ws_url);
             this.psu.updateWalletRoleConnecting();
-            this.wcu.drawConnecting();
+            this.wbu.drawConnecting();
             this.wi.connect(ws_url, "wallet");
         } else if (cb_param == "service") {
-            var ws_url = this.scu.GetWsUrl();
+            var ws_url = this.sbu.getWsUrl();
             console.log("connect service: " + ws_url);
             this.psu.updateServiceRoleConnecting();
-            this.scu.drawConnecting();
+            this.sbu.drawConnecting();
             this.wi.connect(ws_url, "service");
         } else {
             console.log("unknown cb_param: " + cb_param);
@@ -201,12 +193,12 @@ class PurseApp {
         if (cb_param == "wallet") {
             console.log("disconnect wallet");
             if (this.wallet_socket != null) {
-                this.wallet_socket.Close();
+                this.wallet_socket.close();
             }
         } else if (cb_param == "service") {
             console.log("disconnect service");
             if (this.service_socket != null) {
-                this.service_socket.Close();
+                this.service_socket.close();
             }
         } else {
             console.log("unknown cb_param: " + cb_param);

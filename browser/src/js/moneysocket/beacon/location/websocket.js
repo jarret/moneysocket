@@ -29,6 +29,11 @@ class WebsocketLocation {
                                        port);
     }
 
+    toWsUrl() {
+        var protocol = this.use_tls ? "wss://" : "ws://";
+        return protocol + this.host + ":" + this.port;
+    }
+
     toDict() {
         return {'type':    "WebSocket",
                 'host':    this.host,
