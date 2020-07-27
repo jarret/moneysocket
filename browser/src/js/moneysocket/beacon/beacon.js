@@ -8,7 +8,11 @@ const BinUtl = require('../utl/bin.js').BinUtl;
 
 const Tlv = require('../utl/bolt/tlv.js').Tlv;
 const BigSize = require('../utl/bolt/bigsize.js').BigSize;
+
 const WebsocketLocation = require('./location/websocket.js').WebsocketLocation;
+const WebRtcLocation = require('./location/webrtc.js').WebRtcLocation;
+const BluetoothLocation = require('./location/bluetooth.js').BluetoothLocation;
+const NfcLocation = require('./location/nfc.js').NfcLocation;
 
 
 
@@ -67,14 +71,17 @@ class MoneysocketBeacon {
     }
 
     toDict() {
+        var dict_locations = [];
+        this.locations.forEach(location => {
+            dict_locations.push(location.toDict());
+        });
         return {'shared_seed': BinUtl.toHexString(this.shared_seed.getBytes()),
-                'locations':   this.locations}
+                'locations':   dict_locations}
     }
 
     ///////////////////////////////////////////////////////////////////////////
 
     addLocation(location) {
-        console.log("pushing: " + (location instanceof WebsocketLocation));
         this.locations.push(location);
     }
 
@@ -87,9 +94,7 @@ class MoneysocketBeacon {
         var lc_tlv = new Tlv(LOCATION_COUNT_TLV_TYPE, location_count_encoded);
         encoded = lc_tlv.encode();
         this.locations.forEach(location => {
-            console.log("location: + " + (location instanceof WebsocketLocation));
             var location_encoded = location.encodeTlv();
-            console.log("encoding location");
             encoded = BinUtl.arrayConcat(encoded, location_encoded);
         });
         return new Tlv(LOCATION_LIST_TLV_TYPE, encoded).encode();
