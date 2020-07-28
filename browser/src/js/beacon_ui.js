@@ -43,7 +43,7 @@ class BeaconUi {
 
     draw(style) {
         this.my_div = document.createElement("div");
-        DomUtl.drawTitle(this.my_div, this.title, "h4");
+        DomUtl.drawTitle(this.my_div, this.title, "h2");
         this.my_div.setAttribute("class", style);
 
         this.mode_display_div = DomUtl.emptyDiv(this.my_div);
