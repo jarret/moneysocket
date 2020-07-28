@@ -14,6 +14,10 @@ class NotifyPong extends MoneysocketNotification {
         super("NOTIFY_PONG");
     }
 
+    cryptLevel() {
+        return "AES";
+    }
+
     static castClass(msg_dict) {
         var c = new NotifyPong();
         Object.keys(msg_dict).forEach(key => {

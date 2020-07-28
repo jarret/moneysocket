@@ -15,6 +15,10 @@ class NotifyRendezvous extends MoneysocketNotification {
         this.rendezvous_id = rendezvous_id;
     }
 
+    cryptLevel() {
+        return "CLEAR";
+    }
+
     static castClass(msg_dict) {
         var c = new NotifyRendezvous(msg_dict['rendezvous_id'],
                                      msg_dict['request_reference_id']);

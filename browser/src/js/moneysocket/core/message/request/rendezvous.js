@@ -16,6 +16,10 @@ class RequestRendezvous extends MoneysocketRequest {
         this.rendezvous_id = rendezvous_id;
     }
 
+    cryptLevel() {
+        return "CLEAR";
+    }
+
     static castClass(msg_dict) {
         var c = new RequestRendezvous(msg_dict['rendezvous_id']);
         Object.keys(msg_dict).forEach(key => {

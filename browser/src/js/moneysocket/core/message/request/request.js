@@ -44,9 +44,7 @@ class MoneysocketRequest extends MoneysocketMessage {
 
         var subclass = REQUEST_SUBCLASSES[msg_dict['request_name']];
         return subclass.checkValidMsgDict(msg_dict);
-
     }
-
 }
 
 

@@ -29,6 +29,10 @@ class MoneysocketMessage {
         return JSON.stringify(this);
     }
 
+    cryptLevel() {
+        return "AES";
+    }
+
     static castClass(msg_dict) {
         var message_class = MESSAGE_SUBCLASSES[msg_dict['message_class']];
         return message_class.castClass(msg_dict);

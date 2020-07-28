@@ -13,6 +13,10 @@ class RequestPing extends MoneysocketRequest {
         super("REQUEST_PING");
     }
 
+    cryptLevel() {
+        return "AES";
+    }
+
     static castClass(msg_dict) {
         var c = new RequestPing();
         Object.keys(msg_dict).forEach(key => {
