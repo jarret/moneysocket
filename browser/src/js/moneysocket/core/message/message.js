@@ -30,15 +30,18 @@ class MoneysocketMessage {
     }
 
     static castClass(msg_dict) {
-        var message_class = MESSAGE_SUBCLASSES[msg_dict['request_name']];
-        return request_class.castClass();
+        var message_class = MESSAGE_SUBCLASSES[msg_dict['message_class']];
+        return message_class.castClass(msg_dict);
     }
 
     static checkValidMsgDict(msg_dict) {
         if (! ('message_class' in msg_dict)) {
             return "no message_class included";
         }
-        if (! (msg_dict['message_class'] instanceof String)) {
+        console.log("class: ", msg_dict['message_class']);
+        console.log("Str: ", typeof msg_dict['message_class']);
+
+        if (typeof msg_dict['message_class'] != 'string') {
             return "unknown message_class type";
         }
         if (! (msg_dict['message_class'] in MESSAGE_SUBCLASSES)) {
@@ -53,28 +56,26 @@ class MoneysocketMessage {
         if (! ('protocol' in msg_dict)) {
             return "no timestamp included";
         }
-        if (! (msg_dict['protocol'] instanceof String)) {
+        if (typeof msg_dict['protocol'] != 'string') {
             return "unknown protocol type";
         }
         if (msg_dict['protocol'] != PROTOCOL) {
             return "unknown protocol";
         }
-
         if (! ('protocol_version' in msg_dict) ) {
             return "no protocol_version declared";
         }
-
-        if (! (msg_dict['protocol_version'] instanceof String)) {
+        if (typeof msg_dict['protocol_version'] != 'string') {
             return "unknown protocol type";
         }
         // TODO determine version compatibility?
 
-        subclass = MESSAGE_SUBCLASSES[msg_dict['message_class']];
+        var subclass = MESSAGE_SUBCLASSES[msg_dict['message_class']];
         return subclass.checkValidMsgDict(msg_dict)
     }
 
     static fromText(msg_text) {
-        return new MoneysocketMessage.castClass(msg_dict), null;
+        return MoneysocketMessage.castClass(msg_dict), null;
     }
 
 }

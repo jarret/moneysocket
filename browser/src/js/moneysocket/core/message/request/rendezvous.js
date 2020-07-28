@@ -13,11 +13,11 @@ let REQUEST_SUBCLASSES = require('./request.js').REQUEST_SUBCLASSES;
 class RequestRendezvous extends MoneysocketRequest {
     constructor(rendezvous_id) {
         super("REQUEST_RENDEZVOUS");
-        self.rendezvous_id = rendezvous_id;
+        this.rendezvous_id = rendezvous_id;
     }
 
     static castClass(msg_dict) {
-        c = new RequestRendezvous(msg_dict['rendezvous_id']);
+        var c = new RequestRendezvous(msg_dict['rendezvous_id']);
         Object.keys(msg_dict).forEach(key => {
             c[key] = msg_dict[key];
         });
@@ -28,10 +28,10 @@ class RequestRendezvous extends MoneysocketRequest {
         if (! ('rendezvous_id' in msg_dict)) {
             return "no rendezvous_id included";
         }
-        if (! (msg_dict['rendezvous_id'] instanceof String)) {
+        if (typeof msg_dict['rendezvous_id'] != 'string') {
             return "unknown rendezvous_id type";
         }
-        if (BinUtl.stringIsHex(msg_dict['rendezvous_id'])) {
+        if (! BinUtl.stringIsHex(msg_dict['rendezvous_id'])) {
             return "rendezvous_id not hex string";
         }
         if (msg_dict['rendezvous_id'].length != 64) {

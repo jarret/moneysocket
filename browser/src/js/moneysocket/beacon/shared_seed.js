@@ -50,6 +50,10 @@ class SharedSeed {
         var aes256_key = this.deriveAes256Key();
         return this.doubleSha256(aes256_key);
     }
+
+    deriveRendezvousIdHex() {
+        return BinUtl.b2h(this.deriveRendezvousId());
+    }
 }
 
 exports.SharedSeed = SharedSeed;

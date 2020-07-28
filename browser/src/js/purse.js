@@ -6,18 +6,13 @@ const DomUtl = require('./domutl.js').DomUtl;
 const WebsocketInterconnect = require(
     './moneysocket/socket/websocket.js').WebsocketInterconnect;
 const BeaconUi = require('./beacon_ui.js').BeaconUi;
-
-const MoneysocketMessage = require(
-    './moneysocket/core/message/message.js').MoneysocketMessage;
-
-let MESSAGE_SUBCLASSES = require(
-    './moneysocket/core/message/message.js').MESSAGE_SUBCLASSES;
-
-const  MoneysocketRequest = require(
-    './moneysocket/core/message/request/request.js').MoneysocketRequest;
+const SharedSeed = require('./moneysocket/beacon/shared_seed.js').SharedSeed;
 
 const  RequestRendezvous = require(
     './moneysocket/core/message/request/rendezvous.js').RequestRendezvous;
+
+const  MessageReceiver = require(
+    './moneysocket/core/message/receiver.js').MessageReceiver;
 
 class PurseStatusUi {
     constructor(div) {
@@ -220,15 +215,24 @@ class PurseApp {
 
 window.app = new PurseApp();
 
+
+function smokeTest() {
+    var ss = new SharedSeed();
+    var rid = ss.deriveRendezvousIdHex();
+    var rr = new RequestRendezvous(rid);
+    var rrj = rr.toJson();
+    console.log("rrj: " + rrj);
+    var [rr2, err] = MessageReceiver.fromText(rrj);
+    console.log("err: " + err);
+    console.log("rr2: " + rr2);
+    var rr2j = rr2.toJson();
+    console.log("rr2j: " + rr2j);
+}
+
 function drawFirstUi() {
     window.app.drawPurseUi()
-    var mm = new MoneysocketMessage("REQUEST");
-    console.log("mm: " + mm.toJson());
-    var mr = new MoneysocketRequest("PING");
-    console.log("mr: " + mr.toJson());
-    console.log("subclasses: " + Object.keys(MESSAGE_SUBCLASSES));
-    var rr = new RequestRendezvous("abc123");
-    console.log("rr: " + rr.toJson());
+
+    smokeTest();
 }
 
 window.addEventListener("load", drawFirstUi());

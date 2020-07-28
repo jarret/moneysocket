@@ -22,14 +22,14 @@ class MoneysocketRequest extends MoneysocketMessage {
 
     static castClass(msg_dict) {
         var request_class = REQUEST_SUBCLASSES[msg_dict['request_name']];
-        return request_class.castClass();
+        return request_class.castClass(msg_dict);
     }
 
     static checkValidMsgDict(msg_dict) {
         if (! ('request_uuid' in msg_dict)) {
             return "no request_uuid included";
         }
-        if (! (msg_dict['request_uuid'] instanceof String)) {
+        if (typeof msg_dict['request_uuid'] != 'string') {
             return "unknown request_uuid type";
         }
         if (! Uuid.isUuid(msg_dict['request_uuid'])) {
@@ -38,14 +38,14 @@ class MoneysocketRequest extends MoneysocketMessage {
         if (! ('request_name' in msg_dict)) {
             return "invalid request_name";
         }
-        if (! (msg_dict['request_name'] instanceof String)) {
+        if (typeof msg_dict['request_name'] != 'string') {
             return "unknown request_name type";
         }
         if (! (msg_dict['request_name'] in REQUEST_SUBCLASSES)) {
             return "unknown request_name: %s" % msg_dict['request_name'];
         }
 
-        subclass = REQUEST_SUBCLASSES[msg_dict['request_name']];
+        var subclass = REQUEST_SUBCLASSES[msg_dict['request_name']];
         return subclass.checkValidMsgDict(msg_dict);
 
     }

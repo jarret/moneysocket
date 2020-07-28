@@ -17,7 +17,7 @@ class Timestamp {
     }
 
     static isTimestamp(val) {
-        var is_val = Timestamp.isInt(timestamp_val) || Timestamp.isFloat(val);
+        var is_val = Timestamp.isInt(val) || Timestamp.isFloat(val);
         return is_val && (val > 0);
     }
 }
