@@ -7,6 +7,18 @@ const WebsocketInterconnect = require(
     './moneysocket/socket/websocket.js').WebsocketInterconnect;
 const BeaconUi = require('./beacon_ui.js').BeaconUi;
 
+const MoneysocketMessage = require(
+    './moneysocket/core/message/message.js').MoneysocketMessage;
+
+let MESSAGE_SUBCLASSES = require(
+    './moneysocket/core/message/message.js').MESSAGE_SUBCLASSES;
+
+const  MoneysocketRequest = require(
+    './moneysocket/core/message/request/request.js').MoneysocketRequest;
+
+const  RequestRendezvous = require(
+    './moneysocket/core/message/request/rendezvous.js').RequestRendezvous;
+
 class PurseStatusUi {
     constructor(div) {
         this.parent_div = div;
@@ -119,11 +131,11 @@ class PurseApp {
         this.psu.draw("center");
 
         DomUtl.drawBr(this.my_div);
-        var wtitle = "WALLET Connect to External SERVICE";
+        var wtitle = "💸 WALLET Connect to External SERVICE";
         this.wbu = new BeaconUi(this.my_div, wtitle, this, "wallet");
         this.wbu.draw("left");
 
-        var stitle = "SERVICE Connect to External WALLET";
+        var stitle = "💸 SERVICE Connect to External WALLET";
         this.sbu = new BeaconUi(this.my_div, stitle, this, "service");
         this.sbu.draw("right");
         DomUtl.drawBr(this.my_div);
@@ -210,6 +222,13 @@ window.app = new PurseApp();
 
 function drawFirstUi() {
     window.app.drawPurseUi()
+    var mm = new MoneysocketMessage("REQUEST");
+    console.log("mm: " + mm.toJson());
+    var mr = new MoneysocketRequest("PING");
+    console.log("mr: " + mr.toJson());
+    console.log("subclasses: " + Object.keys(MESSAGE_SUBCLASSES));
+    var rr = new RequestRendezvous("abc123");
+    console.log("rr: " + rr.toJson());
 }
 
 window.addEventListener("load", drawFirstUi());

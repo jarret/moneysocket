@@ -4,6 +4,12 @@
 const UInt64 = require('../utl/uint64.js').UInt64;
 
 class BinUtl {
+
+    static stringIsHex(input_string) {
+        var re = /[0-9A-Fa-f]{6}/g;
+        return (re.test(input_string));
+    }
+
     static toByteArray(hex_string) {
         var result = [];
         for (var i = 0; i < hex_string.length; i += 2) {
