@@ -4,7 +4,8 @@
 
 class StringUtl {
     static toUtf8(string) {
-        var byte_array = new TextEncoder("utf-8").encode(string);
+        const te = new TextEncoder("utf-8");
+        var byte_array = te.encode(string);
         return byte_array;
     }
     static fromUtf8(byte_array) {

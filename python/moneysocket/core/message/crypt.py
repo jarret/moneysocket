@@ -4,7 +4,6 @@
 
 
 import json
-import hashlib
 import re
 
 from Crypto.Cipher import AES

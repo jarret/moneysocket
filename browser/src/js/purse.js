@@ -17,6 +17,11 @@ const  RequestPing = require(
 const  MessageReceiver = require(
     './moneysocket/core/message/receiver.js').MessageReceiver;
 
+const  MoneysocketCrypt = require(
+    './moneysocket/core/message/crypt.js').MoneysocketCrypt;
+
+const  BinUtl = require('./moneysocket/utl/bin.js').BinUtl;
+
 class PurseStatusUi {
     constructor(div) {
         this.parent_div = div;
@@ -239,6 +244,29 @@ function smokeTest() {
     console.log("rp2: " + rp2);
     var rp2j = rp2.toJson();
     console.log("rp2j: " + rp2j);
+
+
+
+    //var encoded = MoneysocketCrypt.wireEncode(rr, ss);
+    //console.log("rr encoded: " + BinUtl.b2h(encoded));
+
+    var encoded = MoneysocketCrypt.wireEncode(rp, ss);
+    console.log("rp encoded: " + BinUtl.b2h(encoded));
+
+    var [dm, err] = MoneysocketCrypt.wireDecode(encoded, ss);
+    console.log("err: " + err);
+    console.log("dm: " + dm);
+
+
+
+    var pyss = SharedSeed.fromHexStr("47598990672ba514d473d72af4549e1c");
+    var pytxt = "0eae9d39b1d1a8d2dc48a1bb662d0f3e0a5cd472494206e3fb6b3726f07ea1ae1f1914221e57efc7501a7d77a9c1f19cbd229d6c966c883076fa203889a41911cbbe8385afb204f602d1cba50c7546cb96dc058e2b87cab503161958bb8787ea2c324f99a5dd549d984a048d7a3f5066203bb68eb9906314a1679a9cf1de8b2ce78d289a93b9ec2c17954ac0eebd44eb988e1e0581256878be88d331bd93558cda0002bfc199edf0c66dcf3cb1d2c8a5014a2eec816be35dcfbb6e13e4130c1a7bd4c75da067fcde2956752c863d0f756636a7f3ab29bc212ef8c2599a4541bb";
+
+    var pybin = BinUtl.h2b(pytxt);
+    var [dm, err] = MoneysocketCrypt.wireDecode(pybin, pyss);
+    console.log("py err: " + err);
+    console.log("pydm: " + dm.toJson());
+
 }
 
 function drawFirstUi() {
