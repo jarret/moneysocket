@@ -5,9 +5,10 @@
 
 const MoneysocketMessage = require('./message.js').MoneysocketMessage;
 
-const  RequestReceiver = require('./request/receiver.js').RequestReceiver;
-
-
+/* require to trigger registration of SUBCLASSES dictionaries */
+const RequestReceiver = require('./request/receiver.js').RequestReceiver;
+const NotificationReceiver = require(
+    './notification/receiver.js').NotificationReceiver;
 
 class MessageReceiver {
     static decodeJson(msg_txt) {

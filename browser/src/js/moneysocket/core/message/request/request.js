@@ -1,9 +1,6 @@
 // Copyright (c) 2020 Jarret Dyrbye
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
-// Copyright (c) 2020 Jarret Dyrbye
-// Distributed under the MIT software license, see the accompanying
-// file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
 
 const MoneysocketMessage = require('../message.js').MoneysocketMessage;
@@ -42,7 +39,7 @@ class MoneysocketRequest extends MoneysocketMessage {
             return "unknown request_name type";
         }
         if (! (msg_dict['request_name'] in REQUEST_SUBCLASSES)) {
-            return "unknown request_name: %s" % msg_dict['request_name'];
+            return "unknown request_name: " + msg_dict['request_name'];
         }
 
         var subclass = REQUEST_SUBCLASSES[msg_dict['request_name']];

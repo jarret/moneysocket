@@ -4,8 +4,11 @@
 
 
 
-const  RequestRendezvous = require('./rendezvous.js').RequestRendezvous;
+/* we need to require all the classes so they rgister to the REQUEST_SUBCLASSES
+ * dictionary */
 
+const RequestRendezvous = require('./rendezvous.js').RequestRendezvous;
+const RequestPing = require('./rendezvous.js').RequestRendezvous;
 
 class RequestReceiver {
 }

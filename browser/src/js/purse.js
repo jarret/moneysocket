@@ -11,6 +11,9 @@ const SharedSeed = require('./moneysocket/beacon/shared_seed.js').SharedSeed;
 const  RequestRendezvous = require(
     './moneysocket/core/message/request/rendezvous.js').RequestRendezvous;
 
+const  RequestPing = require(
+    './moneysocket/core/message/request/ping.js').RequestPing;
+
 const  MessageReceiver = require(
     './moneysocket/core/message/receiver.js').MessageReceiver;
 
@@ -227,6 +230,15 @@ function smokeTest() {
     console.log("rr2: " + rr2);
     var rr2j = rr2.toJson();
     console.log("rr2j: " + rr2j);
+
+    var rp = new RequestPing();
+    var rpj = rp.toJson();
+    console.log("rpj: " + rrj);
+    var [rp2, err] = MessageReceiver.fromText(rpj);
+    console.log("err: " + err);
+    console.log("rp2: " + rp2);
+    var rp2j = rp2.toJson();
+    console.log("rp2j: " + rp2j);
 }
 
 function drawFirstUi() {
