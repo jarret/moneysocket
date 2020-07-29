@@ -11,6 +11,44 @@ from moneysocket.socket.websocket import WebsocketInterconnect
 from moneysocket.core.service import Service
 from moneysocket.core.wallet import Wallet
 
+
+
+class Rendezvous(object):
+    def __init__(self):
+        self.sockets_waiting = {}
+        self.unpaired = {}
+        self.unpaired_rendezvous = {}
+        self.paired = {}
+        self.paired_rendezvous = {}
+
+    def new_socket(self, socket):
+        self.sockets_waiting[socket.uuid] = socket;
+
+    def socket_close(self, socket):
+        if socket.uuid in self.sockets_waiting:
+            del self.sockets_waiting[socket.uuid]
+
+    def enter_rendezvous(self, rendezvous_id, socket):
+        if rendezvous_id  in self.paired_rendezvous.keys():
+            return False
+
+        if rendezvous_id in self.unpaired_rendezvous.keys():
+            peer_socket = self.unpaired[rendezvous_id]
+            self.enter_pairing(rendezvous_id, socket, peer_socket)
+        else:
+            self.unpaired[rendezvous_id] = socket
+
+    def enter_pairing(self, rendezvous_id, socket1, socket2):
+        del self.unpaired[rendezvous_id]
+        self.paired[socket1.uuid] = {'peer_socket':   socket2,
+                                     'rendezvous_id': rendezvous_id}
+        self.paired[socket2.uuid] = {'peer_socket':   socket1,
+                                     'rendezvous_id': rendezvous_id}
+        self.paired_rendezvous[rendezvous_id] = {'socket1': socket1,
+                                                 'socket2': socket2}
+
+
+
 class Relay(object):
     def __init__(self, config):
         self.config = config
