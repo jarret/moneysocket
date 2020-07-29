@@ -5,7 +5,6 @@
 
 class Pairing(object):
     def __init__(self):
-        self.sockets_waiting_by_uuid = {}
         self.sockets_by_uuid = {}
 
         self.unpaired_rids_by_uuid = {}
@@ -13,6 +12,19 @@ class Pairing(object):
 
         self.pairs_by_uuid = {}
         self.pairs_by_rid = {}
+
+    ###########################################################################
+
+    def iter_str_lines(self):
+        sockets = len(self.sockets_by_uuid)
+        unpaired = len(self.unpaired_rids_by_uuid)
+        paired = len(self.pairs_by_uuid)
+        yield "----------"
+        yield "sockets/unpaired/paired: %d/%d/%d" % (sockets, unpaired, paired)
+        yield "relay pairs connected:   %d" % len(self.pairs_by_rid)
+
+    def __str__(self):
+        return "\n".join(self.iter_str_lines())
 
     ###########################################################################
 
@@ -45,22 +57,22 @@ class Pairing(object):
     ###########################################################################
 
     def new_socket(self, socket):
-        self.sockets_waiting[socket.uuid] = socket
         self.sockets_by_uuid[socket.uuid] = socket
 
     def socket_close(self, socket):
         del self.sockets_by_uuid[socket.uuid]
-        if socket.uuid in self.sockets_waiting:
-            del self.sockets_waiting_by_uuid[socket.uuid]
 
         if socket.uuid in self.unpaired_rids_by_uuid:
             self._exit_unpaired(socket.uuid)
 
-        if socket.uuid in self.pairs_by_uuid:
-            unpaired_uuid = self.pairs_by_uuid[socket_uuid]['peer_uuid']
-            self._exit_paired(socket.uuid)
-            return "PEER_UNPAIRED", unpaired_uuid
-        return "QUIET_CLOSE", None
+        if socket.uuid not in self.pairs_by_uuid:
+            return "QUIET_CLOSE", None, None
+
+        unpaired_uuid = self.pairs_by_uuid[socket_uuid]['peer_uuid']
+        broken_rid = self.pairs_by_uuid[socket_uuid]['rid']
+        self._exit_paired(socket.uuid)
+        self._exit_unpaired(socket.uuid)
+        return "RENDEZVOUS_END", unpaired_uuid, broken_rid
 
     ###########################################################################
 
@@ -89,3 +101,5 @@ class Pairing(object):
         peer_uuid = self.pairs_by_uuid[uuid]['peer_uuid']
         return self.sockets_by_uuid[peer_uuid]
 
+    def get_socket(self, uuid):
+        return self.sockets_by_uuid[uuid]
