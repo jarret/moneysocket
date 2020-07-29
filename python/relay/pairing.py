@@ -7,6 +7,8 @@ class Pairing(object):
     def __init__(self):
         self.sockets_by_uuid = {}
 
+        self.req_ref_by_uuid = {}
+
         self.unpaired_rids_by_uuid = {}
         self.unpaired_uuids_by_rid = {}
 
@@ -28,13 +30,15 @@ class Pairing(object):
 
     ###########################################################################
 
-    def _enter_unpaired(self, uuid, rid):
+    def _enter_unpaired(self, uuid, rid, req_ref_uuid):
         self.unpaired_uuids_by_rid[rid] = uuid
         self.unpaired_rids_by_uuid[uuid] = rid
+        self.req_ref_by_uuid[uuid] = req_ref_uuid
 
     def _exit_unpaired(self, uuid, rid):
         del self.unpaired_uuids_by_rid[rid]
         del self.unpaired_rids_by_uuid[uuid]
+        del self.req_ref_by_uuid[uuid]
 
     ###########################################################################
 
@@ -52,7 +56,6 @@ class Pairing(object):
         del self.pairs_by_uuid[uuid]
         del self.pairs_by_uuid[unpaired_uuid]
         del self.pairs_by_rid[unpaired_rid]
-        self._enter_unpaired(unpaired_uuid, unpaired_rid)
 
     ###########################################################################
 
@@ -76,21 +79,22 @@ class Pairing(object):
 
     ###########################################################################
 
-    def socket_enter_rendezvous(self, rid, socket):
+    def enter_rendezvous(self, rid, socket, req_ref_uuid):
         if rid in self.pairs_by_rid:
             # third entrant can't rendezvous
-            return "THIRD", None
+            return "THIRD", None, None
 
         # is there another socket waiting on this rid?
         if rid in self.unpaired_uuids_by_rid:
             # yes, pair them up
             peer_uuid = self.unpaired_uuids_by_rid[rid]
-            self.exit_unpaired(peer_uuid, rid)
+            peer_req_ref_uuid = self.req_ref_by_uuid[peer_uuid]
+            self._exit_unpaired(peer_uuid, rid)
             self._enter_paired(rid, socket.uuid, peer_uuid)
-            return "PAIRED", rid
+            return "PAIRED", peer_uuid, peer_req_ref_uuid
         # no, wait for pair
-        self._enter_unpaired(socket.uuid, rid)
-        return "WAITING", rid
+        self._enter_unpaired(socket.uuid, rid, req_ref_uuid)
+        return "WAITING", None, None
 
     ###########################################################################
 
@@ -103,3 +107,6 @@ class Pairing(object):
 
     def get_socket(self, uuid):
         return self.sockets_by_uuid[uuid]
+
+    def get_rid(self, uuid):
+        return self.pairs_by_uuid[uuid]['rid']
