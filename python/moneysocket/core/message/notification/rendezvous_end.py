@@ -12,7 +12,7 @@ class NotifyRendezvousEnd(MoneysocketNotification):
     MUST_BE_CLEARTEXT = True
 
     def __init__(self, rendezvous_id):
-        super().__init__("NOTIFY_RENDEZVOUS_END"):
+        super().__init__("NOTIFY_RENDEZVOUS_END")
         self['rendezvous_id'] = rendezvous_id
 
     @staticmethod
