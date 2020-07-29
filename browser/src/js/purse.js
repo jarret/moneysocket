@@ -272,7 +272,7 @@ function smokeTest() {
 function drawFirstUi() {
     window.app.drawPurseUi()
 
-    smokeTest();
+    //smokeTest();
 }
 
 window.addEventListener("load", drawFirstUi());
