@@ -7,12 +7,22 @@ import logging
 from configparser import ConfigParser
 from OpenSSL import SSL
 
+from twisted.internet import reactor
+from twisted.internet.task import LoopingCall
+
 from moneysocket.socket.websocket import WebsocketInterconnect
 from moneysocket.core.service import Service
 from moneysocket.core.wallet import Wallet
+from moneysocket.core.wallet import Wallet
+
+from moneysocket.core.message.notification.rendezvous_end import (
+    NotifyRendezvousEnd)
+from moneysocket.core.message.notification.error import NotifyError
+from moneysocket.core.message.notification.rendezvous import NotifyRendezvous
+from moneysocket.core.message.notification.rendezvous_becoming_ready import (
+    NotifyRendezvousBecomingReady)
 
 from relay.pairing import Pairing
-
 
 
 
@@ -24,6 +34,16 @@ class Relay(object):
         self.sockets = {}
         self.listen_url = self.get_listen_url(self.config['Relay'])
         self.tls_info = self.get_tls_info(self.config['Relay'])
+
+        self.pairing = Pairing()
+
+        self.info_loop = LoopingCall(self.output_pairing_info)
+        self.info_loop.start(2.0, now=False)
+
+    ###########################################################################
+
+    def output_pairing_info(self):
+        logging.info(str(self.pairing))
 
     ###########################################################################
 
@@ -46,23 +66,77 @@ class Relay(object):
 
     ###########################################################################
 
-    def recv_cb(self, socket, msg_dict):
-        if msg_dict['request_type'] in {"PING", "PONG", "ERROR"}:
-            print("got: %s" % msg_dict)
+    def msg_recv_cb(self, socket, msg):
+        if msg['message_class'] != "REQUEST":
+            logging.error("got a message the relay can't undersand")
+            return
+
+        if msg['request_name'] != "REQUEST_RENDEZVOUS":
+            logging.error("got a request the relay can't understand")
+            return
+
+        rid = msg['rendezvous_id']
+        req_ref_uuid = msg['request_reference_uuid']
+        result, peer_uuid, peer_req_ref_uuid = self.pairing.enter_rendezvous(
+            rid, socket, req_ref_uuid)
+
+        if result not in {"THIRD", "WAITING", "PAIRED"}:
+            logging.error("got an unexpected pairing result")
+            return
+
+        if result == "THIRD":
+            notify = NotifyError("rendezvous occupied")
+            socket.write(notify)
+        elif result == "WAITING":
+            notify = NotifyRendezvousBecomingReady(rid, req_ref_uuid)
+            socket.write(notify)
         else:
-            logging.error("unknown message: %s" % msg_dict)
+            assert result == "PAIRED"
+            peer_socket = self.pairing.get_socket(peer_uuid)
+            rendezvous_id = self.pairing.get_rid(uuid)
+
+            notify = NotifyRendezvous(rendezvous_id, req_ref_uuid)
+            socket.write(notify)
+
+            notify_peer = NotifyRendezvous(rendezvous_id, peer_req_ref_uuid)
+            peer_socket.write(notify_peer)
+
+
+    def cyphertext_recv_cb(self, socket, msg_bytes):
+        logging.info("relay received cyphertext: %s" % len(msg_bytes))
+        if not self.pairing.is_socket_paired(socket.uuid):
+            logging.error("got cyphertext from upaired socket" % len(msg_bytes))
+            return
+        # forward the cyphertext to the peer
+        peer_socket = self.pairing.get_paired_socket(socket.uuid)
+        peer_socket.write_raw(msg_bytes)
+        pass
+
+    ###########################################################################
+
+    def send_rendezvous_end(self, socket, rid):
+        notify = NotifyRedezvousEnd(rid)
+        socket.write(notify)
 
     ###########################################################################
 
     def new_socket_cb(self, socket, cb_param):
         logging.info("got new socket: %s %s" % (socket, cb_param))
-        self.sockets[socket.uuid] = socket
-        socket.register_recv_cb(self.recv_cb)
+        socket.register_recv_cb(self.msg_recv_cb)
+        socket.register_cyphertext_recv_cb(self.msg_recv_cb)
+        # no shared seed to register for for relay
+
+        self.pairing.new_socket(socket)
 
     def socket_close_cb(self, socket):
         logging.info("got socket close: %s" % (socket))
-        if socket.uuid in self.sockets.keys():
-            del self.sockets[socket.uuid];
+        result, unpaired_uuid, broken_rid = self.pairing.socket_close(socket)
+        assert result in {"QUIET_CLOSE", "RENDEZVOUS_END"}, "unexpected result"
+        if result == "QUIET_CLOSE":
+            logging.info("quiet close")
+        else:
+            peer_socket = self.pairing.get_socket(unpaired_uuid)
+            self.send_rendezvous_end(peer_socket, broken_rid)
 
     def run_app(self):
         print("listening at: %s" % self.listen_url)
