@@ -117,16 +117,18 @@ class IncomingSocket(WebSocketServerProtocol):
         logging.info("initiating socket close")
         super().sendClose()
 
-    def initiate_send(self, msg_dict):
-        s = self.sendMessage(json.dumps(msg_dict).encode("utf8"))
-        logging.info("sent message %s, got: %s" % (msg_dict, s))
+    def initiate_send(self, msg_bytes):
+        s = self.sendMessage(msg_bytes, isBinary=True)
+        logging.info("sent message %d bytes, got: %s" % (len(msg_bytes), s))
 
     def handle_binary(self, payload):
         logging.info("binary payload: %d bytes" % len(payload))
+        self.ms._msg_recv(payload)
 
     def handle_text(self, payload):
         logging.info("text payload: %s" % payload.decode("utf8"))
-        self.ms._msg_recv(json.loads(payload.decode("utf8")))
+        logging.error("text payload is unexpected, dropping")
+
 
 
 class IncomingWebsocketInterconnect(MoneysocketInterconnect):
@@ -205,16 +207,17 @@ class OutgoingSocket(WebSocketClientProtocol):
     def initiate_close(self):
         super().sendClose()
 
-    def initiate_send(self, msg_dict):
-        s = self.sendMessage(json.dumps(msg_dict).encode("utf8"))
-        logging.info("sent message %s, got: %s" % (msg_dict, s))
+    def initiate_send(self, msg_bytes):
+        s = self.sendMessage(msg_bytes, isBinary=True)
+        logging.info("sent message %d bytes, got: %s" % (len(msg_bytes), s))
 
     def handle_binary(self, payload):
         logging.info("binary payload: %d bytes" % len(payload))
+        self.ms._msg_recv(payload)
 
     def handle_text(self, payload):
         logging.info("text payload: %s" % payload.decode("utf8"))
-        self.ms._msg_recv(json.loads(payload.decode("utf8")))
+        logging.error("text payload is unexpected, dropping")
 
     ##########################################################################
 

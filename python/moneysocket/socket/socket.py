@@ -5,13 +5,16 @@
 import logging
 import uuid
 
+from moneysocket.core.message.crypt import MoneysocketCrypt
 
 class MoneysocketSocket(object):
     def __init__(self):
         self.uuid = uuid.uuid4()
         self.msg_recv_cb = None
+        self.cyphertext_recv_cb = None
         self.initiate_close_func = None
         self.initiate_send_func = None
+        self.shared_seed = None
 
     def __str__(self):
         return "<socket uuid=%s>" % str(self.uuid)[:8]
@@ -24,13 +27,36 @@ class MoneysocketSocket(object):
         """
         self.msg_recv_cb = cb
 
-    def write(self, msg_dict):
+    def register_cyphertext_recv_cb(self, cb):
+        """ Client of API may register a callback which will be used to
+            deliver messages recieved from the socket which can't be decrypted.
+        """
+        self.cyphertext_recv_cb = cb
+
+    def register_shared_seed(self, shared_seed):
+        """ Client of API may register shared seed to facilitate
+            encryption/decrpytion of the messanges.
+        """
+        self.shared_seed = shared_seed
+
+    def write(self, msg):
         """ Write msg a message to the socket.
         """
         if not self.initiate_send_func:
             logging.error("no send initialized")
             return
-        self.initiate_send_func(msg_dict)
+
+        msg_bytes = MoneysocketCrypt.wire_encode(msg,
+                                                 shared_seed=self.shared_seed)
+        self.initiate_send_func(msg_bytes)
+
+    def write_raw(self, msg_bytes):
+        """ Write an already-encoded/crypted message to the socket.
+        """
+        if not self.initiate_send_func:
+            logging.error("no send initialized")
+            return
+        self.initiate_send_func(msg_bytes)
 
     def close(self):
         """ Closes the socket.
@@ -48,11 +74,25 @@ class MoneysocketSocket(object):
     def _register_initiate_send_func(self, func):
         self.initiate_send_func = func
 
-    def _msg_recv(self, msg_dict):
+    def _msg_recv(self, msg_bytes):
         if not self.msg_recv_cb:
             logging.error("no recv callback registered!")
             return
-        self.msg_recv_cb(self, msg_dict)
+
+        if (MoneysocketCrypt.is_cyphertext(msg_bytes) and
+            self.shared_seed is None):
+            if self.cyphertext_recv_cb is None:
+                logging.error("nowhere to forward cyphertext?")
+                return
+            self.cyphertext_recv_cb(self, msg_bytes)
+            return
+
+        msg, err = MoneysocketCrypt.wire_decode(msg_bytes,
+                                                shared_seed=self.shared_seed)
+        if err:
+            logging.error("got bad message? len: %d" % len(msg_bytes))
+            return
+        self.msg_recv_cb(self, msg)
 
 
 ###############################################################################
