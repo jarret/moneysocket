@@ -7,6 +7,7 @@
 /* we need to require all the classes so they rgister to the REQUEST_SUBCLASSES
  * dictionary */
 
+const NotifyError = require('./error.js').NotifyError;
 const NotifyPong = require('./pong.js').NotifyPong;
 const NotifyRendezvous = require('./rendezvous.js').NotifyRendezvous;
 const NotifyRendezvousBecomingReady = require(
