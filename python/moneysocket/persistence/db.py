@@ -56,26 +56,26 @@ class PersistenceDb(object):
     def add_wallet(self, wallet_name, msatoshis):
         self.db['wallets'][wallet_name] = {'msatoshis':       msatoshis,
                                            'pending':         {},
-                                           'listen_ws_urls':  [],
-                                           'connect_ws_urls': []}
+                                           'listen_beacons':  [],
+                                           'connect_beacons': []}
         self.persist()
 
     def remove_wallet(self, wallet_name):
         del self.db['wallets'][wallet_name]
         self.persist()
 
-    def add_wallet_listen_connection(self, wallet_name, listen_ws_url):
-        self.db['wallets'][wallet_name]['listen_ws_urls'].append(listen_ws_url)
+    def add_wallet_listen_beacon(self, wallet_name, listen_beacon):
+        self.db['wallets'][wallet_name]['listen_beacons'].append(listen_beacon)
         self.persist()
 
-    def add_wallet_connect_connection(self, wallet_name, connect_ws_url):
-        self.db['wallets'][wallet_name]['connect_ws_urls'].append(
-            connect_ws_url)
+    def add_wallet_connect_beacon(self, wallet_name, connect_beacon):
+        self.db['wallets'][wallet_name]['connect_beaons'].append(
+            connect_beacon)
         self.persist()
 
-    def clear_wallet_connections(self, wallet_name):
-        self.db['wallets'][wallet_name]['listen_ws_urls'] = []
-        self.db['wallets'][wallet_name]['connect_ws_urls'] = []
+    def clear_wallet_beacons(self, wallet_name):
+        self.db['wallets'][wallet_name]['listen_beacons'] = []
+        self.db['wallets'][wallet_name]['connect_beacons'] = []
         self.persist()
 
 
@@ -90,26 +90,27 @@ class PersistenceDb(object):
     ###########################################################################
 
     def add_service(self, service_name):
-        self.db['services'][service_name] = {'listen_ws_urls':  [],
-                                             'connect_ws_urls': []}
+        self.db['services'][service_name] = {'listen_beacons':  [],
+                                             'connect_beacons': []}
         self.persist()
 
     def remove_service(self, service_name):
         del self.db['services'][service_name]
         self.persist()
 
-    def clear_service_connections(self, service_name):
-        self.db['services'][service_name]['listen_ws_urls'] = []
-        self.db['services'][service_name]['connect_ws_urls'] = []
+    def clear_service_beacons(self, service_name):
+        self.db['services'][service_name]['listen_beacons'] = []
+        self.db['services'][service_name]['connect_beacons'] = []
         self.persist()
 
-    def add_service_listen_connection(self, service_name, listen_url):
-        self.db['services'][service_name]['listen_ws_urls'].append(listen_url)
+    def add_service_listen_beacon(self, service_name, listen_beacon):
+        self.db['services'][service_name]['listen_beacons'].append(
+            listen_beacon)
         self.persist()
 
-    def add_service_connect_connection(self, service_name, connect_ws_url):
-        self.db['services'][service_name]['connect_ws_urls'].append(
-            connect_ws_url)
+    def add_service_connect_beacon(self, service_name, connect_beacon):
+        self.db['services'][service_name]['connect_beacons'].append(
+            connect_beacon)
         self.persist()
 
 
@@ -118,12 +119,12 @@ class PersistenceDb(object):
     def iter_wallets(self):
         for name, record in self.db['wallets'].items():
             msats = record['msatoshis']
-            listens = record['listen_ws_urls']
-            connects = record['connect_ws_urls']
+            listens = record['listen_beacons']
+            connects = record['connect_beacons']
             yield name, msats, listens, connects
 
     def iter_services(self):
         for name, record in self.db['services'].items():
-            listens = record['listen_ws_urls']
-            connects = record['connect_ws_urls']
+            listens = record['listen_beacons']
+            connects = record['connect_beacons']
             yield name, listens, connects

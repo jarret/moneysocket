@@ -39,7 +39,3 @@ class SharedSeed():
         aes256_key = self.derive_aes256_key()
         return self.double_sha256(aes256_key)
 
-    def derive_iv(self):
-        rid = self.derive_rendezvous_id()
-        return self.double_sha256(rid)[0:16]
-

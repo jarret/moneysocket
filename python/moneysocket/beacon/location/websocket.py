@@ -24,11 +24,16 @@ class WebsocketLocation():
         self.port = port if port else (DEFAULT_TLS_PORT if use_tls else
                                        DEFAULT_NO_TLS_PORT)
 
+    def __str__(self):
+        return "%s://%s:%s" % ("wss" if self.use_tls else "ws", self.host,
+                                self.port)
+
     def to_dict(self):
         return {'type':    "WebSocket",
                 'host':    self.host,
                 'port':    self.port,
                 'use_tls': self.use_tls}
+
 
     @staticmethod
     def from_tlv(tlv):

@@ -9,6 +9,9 @@ import argparse
 
 from twisted.conch.telnet import TelnetProtocol
 
+from moneysocket.beacon.location.websocket import WebsocketLocation
+from moneysocket.beacon.beacon import MoneysocketBeacon
+
 ###############################################################################
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -48,19 +51,16 @@ class AppTelnetInterface(TelnetProtocol):
 
     ##########################################################################
 
-    def get_default_listen_url(self):
-        if self.config['Listen']['UseTLS'] == "True":
-            url = "wss://%s:%s" % (
-                self.config['Listen']['DefaultBind'],
-                self.config['Listen']['DefaultPort'])
-        elif self.config['Listen']['UseTLS'] == "False":
-            url = "ws://%s:%s" % (
-                self.config['Listen']['DefaultBind'],
-                self.config['Listen']['DefaultPort'])
-        else:
-            logging.error("unknown setting: %s" %
-                          self.config['Listen']['UseTLS'])
-            return ''
+    def get_default_listen_beacon_location(self):
+        use_tls = self.config['Listen']['UseTLS'] == "True"
+        host = self.config['Listen']['ExternalHost']
+        port = int(self.config['Listen']['ExternalPort'])
+        return WebsocketLocation(host, port=port, use_tls=use_tls)
+
+    def gen_default_listen_beacon(self):
+        beacon = MoneysocketBeacon()
+        beacon.add_location(self.get_default_listen_beacon_location())
+        return beacon
 
     def parse(self, args):
         parser = self.prep_parser()

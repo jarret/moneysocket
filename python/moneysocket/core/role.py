@@ -3,10 +3,11 @@
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
 import logging
-
+import uuid
 
 class Role(object):
     def __init__(self, name):
+        self.uuid = uuid.uuid4()
         self.name = name
         self.socket = None
         self.connection_attempt = None

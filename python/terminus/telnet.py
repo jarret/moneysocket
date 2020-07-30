@@ -10,6 +10,8 @@ from twisted.conch.telnet import TelnetTransport
 from twisted.internet.protocol import ServerFactory
 from twisted.application.internet import TCPServer
 
+from moneysocket.beacon.beacon import MoneysocketBeacon
+
 from utl.telnet_interface import AppTelnetInterface, ArgumentParser
 
 ###############################################################################
@@ -56,21 +58,20 @@ class TerminusTelnetInterface(AppTelnetInterface):
         parser_connect = subparsers.add_parser('connect',
                                                help='connect to websocket')
         parser_connect.set_defaults(cmd_func=self.APP.connect)
-        parser_connect.add_argument("connect_ws_url", help="url to connect to")
         parser_connect.add_argument("wallet", type=str,
                                     help="wallet or service for connection")
+        parser_connect.add_argument("beacon", help="beacon to connect to")
 
         parser_listen = subparsers.add_parser('listen',
                                               help='listen to websocket')
         parser_listen.set_defaults(cmd_func=self.APP.listen)
-        listen_url_default = self.get_default_listen_url()
-        parser_listen.add_argument('listen_ws_url', type=str,
-            default=listen_url_default,
-            help="websocket bind addr typically ws://127.0.0.1 or ws://0.0.0.0 "
-                 "with port and wss:// for TLS (default=%s)" %
-                 listen_url_default)
+
+        default_beacon = self.gen_default_listen_beacon().to_bech32_str()
         parser_listen.add_argument("wallet", type=str,
-            help="wallet to match with connections")
+            help="wallet to match with incoming connections")
+        parser_listen.add_argument('-b', '--beacon', type=str,
+                                   default=default_beacon,
+            help="beacon to listen for wallet (default=auto-generated)")
 
         parser_clear = subparsers.add_parser('clearconnection',
             help='clear connections for wallet')
