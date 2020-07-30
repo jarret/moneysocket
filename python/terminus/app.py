@@ -94,24 +94,59 @@ class Terminus(object):
             return False
         return msg['request_name'] == "REQUEST_RENDEZVOUS"
 
+    def start_rendezvous(self, socket, beacon_str):
+        beacon, err = MoneysocketBeacon.from_bech32_str(beacon_str)
+        assert not err, "unexpected err: %s" % err
+
+        wallet_name = self.match.get_wallet(beacon_str)
+        wallet = self.wallets[wallet_name]
+        rid = beacon.shared_seed.derive_rendezvous_id()
+
+        socket.register_shared_seed(beacon.shared_seed)
+        wallet.add_socket(socket)
+        wallet.start_rendezvous(rid)
+
+    def handle_request_rendezvous(self, socket, msg):
+        rid = msg['rendezvous_id']
+        if not self.match.rid_is_known(rid):
+            req_ref_uuid = msg['request_reference_uuid']
+            socket.write(NotifyError("unknown rendezvous_id",
+                                     request_reference_uuid=req_ref_uuid))
+            return
+
+        # match rendezvous to wallet role and register socket
+        wallet = self.match.get_wallet_from_rid(rid)
+        beacon_str = self.match.get_beacon(wallet.name)
+        beacon, err = MoneysocketBeacon.from_bech32_str(beacon_str)
+        assert not err, "unexpected err: %s" % err
+        assert rid == beacon.derive_rendezvous_id(), "unexpected rid"
+        socket.register_shared_seed(beacon.shared_seed)
+        wallet.add_socket(socket)
+
+        # pass message for wallet role to proceed
+        wallet.msg_recv_cb(socket, msg)
+
+    ##########################################################################
+
     def recv_cb(self, socket, msg):
         logging.info("got msg: %s" % msg.to_json())
 
-        if self.is_request_rendezvous(msg):
-            rid = msg['rendezvous_id']
-            if not self.match.rid_is_known(rid):
-                req_ref_uuid = msg['request_reference_uuid']
-                socket.write(NotifyError("unknown rendezvous_id",
-                                         request_reference_uuid=req_ref_uuid))
-                return
-            wallet = self.match.get_wallet_from_rid(rid)
-            wallet.add_socket()
-            wallet.proceed_rendezvous(rid)
+        if not self.is_request_rendezvous(msg):
+            socket.write(NotifyError("unknown message",
+                                     request_reference_uuid=None))
+            socket.close()
+            return
+        self.handle_request_rendezvous(socket, msg)
 
     ###########################################################################
 
     def new_socket_cb(self, socket, cb_param):
-        socket.register_recv_cb(self.recv_cb)
+        if cb_param is not None:
+            beacon_str = cb_param
+            self.start_rendezvous(socket, beacon_str)
+        else:
+            logging.info("waiting until other side requests rendezvous")
+            socket.register_recv_cb(self.recv_cb)
 
     def socket_close_cb(self, socket):
         logging.info("app got socket closed: %s" % socket)
@@ -192,7 +227,8 @@ class Terminus(object):
         ws_url = str(location)
 
         self.match.assoc_wallet(wallet, beacon_str)
-        connection_attempt = self.interconnect.connect(ws_url)
+        connection_attempt = self.interconnect.connect(ws_url,
+                                                       cb_param=beacon_str)
         wallet.add_connection_attempt(connection_attempt)
         self.add_connect_beacon_attributes(wallet, beacon_str)
         self.is_connecting[wallet_name] = wallet
@@ -215,7 +251,7 @@ class Terminus(object):
 
         listen_url = self.get_listen_url()
         if len(self.is_listening) == 0:
-            self.interconnect.listen(listen_url)
+            self.interconnect.listen(listen_url, cb_param=None)
         self.is_listening.add(wallet_name)
 
         self.match.assoc_wallet(wallet, beacon_str)

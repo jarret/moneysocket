@@ -15,7 +15,6 @@ class Match(object):
         self.rids_by_beacon = {}
 
     def _derive_rid(self, beacon_str):
-        print("beacon %s" % beacon_str.__class__)
         b, err = MoneysocketBeacon.from_bech32_str(beacon_str)
         assert not err, "unexpected err: %s" % err
         return b.shared_seed.derive_rendezvous_id()

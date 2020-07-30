@@ -5,6 +5,9 @@
 import logging
 import uuid
 
+
+from moneysocket.core.message.request.rendezvous import RequestRendezvous
+
 class Role(object):
     def __init__(self, name):
         self.uuid = uuid.uuid4()
@@ -45,8 +48,23 @@ class Role(object):
 
     ###########################################################################
 
+    def msg_recv_cb(self, socket, msg):
+        assert socket.uuid == self.socket.uuid, "crossed socket?"
+        logging.info("role received: %s" % msg)
+
+    ###########################################################################
+
+    def start_rendezvous(self, rid):
+        msg = RequestRendezvous(rid.hex())
+        logging.info("sending: %s" % msg)
+        self.socket.write(msg)
+        logging.info("writing request rendezvous: %s" % rid.hex())
+
+    ###########################################################################
+
     def add_socket(self, socket):
         logging.info("%s is adding socket %s" % (self.name, socket))
+        socket.register_recv_cb(self.msg_recv_cb)
         self.socket = socket
         self.connection_attempt = None
 

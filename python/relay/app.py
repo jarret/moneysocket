@@ -74,9 +74,9 @@ class Relay(object):
         if msg['request_name'] != "REQUEST_RENDEZVOUS":
             logging.error("got a request the relay can't understand")
             return
-
+        logging.info("received msg: %s" % msg)
         rid = msg['rendezvous_id']
-        req_ref_uuid = msg['request_reference_uuid']
+        req_ref_uuid = msg['request_uuid']
         result, peer_uuid, peer_req_ref_uuid = self.pairing.enter_rendezvous(
             rid, socket, req_ref_uuid)
 
@@ -86,9 +86,11 @@ class Relay(object):
 
         if result == "THIRD":
             notify = NotifyError("rendezvous occupied")
+            logging.info("send err: %s" % notify)
             socket.write(notify)
         elif result == "WAITING":
             notify = NotifyRendezvousBecomingReady(rid, req_ref_uuid)
+            logging.info("send becoming ready: %s" % notify)
             socket.write(notify)
         else:
             assert result == "PAIRED"
@@ -96,9 +98,11 @@ class Relay(object):
             rendezvous_id = self.pairing.get_rid(uuid)
 
             notify = NotifyRendezvous(rendezvous_id, req_ref_uuid)
+            logging.info("send rendezvous 1: %s" % notify)
             socket.write(notify)
 
             notify_peer = NotifyRendezvous(rendezvous_id, peer_req_ref_uuid)
+            logging.info("send rendezvous2: %s" % notify_peer)
             peer_socket.write(notify_peer)
 
 

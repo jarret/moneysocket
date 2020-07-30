@@ -35,7 +35,8 @@ class Pairing(object):
         self.unpaired_rids_by_uuid[uuid] = rid
         self.req_ref_by_uuid[uuid] = req_ref_uuid
 
-    def _exit_unpaired(self, uuid, rid):
+    def _exit_unpaired(self, uuid):
+        rid = self.unpaired_rids_by_uuid[uuid]
         del self.unpaired_uuids_by_rid[rid]
         del self.unpaired_rids_by_uuid[uuid]
         del self.req_ref_by_uuid[uuid]

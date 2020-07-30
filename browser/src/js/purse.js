@@ -174,12 +174,14 @@ class PurseApp {
             this.wallet_socket = null;
             this.psu.updateWalletRoleDisconnected();
             this.wbu.drawConnectButton();
+            this.wbu.doModeEnter();
             // TODO wallet role object
         } else if (cb_param == "service") {
             console.log("got service socket closed");
             this.service_socket = null;
             this.psu.updateServiceRoleDisconnected();
             this.sbu.drawConnectButton();
+            this.sbu.doModeEnter();
             // TODO service role object
         } else {
             console.log("got unknown socket closed");
