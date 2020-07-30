@@ -12,6 +12,7 @@ const NotifyPong = require('./pong.js').NotifyPong;
 const NotifyRendezvous = require('./rendezvous.js').NotifyRendezvous;
 const NotifyRendezvousBecomingReady = require(
     './rendezvous_becoming_ready.js').NotifyRendezvousBecomingReady;
+const NotifyRendezvousEnd = require('./rendezvous_end.js').NotifyRendezvousEnd;
 
 class NotificationReceiver {
 }
