@@ -69,7 +69,7 @@ class PersistenceDb(object):
         self.persist()
 
     def add_wallet_connect_beacon(self, wallet_name, connect_beacon):
-        self.db['wallets'][wallet_name]['connect_beaons'].append(
+        self.db['wallets'][wallet_name]['connect_beacons'].append(
             connect_beacon)
         self.persist()
 

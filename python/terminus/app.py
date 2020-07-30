@@ -63,6 +63,13 @@ class Terminus(object):
         wallet.add_attribute("shared_seed", str(b.shared_seed))
         wallet.add_attribute("rendezvous_id",
                              b.shared_seed.derive_rendezvous_id().hex())
+        wallet.add_attribute("beacon", beacon_str)
+
+    def remove_connect_attributes(self, wallet):
+        wallet.remove_attribute("connect")
+        wallet.remove_attribute("shared_seed")
+        wallet.remove_attribute("rendezvous_id")
+        wallet.remove_attribute("beacon")
 
     def add_listen_beacon_attributes(self, wallet, beacon_str):
         b, err = MoneysocketBeacon.from_bech32_str(beacon_str)
@@ -71,6 +78,14 @@ class Terminus(object):
         wallet.add_attribute("shared_seed", str(b.shared_seed))
         wallet.add_attribute("rendezvous_id",
                              b.shared_seed.derive_rendezvous_id().hex())
+        wallet.add_attribute("beacon", beacon_str)
+
+    def remove_listen_attributes(self, wallet):
+        wallet.remove_attribute("listen")
+        wallet.remove_attribute("shared_seed")
+        wallet.remove_attribute("rendezvous_id")
+        wallet.remove_attribute("beacon")
+
 
     ##########################################################################
 
@@ -169,12 +184,14 @@ class Terminus(object):
         if persist:
             self.db.add_wallet_connect_beacon(wallet_name, beacon_str)
 
-        beacon = MoneysocketBeacon.from_bech32_str(beacon_str)
+        beacon, err = MoneysocketBeacon.from_bech32_str(beacon_str)
+        if err:
+            return "*** could not decode beacon: %s" % err
         location = beacon.locations[0]
         assert location.to_dict()['type'] == "WebSocket", "can't connect beacon"
         ws_url = str(location)
 
-        self.match.assoc_wallet(wallet, beacon)
+        self.match.assoc_wallet(wallet, beacon_str)
         connection_attempt = self.interconnect.connect(ws_url)
         wallet.add_connection_attempt(connection_attempt)
         self.add_connect_beacon_attributes(wallet, beacon_str)
@@ -226,8 +243,8 @@ class Terminus(object):
         self.db.clear_wallet_beacons(wallet_name)
         self.match.disassoc_wallet(wallet_name)
 
-        wallet.remove_attribute("listen")
-        wallet.remove_attribute("connect")
+        self.remove_listen_attributes(wallet)
+        self.remove_connect_attributes(wallet)
         if wallet.has_socket():
             socket = wallet.get_socket()
             socket.close()
@@ -254,7 +271,7 @@ class Terminus(object):
                 args.beacon = beacon_str
                 args.wallet = name
                 logging.info("from persist, connecting: %s to %s" % (name,
-                    beacon))
+                    beacon_str))
                 self.connect(args, persist=False)
 
             for beacon_str in listens:
