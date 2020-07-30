@@ -52,7 +52,6 @@ class WebsocketLocation():
             enum_value, remainder, err = BigSize.pop(tlvs[USE_TLS_TLV_TYPE].v)
             if err:
                 return None, err
-            print("enum_value: %s" % enum_value)
             if enum_value not in USE_TLS_ENUM_VALUE.keys():
                 return None, "error decoding use_tls setting"
             use_tls = USE_TLS_ENUM_VALUE[enum_value]
