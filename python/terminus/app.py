@@ -231,7 +231,7 @@ class Terminus(object):
                                                        cb_param=beacon_str)
         wallet.add_connection_attempt(connection_attempt)
         self.add_connect_beacon_attributes(wallet, beacon_str)
-        self.is_connecting[wallet_name] = wallet
+        self.is_connecting[wallet_name] = beacon_str
         return "connected: %s to %s" % (wallet_name, ws_url)
 
 
@@ -320,8 +320,18 @@ class Terminus(object):
 
 
     def try_connect(self):
-        # TODO retry loop on is_connecting
-        pass
+        for wallet_name, beacon_str in self.is_connecting.items():
+            wallet = self.wallets[wallet_name]
+            if not wallet.has_socket() and not wallet.is_connecting():
+                logging.info("trying to connect %s to %s" % (wallet_name,
+                                                             beacon_str))
+
+                beacon, err = MoneysocketBeacon.from_bech32_str(beacon_str)
+                location = beacon.locations[0]
+                ws_url = str(location)
+                connection_attempt = self.interconnect.connect(
+                    ws_url, cb_param=beacon_str)
+                wallet.add_connection_attempt(connection_attempt)
 
     ##########################################################################
 
@@ -329,4 +339,4 @@ class Terminus(object):
         TerminusTelnetInterface.run_interface(self.config)
         self.load_persisted()
         self.connect_loop = LoopingCall(self.try_connect)
-        self.connect_loop.start(10, now=False)
+        self.connect_loop.start(5, now=False)

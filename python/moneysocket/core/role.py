@@ -106,10 +106,3 @@ class Role(object):
         if self.connection_attempt.get_state() == "connecting":
             self.connection_attempt.stop_connecting()
         self.connection_attempt = None
-
-    ###########################################################################
-
-    def proceed_rendezvous(self, rid):
-        # send notify rendezvous
-        logging.info("PROCEED RENDEZVOUS")
-        pass
