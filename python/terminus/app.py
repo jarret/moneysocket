@@ -14,6 +14,8 @@ from moneysocket.persistence.db import PersistenceDb
 
 from terminus.telnet import TerminusTelnetInterface
 
+from moneysocket.core.message.notification.error import NotifyError
+
 from moneysocket.beacon.beacon import MoneysocketBeacon
 from moneysocket.beacon.location.websocket import WebsocketLocation
 
@@ -33,7 +35,7 @@ class Match(object):
         assert not err, "unexpected err: %s" % err
         return b.shared_seed.derive_rendezvous_id()
 
-    def add_wallet(self, wallet, beacon_str):
+    def assoc_wallet(self, wallet, beacon_str):
         assert wallet.name not in self.wallets, "double-added wallet/"
         self.wallets[wallet.name] = wallet
         self.wallets_by_beacon[beacon_str] = wallet.name
@@ -42,7 +44,7 @@ class Match(object):
         self.beacons_by_rid[rid] = beacon_str
         self.rids_by_beacon[beacon_str] = rid
 
-    def remove_wallet(self, wallet_name):
+    def disassoc_wallet(self, wallet_name):
         beacon_str = self.beacons_by_wallet[wallet_name]
         rid = self.rids_by_beacon[beacon_str]
         del self.wallets[wallet_name]
@@ -61,6 +63,15 @@ class Match(object):
         beacon_str = self.get_beacon(wallet_name)
         return self.rids_by_beacon[beacon_str]
 
+    def rid_is_known(self, rid):
+        return rid in self.beacons_by_rid
+
+    def get_wallet_from_rid(self, rid):
+        beacon_str = self.beacons_by_rid[rid]
+        wallet_name = self.wallets_by_beacon[beacon_str]
+        return self.wallets[wallet_name]
+
+
 
 
 class Terminus(object):
@@ -73,9 +84,8 @@ class Terminus(object):
 
         self.wallets = {}
 
-        #self.listen_order = {}
+        self.is_listening = set()
 
-        self.is_listening = {}
         self.is_connecting = {}
         self.interconnect = WebsocketInterconnect(self.new_socket_cb,
                                                   self.socket_close_cb)
@@ -102,43 +112,82 @@ class Terminus(object):
                           self.config['Listen']['UseTLS'])
             return ''
 
+    def add_connect_beacon_attributes(self, wallet, beacon_str):
+        b, err = MoneysocketBeacon.from_bech32_str(beacon_str)
+        assert err == None
+        wallet.add_attribute("connect", str(b.locations[0]))
+        wallet.add_attribute("shared_seed", str(b.shared_seed))
+        wallet.add_attribute("rendezvous_id",
+                             b.shared_seed.derive_rendezvous_id().hex())
+
+    def add_listen_beacon_attributes(self, wallet, beacon_str):
+        b, err = MoneysocketBeacon.from_bech32_str(beacon_str)
+        assert err == None
+        wallet.add_attribute("listen", str(b.locations[0]))
+        wallet.add_attribute("shared_seed", str(b.shared_seed))
+        wallet.add_attribute("rendezvous_id",
+                             b.shared_seed.derive_rendezvous_id().hex())
 
     ##########################################################################
 
-    def wallet_recv_cb(self, socket, msg):
+    def is_request_rendezvous(self, msg):
+        if msg['message_class'] != "REQUEST":
+            return False
+        return msg['request_name'] == "REQUEST_RENDEZVOUS"
+
+    def recv_cb(self, socket, msg):
         logging.info("got msg: %s" % msg.to_json())
+        # find rendezvous id and match with wallet
+
+        if self.is_request_rendezvous(msg):
+            rid = msg['rendezvous_id']
+            if not self.match.rid_is_known(rid):
+                req_ref_uuid = msg['request_reference_uuid']
+                socket.write(NotifyError("unknown rendezvous_id",
+                                         request_reference_uuid=req_ref_uuid))
+                return
+            wallet = self.match.get_wallet_from_rid(rid)
+            wallet.add_socket()
+            wallet.proceed_rendezvous(rid)
 
     ###########################################################################
 
     def new_socket_cb(self, socket, cb_param):
-        if isinstance(cb_param, Wallet):
-            # outgoing connection
-            wallet = cb_param
-            socket.register_recv_cb(self.wallet_recv_cb)
-            wallet.add_socket(socket)
-        else:
-            # incoming connection
-            assert isinstance(cb_param, str)
-            listen_beacon = cb_param
-            wallet = self.match.get_wallet(listen_beacon)
+        socket.register_recv_cb(self.recv_cb)
 
-            #if listen_ws_url not in self.listen_order:
-            #    logging.info("no wallet to connect new socket to")
-            #    socket.initiate_close()
-            #    return
-            #if len(self.listen_order[listen_ws_url]) == 0:
-            #    logging.info("no wallet or service to connect new socket to")
-            #    socket.close()
-            #    return
-            #wallet_name = self.listen_order[listen_ws_url].pop(0)
-            socket.register_recv_cb(self.wallet_recv_cb)
-            wallet.add_socket(socket)
+#        if isinstance(cb_param, Wallet):
+#            # outgoing connection
+#            wallet = cb_param
+#            socket.register_recv_cb(self.wallet_recv_cb)
+#            wallet.add_socket(socket)
+#            del self.is_connecting[wallet.name]
+#        else:
+#            # incoming connection
+#            assert cb_param = None
+#
+#            #listen_beacon = cb_param
+#            #wallet = self.match.get_wallet(listen_beacon)
+#
+#            #if listen_ws_url not in self.listen_order:
+#            #    logging.info("no wallet to connect new socket to")
+#            #    socket.initiate_close()
+#            #    return
+#            #if len(self.listen_order[listen_ws_url]) == 0:
+#            #    logging.info("no wallet or service to connect new socket to")
+#            #    socket.close()
+#            #    return
+#            #wallet_name = self.listen_order[listen_ws_url].pop(0)
+#            socket.register_recv_cb(self.wallet_recv_cb)
+#            wallet.add_socket(socket)
 
     def socket_close_cb(self, socket):
         logging.info("app got socket closed: %s" % socket)
         for wallet in self.wallets.values():
             if wallet.has_this_socket(socket):
                 wallet.remove_socket()
+
+        # remove unmatched socket?
+
                 #if wallet.name in self.is_listening.keys():
                 #    listen_ws_url = self.is_listening[wallet.name]
                 #    self.listen_order[listen_ws_url].append(wallet.name)
@@ -213,12 +262,10 @@ class Terminus(object):
         assert location.to_dict()['type'] == "WebSocket", "can't connect beacon"
         ws_url = str(location)
 
-        self.match.add_wallet(wallet, beacon)
-
-        connection_attempt = self.interconnect.connect(ws_url,
-                                                       cb_param=wallet)
+        self.match.assoc_wallet(wallet, beacon)
+        connection_attempt = self.interconnect.connect(ws_url)
         wallet.add_connection_attempt(connection_attempt)
-        wallet.add_attribute("connect", beacon_str)
+        self.add_connect_beacon_attributes(wallet, beacon_str)
         self.is_connecting[wallet_name] = wallet
         return "connected: %s to %s" % (wallet_name, ws_url)
 
@@ -237,12 +284,13 @@ class Terminus(object):
         if persist:
             self.db.add_wallet_listen_beacon(wallet_name, beacon_str)
 
-        #beacon = MoneysocketBeacon.from_bech32_str(args.beacon)
         listen_url = self.get_listen_url()
-        self.interconnect.listen(listen_url, cb_param=beacon_str)
+        if len(self.is_listening) == 0:
+            self.interconnect.listen(listen_url)
+        self.is_listening.add(wallet_name)
 
-        self.match.add_wallet(wallet, beacon_str)
-        wallet.add_attribute("listen", beacon_str)
+        self.match.assoc_wallet(wallet, beacon_str)
+        self.add_listen_beacon_attributes(wallet, beacon_str)
 
         return "listening: %s to %s" % (wallet_name, beacon_str)
 
@@ -251,7 +299,7 @@ class Terminus(object):
     def clearconnection(self, args):
         if args.wallet not in self.wallets.keys():
             return "*** unknown role: %s" % args.wallet
-        name = args.wallet
+        wallet_name = args.wallet
 
         #new_listen_orders = {}
         #for listen_ws_url, listen_orders in self.listen_order.items():
@@ -266,13 +314,19 @@ class Terminus(object):
         #                           if u == listen_ws_url)
         #    if n_listening_same == 0:
         #        self.interconnect.stop_listening(listen_ws_url)
-        #if name in self.is_connecting.keys():
-        #    del self.is_connecting[name]
 
-        wallet = self.wallets[name]
-        self.db.clear_wallet_beacons(name)
+        if wallet_name in self.is_connecting.keys():
+            del self.is_connecting[wallet_name]
 
-        #self.match.remove_wallet(wallet.name)
+        if wallet_name in self.is_listening:
+            self.is_listening.remove(wallet_name)
+
+        if len(self.is_listening) == 0:
+            self.interconnect.stop_listening(self.get_listen_url())
+
+        wallet = self.wallets[wallet_name]
+        self.db.clear_wallet_beacons(wallet_name)
+        self.match.disassoc_wallet(wallet_name)
 
         wallet.remove_attribute("listen")
         wallet.remove_attribute("connect")
