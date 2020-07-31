@@ -28,9 +28,9 @@ const DEFAULT_USE_TLS = false;
 
 const MODES = new Set(["ENTER_BEACON",
                        "GENERATED_BEACON",
-                       "CONNECTING_1",
-                       "CONNECTING_2",
-                       "CONNECTING_3",
+                       "CONNECTING_WEBSOCKET",
+                       "REQUESTING_RENDEZVOUS",
+                       "WAITING_FOR_RENDZVOUS",
                        "CONNECTED",
                        "CONNECT_FAILED",
                       ]);
@@ -124,35 +124,35 @@ class BeaconUi {
             DomUtl.drawButton(this.mode_switch_button_div, "Enter Beacon",
                 (function() {this.switchMode("ENTER_BEACON")}).bind(this));
 
-        } else if (new_mode == "CONNECTING_1") {
+        } else if (new_mode == "CONNECTING_WEBSOCKET") {
             var t = DomUtl.drawText(this.mode_output_div, "Connecting");
             t.setAttribute("style", "padding:5px;");
 
             var progress = new ConnectProgress(this.mode_output_div);
-            progress.drawConnectingWebsocket();
+            progress.draw("CONNECTING_WEBSOCKET");
 
             this.setCopyBeaconButton();
             this.setMessagePlaceholderDiv();
 
             DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
                 (function() {this.switchMode(this.last_mode)}).bind(this));
-        } else if (new_mode == "CONNECTING_2") {
+        } else if (new_mode == "REQUESTING_RENDEZVOUS") {
             var t = DomUtl.drawText(this.mode_output_div, "Connecting");
             t.setAttribute("style", "padding:5px;");
 
             var progress = new ConnectProgress(this.mode_output_div);
-            progress.drawRequestingRendezvous();
+            progress.draw("REQUESTING_RENDEZVOUS");
 
             this.setCopyBeaconButton();
             this.setMessagePlaceholderDiv();
             DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
                 (function() {this.switchMode("ENTER_BEACON")}).bind(this));
-        } else if (new_mode == "CONNECTING_3") {
+        } else if (new_mode == "WAITING_FOR_RENDEZVOUS") {
             var t = DomUtl.drawText(this.mode_output_div, "Connecting");
             t.setAttribute("style", "padding:5px;");
 
             var progress = new ConnectProgress(this.mode_output_div);
-            progress.drawWaitingForRendezvousPeer();
+            progress.draw("WAITING_FOR_RENDEZVOUS");
 
             this.setCopyBeaconButton();
             this.setMessagePlaceholderDiv();
@@ -163,7 +163,7 @@ class BeaconUi {
             t.setAttribute("style", "padding:5px;");
 
             var progress = new ConnectProgress(this.mode_output_div);
-            progress.drawConnected();
+            progress.draw("CONNECTED");
 
             this.setMessagePlaceholderDiv();
             DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
@@ -173,7 +173,7 @@ class BeaconUi {
             t.setAttribute("style", "padding:5px;");
 
             var progress = new ConnectProgress(this.mode_output_div);
-            progress.drawConnectionFailed();
+            progress.draw("CONNECTION_FAILED");
 
             this.setCopyBeaconButton();
 
@@ -231,13 +231,13 @@ class BeaconUi {
 
         // TODO call app to start connection cb_obj.connect()
 
-        this.switchMode("CONNECTING_1");
+        this.switchMode("CONNECTING_WEBSOCKET");
     }
 
     attemptConnectFromGeneratedBeacon() {
         // TODO call app to start connection
 
-        this.switchMode("CONNECTING_1");
+        this.switchMode("CONNECTING_WEBSOCKET");
     }
 
     generateNewBeacon() {
