@@ -127,7 +127,7 @@ class DomUtl {
         var qr = Kjua({
             ecLevel: "M",
             render:  "canvas",
-            size:    200,
+            size:    120,
             text:    b32,
             quiet:   0,
         });

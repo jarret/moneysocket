@@ -9,7 +9,7 @@ file LICENSE or http://www.opensource.org/licenses/mit-license.php -->
 <style>
     .container {
       width: 98%;
-      margin: auto;
+      margin: 0 auto;
       padding: 5px;
     }
     .bordered {
@@ -19,20 +19,22 @@ file LICENSE or http://www.opensource.org/licenses/mit-license.php -->
         float:left;
         padding: 5px;
         width: 98%;
+        margin: 0 auto;
     }
     .left {
         border: 1px solid blue ;
-        width: 48%;
+        min-width: 48%;
         text-align: center;
         float: left;
         padding: 5px;
     }
     .right {
         border: 1px solid blue ;
-        width: 48%;
+        min-width: 48%;
         text-align: center;
         float: right;
         padding: 5px;
+        margin: 0 auto;
     }
     .center {
         border: 1px solid blue ;
@@ -40,9 +42,22 @@ file LICENSE or http://www.opensource.org/licenses/mit-license.php -->
         text-align: center;
         float: center;
         padding: 5px;
+        margin: 0 auto;
     }
     .balance {
         font-size: 200%;
+    }
+
+    .mode-output {
+        border: 1px solid black ;
+        float: center;
+        margin: 0 auto;
+        width: 250px;
+        height: 150px;
+    }
+
+    .mode-switch-button {
+        float: left;
     }
 
     div {
