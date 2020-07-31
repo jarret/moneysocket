@@ -67,6 +67,7 @@ class Role(object):
         self.state = new_state
 
     def assert_state(self, expected_state):
+        assert expected_state in STATES
         assert self.state == expected_state, "unexpected state: %s/%s" % (
             self.state, expected_state)
 
@@ -77,18 +78,17 @@ class Role(object):
         req_ref_uuid = msg['request_reference_uuid']
         rid = msg['rendezvous_id']
         if self.state != "INIT":
-            socket.write(NotifyError("not in state to rendezvous",
-                                     request_reference_uuid=req_ref_uuid))
+            self.socket.write(NotifyError("not in state to rendezvous",
+                                          request_reference_uuid=req_ref_uuid))
             return
         self.socket.write(NotifyRendezvous(rid, req_ref_uuid))
         self.set_state("ROLE_OPERATE")
 
     def handle_request_ping(self, msg):
-        # TODO has this always been pre-screened by the app?
         req_ref_uuid = msg['request_reference_uuid']
         if self.state != "ROLE_OPERATE":
-            socket.write(NotifyError("not in state to respond to ping",
-                                     request_reference_uuid=req_ref_uuid))
+            self.socket.write(NotifyError("not in state to respond to ping",
+                                          request_reference_uuid=req_ref_uuid))
             return
         # TODO hook for app to decide how to respond
         self.socket.write(NotifyPong(req_ref_uuid))
@@ -142,10 +142,10 @@ class Role(object):
 
         start_time = self.outstanding_pings[req_ref_uuid]
         elapsed = time.time() - start_time
-        logging.info("PING TIME: %.3fms" * (elapsed * 1000))
+        logging.info("PING TIME: %.3fms" % (elapsed * 1000))
 
     def handle_notify_error(self, msg):
-            logging.error("got error: %s" % msg['error_msg'])
+        logging.error("got error: %s" % msg['error_msg'])
 
     def handle_notification(self, msg):
         n = msg['notification_name']

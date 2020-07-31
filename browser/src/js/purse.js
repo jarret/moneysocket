@@ -20,7 +20,10 @@ const  MessageReceiver = require(
 const  MoneysocketCrypt = require(
     './moneysocket/core/message/crypt.js').MoneysocketCrypt;
 
-const  BinUtl = require('./moneysocket/utl/bin.js').BinUtl;
+const BinUtl = require('./moneysocket/utl/bin.js').BinUtl;
+
+const Role = require('./moneysocket/core/role.js').Role;
+
 
 class PurseStatusUi {
     constructor(div) {
@@ -155,11 +158,13 @@ class PurseApp {
             this.wallet_socket = socket;
             this.psu.updateWalletRoleConnected();
             this.wbu.drawDisconnectButton();
+            this.wallet_role = new Role("wallet");
             // TODO wallet role object,
         } else if (cb_param == "service") {
             this.service_socket = socket;
             this.psu.updateServiceRoleConnected();
             this.sbu.drawDisconnectButton();
+            this.service_role = new Role("service");
             // TODO service role object,
         } else {
             console.log("unknown cb param");
