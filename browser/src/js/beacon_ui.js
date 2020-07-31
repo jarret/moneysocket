@@ -9,6 +9,8 @@ const MoneysocketBeacon = require(
 const WebsocketLocation = require(
     './moneysocket/beacon/location/websocket.js').WebsocketLocation;
 
+const ConnectProgress = require('./connect_progress.js').ConnectProgress;
+
 //////////////////////////////////////////////////////////////////////////////
 
 const PROTOCOL_PREFIX = "moneysocket:"
@@ -33,69 +35,11 @@ const MODES = new Set(["ENTER_BEACON",
                        "CONNECT_FAILED",
                       ]);
 
-const CROSS_MARK = "❌";
-const MONEY_WING = "❎";
-const CHECK_MARK = "✅";
-const EGGPLANT = "🍆";
-
-class ConnectProgress {
-    constructor(div) {
-        this.parent_div = div;
-
-    }
-
-    setConnectingTitle(title, color) {
-        var t = DomUtl.drawText(this.parent_div, title);
-        t.setAttribute("style", "color:" + color +"; padding:10px;");
-    }
-
-    setProgressLine(progress_string) {
-        var t = DomUtl.drawText(this.parent_div, progress_string);
-        t.setAttribute("style", "padding:10px;");
-    }
-
-    drawConnectingWebsocket() {
-        this.setConnectingTitle("Connecting Websocket", "orange");
-        var s = EGGPLANT + EGGPLANT + EGGPLANT + " " + EGGPLANT;
-        this.setProgressLine(s);
-    }
-
-    drawRequestingRendezvous() {
-        this.setConnectingTitle("Requesting Rendezvous", "orange");
-        var s = MONEY_WING + EGGPLANT + EGGPLANT + " " + EGGPLANT;
-        this.setProgressLine(s);
-    }
-
-    drawWaitingForRendezvousPeer() {
-        this.setConnectingTitle("Waiting For Rendezvous Peer", "orange");
-        var s = MONEY_WING + MONEY_WING + EGGPLANT + " " + EGGPLANT;
-        this.setProgressLine(s);
-    }
-
-    drawConnected() {
-        this.setConnectingTitle("Connected", "green");
-        var s = MONEY_WING + MONEY_WING + MONEY_WING + " " + CHECK_MARK;
-        this.setProgressLine(s);
-    }
-
-    drawConnectionFailed() {
-        this.setConnectingTitle("Connection Failed", "red");
-        var s = CROSS_MARK + CROSS_MARK + CROSS_MARK + " " + CROSS_MARK;
-        this.setProgressLine(s);
-    }
-}
-
-
 class BeaconUi {
     constructor(div, title, cb_obj, cb_param) {
         this.title = title;
         this.parent_div = div;
         this.my_div = null;
-
-
-        //this.mode_display_div = null;
-        //this.mode_button_div = null;
-        //this.connect_button_div = null;
 
         this.cb_obj = cb_obj;
         console.assert(typeof cb_obj.connect == 'function');
