@@ -26,9 +26,64 @@ const DEFAULT_USE_TLS = false;
 
 const MODES = new Set(["ENTER_BEACON",
                        "GENERATED_BEACON",
+                       "CONNECTING_1",
+                       "CONNECTING_2",
+                       "CONNECTING_3",
                        "CONNECTED",
+                       "CONNECT_FAILED",
                       ]);
 
+const CROSS_MARK = "❌";
+const MONEY_WING = "❎";
+const CHECK_MARK = "✅";
+const EGGPLANT = "🍆";
+
+class ConnectProgress {
+    constructor(div) {
+        this.parent_div = div;
+
+    }
+
+    setConnectingTitle(title, color) {
+        var t = DomUtl.drawText(this.parent_div, title);
+        t.setAttribute("style", "color:" + color +"; padding:10px;");
+    }
+
+    setProgressLine(progress_string) {
+        var t = DomUtl.drawText(this.parent_div, progress_string);
+        t.setAttribute("style", "padding:10px;");
+    }
+
+    drawConnectingWebsocket() {
+        this.setConnectingTitle("Connecting Websocket", "orange");
+        var s = EGGPLANT + EGGPLANT + EGGPLANT + " " + EGGPLANT;
+        this.setProgressLine(s);
+    }
+
+    drawRequestingRendezvous() {
+        this.setConnectingTitle("Requesting Rendezvous", "orange");
+        var s = MONEY_WING + EGGPLANT + EGGPLANT + " " + EGGPLANT;
+        this.setProgressLine(s);
+    }
+
+    drawWaitingForRendezvousPeer() {
+        this.setConnectingTitle("Waiting For Rendezvous Peer", "orange");
+        var s = MONEY_WING + MONEY_WING + EGGPLANT + " " + EGGPLANT;
+        this.setProgressLine(s);
+    }
+
+    drawConnected() {
+        this.setConnectingTitle("Connected", "green");
+        var s = MONEY_WING + MONEY_WING + MONEY_WING + " " + CHECK_MARK;
+        this.setProgressLine(s);
+    }
+
+    drawConnectionFailed() {
+        this.setConnectingTitle("Connection Failed", "red");
+        var s = CROSS_MARK + CROSS_MARK + CROSS_MARK + " " + CROSS_MARK;
+        this.setProgressLine(s);
+    }
+}
 
 
 class BeaconUi {
@@ -99,11 +154,10 @@ class BeaconUi {
                 (function() {this.scanQr()}).bind(this));
             DomUtl.drawButton(this.mode_output_div, "Connect",
                 (function() {
-                    this.attemptConnectFromEnterBeacon()
+                    this.attemptConnectFromEnterBeacon();
                 }).bind(this));
 
-            DomUtl.drawBr(this.mode_output_div);
-            this.message_div = DomUtl.emptyDiv(this.mode_output_div);
+            this.setMessagePlaceholderDiv();
 
             DomUtl.drawButton(this.mode_switch_button_div, "Generate Beacon",
                 (function() {
@@ -117,33 +171,82 @@ class BeaconUi {
 
             DomUtl.qrCode(this.mode_output_div, this.beacon_str,
                           PROTOCOL_PREFIX);
-            DomUtl.drawButton(this.mode_output_div, "Copy Beacon",
-                (function() {this.copyBeacon()}).bind(this));
+            this.setCopyBeaconButton();
             DomUtl.drawButton(this.mode_output_div, "Connect",
                 (function() {
                     this.attemptConnectFromGeneratedBeacon();
                 }).bind(this));
-
-            DomUtl.drawBr(this.mode_output_div);
-            this.message_div = DomUtl.emptyDiv(this.mode_output_div);
-
+            this.setMessagePlaceholderDiv();
             DomUtl.drawButton(this.mode_switch_button_div, "Enter Beacon",
                 (function() {this.switchMode("ENTER_BEACON")}).bind(this));
 
-        } else if (new_mode == "CONNECTED") {
-            var t = DomUtl.drawText(this.mode_output_div, "Connected");
+        } else if (new_mode == "CONNECTING_1") {
+            var t = DomUtl.drawText(this.mode_output_div, "Connecting");
             t.setAttribute("style", "padding:5px;");
 
-            DomUtl.drawButton(this.mode_output_div, "Copy Beacon",
-                (function() {this.copyBeacon()}).bind(this));
-            DomUtl.drawBr(this.mode_output_div);
-            this.message_div = DomUtl.emptyDiv(this.mode_output_div);
+            var progress = new ConnectProgress(this.mode_output_div);
+            progress.drawConnectingWebsocket();
+
+            this.setCopyBeaconButton();
+            this.setMessagePlaceholderDiv();
 
             DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
                 (function() {this.switchMode(this.last_mode)}).bind(this));
+        } else if (new_mode == "CONNECTING_2") {
+            var t = DomUtl.drawText(this.mode_output_div, "Connecting");
+            t.setAttribute("style", "padding:5px;");
+
+            var progress = new ConnectProgress(this.mode_output_div);
+            progress.drawRequestingRendezvous();
+
+            this.setCopyBeaconButton();
+            this.setMessagePlaceholderDiv();
+            DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
+                (function() {this.switchMode("ENTER_BEACON")}).bind(this));
+        } else if (new_mode == "CONNECTING_3") {
+            var t = DomUtl.drawText(this.mode_output_div, "Connecting");
+            t.setAttribute("style", "padding:5px;");
+
+            var progress = new ConnectProgress(this.mode_output_div);
+            progress.drawWaitingForRendezvousPeer();
+
+            this.setCopyBeaconButton();
+            this.setMessagePlaceholderDiv();
+            DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
+                (function() {this.switchMode("ENTER_BEACON")}).bind(this));
+        } else if (new_mode == "CONNECTED") {
+            var t = DomUtl.drawText(this.mode_output_div, "Connecting");
+            t.setAttribute("style", "padding:5px;");
+
+            var progress = new ConnectProgress(this.mode_output_div);
+            progress.drawConnected();
+
+            this.setMessagePlaceholderDiv();
+            DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
+                (function() {this.switchMode("ENTER_BEACON")}).bind(this));
+        } else if (new_mode == "CONNECT_FAILED") {
+            var t = DomUtl.drawText(this.mode_output_div, "Disconnected");
+            t.setAttribute("style", "padding:5px;");
+
+            var progress = new ConnectProgress(this.mode_output_div);
+            progress.drawConnectionFailed();
+
+            this.setCopyBeaconButton();
+
+            DomUtl.drawButton(this.mode_switch_button_div, "Go Back",
+                (function() {this.switchMode("ENTER_BEACON")}).bind(this));
         }
     }
 
+    setCopyBeaconButton() {
+        DomUtl.drawButton(this.mode_output_div, "Copy Beacon",
+            (function() {this.copyBeacon()}).bind(this));
+    }
+
+    setMessagePlaceholderDiv() {
+        DomUtl.drawBr(this.mode_output_div);
+        this.message_div = DomUtl.emptyDiv(this.mode_output_div);
+    }
 
     setMessage(msg) {
         DomUtl.deleteChildren(this.message_div);
@@ -182,15 +285,15 @@ class BeaconUi {
         this.beacon_str = beacon_str;
         this.beacon = beacon;
 
-        // TODO call app to start connection
+        // TODO call app to start connection cb_obj.connect()
 
-        this.switchMode("CONNECTED");
+        this.switchMode("CONNECTING_1");
     }
 
     attemptConnectFromGeneratedBeacon() {
         // TODO call app to start connection
 
-        this.switchMode("CONNECTED");
+        this.switchMode("CONNECTING_1");
     }
 
     generateNewBeacon() {
@@ -202,109 +305,6 @@ class BeaconUi {
         this.beacon_str = beacon.toBech32Str();
     }
 
-
-    /*
-    draw(style) {
-        this.my_div = document.createElement("div");
-        DomUtl.drawTitle(this.my_div, this.title, "h2");
-        this.my_div.setAttribute("class", style);
-
-        this.mode_display_div = DomUtl.emptyDiv(this.my_div);
-        this.connect_button_div = DomUtl.emptyDiv(this.my_div);
-        this.drawConnectButton();
-
-        DomUtl.drawBr(this.my_div);
-        this.mode_button_div = DomUtl.emptyDiv(this.my_div);
-
-        this.doModeEnter();
-        DomUtl.drawBr(this.my_div);
-
-
-        this.parent_div.appendChild(this.my_div);
-    }
-
-    getDefaultBeacon() {
-        var location = new WebsocketLocation(DEFAULT_HOST, DEFAULT_PORT,
-                                             DEFAULT_USE_TLS);
-        var beacon = new MoneysocketBeacon();
-        beacon.addLocation(location);
-        return beacon;
-    }
-
-    doModeGenerate() {
-        DomUtl.deleteChildren(this.mode_display_div);
-        this.input_div = null;
-
-        var beacon = this.getDefaultBeacon();
-        this.beacon_str = beacon.toBech32Str();
-        DomUtl.qrCode(this.mode_display_div, this.beacon_str, PROTOCOL_PREFIX);
-        this.drawEnterButton();
-    }
-
-    doModeEnter() {
-        DomUtl.deleteChildren(this.mode_display_div);
-        this.beacon_str = null;
-
-        DomUtl.drawText(this.mode_display_div, "Enter Beacon: ");
-        this.input_div = DomUtl.drawTextInput(this.mode_display_div, "");
-        this.drawGenerateButton();
-    }
-*/
-
-    /*doModeConnected() {
-        console.log("do connected");
-        DomUtl.deleteChildren(this.mode_display_div);
-        DomUtl.deleteChildren(this.mode_button_div);
-    }*/
-
-/*
-    drawGenerateButton() {
-        DomUtl.deleteChildren(this.mode_button_div);
-        DomUtl.drawButton(this.mode_button_div, "Generate Beacon",
-            (function() {this.doModeGenerate()}).bind(this));
-    }
-
-    drawEnterButton() {
-        DomUtl.deleteChildren(this.mode_button_div);
-        DomUtl.drawButton(this.mode_button_div, "Enter Beacon",
-            (function() {this.doModeEnter()}).bind(this));
-    }
-
-    doConnect() {
-        if (this.getWsUrl() == '') {
-            return
-        }
-        this.cb_obj.connect(this.cb_param);
-    }
-
-    drawConnectButton() {
-        DomUtl.deleteChildren(this.connect_button_div);
-        DomUtl.drawButton(this.connect_button_div, "Connect",
-            (function() {this.doConnect()}).bind(this));
-    }
-
-    drawConnecting() {
-        DomUtl.deleteChildren(this.connect_button_div);
-        DomUtl.deleteChildren(this.mode_display_div);
-        DomUtl.deleteChildren(this.mode_button_div);
-        var connect_button = DomUtl.drawButton(this.connect_button_div,
-                                              "Connecting", function() {});
-        connect_button.disabled = true;
-    }
-
-
-    doDisconnect() {
-        this.cb_obj.disconnect(this.cb_param);
-        this.doModeEnter();
-    }
-
-    drawDisconnectButton() {
-        DomUtl.deleteChildren(this.connect_button_div);
-        DomUtl.drawButton(this.connect_button_div, "Disconnect",
-            (function() {this.doDisconnect()}).bind(this));
-    }
-
-    */
 
     getBeacon() {
         return this.beacon;
