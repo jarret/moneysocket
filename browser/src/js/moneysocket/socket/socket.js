@@ -11,6 +11,7 @@ class MoneysocketSocket {
         console.assert(typeof initiate_cb_obj.initiateClose == 'function');
         console.assert(typeof initiate_cb_obj.initiateSend == 'function');
         this.initiate_cb_obj = initiate_cb_obj;
+        this.shared_seed = null;
     }
 
     toString() {
@@ -23,20 +24,32 @@ class MoneysocketSocket {
         this.msg_recv_cb = cb;
     }
 
+    registerSharedSeed(shared_seed) {
+        this.shared_seed = shared_seed;
+    }
+
     //////////////////////////////////////////////////////////////////////////
 
-    msgRecv(msg_dict) {
-        this.msg_recv_cb(msg_dict);
-    }
 
     close() {
         this.initiate_cb_obj.initiateClose();
     }
 
-    send(msg_dict) {
+    write(msg_dict) {
+        // TODO wire encode
         this.initiate_cb_obj.initiateSend(msg_dict);
     }
+
+    msgRecv(msg_dict) {
+        // TODO wire decode
+        this.msg_recv_cb(msg_dict);
+    }
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Interconnect
+///////////////////////////////////////////////////////////////////////////////
 
 class MoneysocketInterconnect {
     constructor(cb_obj) {

@@ -47,7 +47,7 @@ class BeaconUi {
         this.cb_param = cb_param;
 
         this.mode = null;
-        this.last_mode = null;
+        this.return_mode = null;
         this.input_div = null;
 
         this.beacon = null;
@@ -80,13 +80,13 @@ class BeaconUi {
 
     switchMode(new_mode) {
         console.assert(MODES.has(new_mode));
-        this.last_mode = (this.mode == null) ? "ENTER_BEACON" : this.mode;
         this.mode = new_mode;
 
         DomUtl.deleteChildren(this.mode_switch_button_div);
         DomUtl.deleteChildren(this.mode_output_div);
 
         if (new_mode == "ENTER_BEACON") {
+            this.return_mode = "ENTER_BEACON";
             var t = DomUtl.drawText(this.mode_output_div, "Enter Beacon");
             t.setAttribute("style", "padding:5px;");
 
@@ -110,6 +110,7 @@ class BeaconUi {
                 }).bind(this));
 
         } else if (new_mode == "GENERATED_BEACON") {
+            this.return_mode = "GENERATED_BEACON";
             var t = DomUtl.drawText(this.mode_output_div, "Generated Beacon");
             t.setAttribute("style", "padding:5px;");
 
@@ -248,18 +249,10 @@ class BeaconUi {
         }
         this.beacon_str = beacon_str;
         this.beacon = beacon;
-
-        // TODO call app to start connection cb_obj.connect()
-
-        //this.switchMode("CONNECTING_WEBSOCKET");
-
         this.cb_obj.connect(this.beacon, this.cb_param);
     }
 
     attemptConnectFromGeneratedBeacon() {
-        // TODO call app to start connection
-        //this.switchMode("CONNECTING_WEBSOCKET");
-
         this.cb_obj.connect(this.beacon, this.cb_param);
     }
 

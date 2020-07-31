@@ -4,6 +4,7 @@
 
 const Uuid = require('../utl/uuid.js').Uuid;
 const Timestamp = require('../utl/timestamp.js').Timestamp;
+const BinUtl = require('../utl/bin.js').BinUtl;
 
 
 const NotifyError = require('./message/notification/error.js').NotifyError;
@@ -41,7 +42,8 @@ class Role {
 
     assertState(expected_state) {
         console.assert(STATES.has(expected_state));
-        console.assert(expected_state == self.state);
+        console.log("expected: " + expected_state + " actual: " + this.state);
+        console.assert(expected_state == this.state);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -119,7 +121,7 @@ class Role {
             console.error("got unexpected pong");
             return;
         }
-        if (! (req_ref_uuid in self.outstanding_pings)) {
+        if (! (req_ref_uuid in this.outstanding_pings)) {
             console.error("got pong with unknown request uuid");
             return;
         }
@@ -188,8 +190,8 @@ class Role {
 
     addSocket(socket) {
         console.log(this.name + " is adding socket " + socket.toString());
-        this.socket.registerRecvCb(this.msgRecvCb);
         this.socket = socket;
+        this.socket.registerRecvCb(this.msgRecvCb);
     }
 
     hasSocket() {

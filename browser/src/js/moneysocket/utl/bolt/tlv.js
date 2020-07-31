@@ -18,7 +18,7 @@ class Tlv {
     }
 
     toString() {
-        return "(" + self.t + "," + self.l + "," + BinUtl.b2h(self.v) + ")";
+        return "(" + this.t + "," + this.l + "," + BinUtl.b2h(this.v) + ")";
     }
 
     static peek(byte_array) {
