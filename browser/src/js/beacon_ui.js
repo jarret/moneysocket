@@ -32,7 +32,7 @@ const MODES = new Set(["ENTER_BEACON",
                        "REQUESTING_RENDEZVOUS",
                        "WAITING_FOR_RENDZVOUS",
                        "CONNECTED",
-                       "CONNECT_FAILED",
+                       "CONNECTION_FAILED",
                       ]);
 
 class BeaconUi {
@@ -135,7 +135,8 @@ class BeaconUi {
             this.setMessagePlaceholderDiv();
 
             DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
-                (function() {this.switchMode(this.last_mode)}).bind(this));
+                (function() {this.disconnect()}).bind(this));
+                //(function() {this.switchMode(this.last_mode)}).bind(this));
         } else if (new_mode == "REQUESTING_RENDEZVOUS") {
             var t = DomUtl.drawText(this.mode_output_div, "Connecting");
             t.setAttribute("style", "padding:5px;");
@@ -146,7 +147,8 @@ class BeaconUi {
             this.setCopyBeaconButton();
             this.setMessagePlaceholderDiv();
             DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
-                (function() {this.switchMode("ENTER_BEACON")}).bind(this));
+                (function() {this.disconnect()}).bind(this));
+                //(function() {this.switchMode("ENTER_BEACON")}).bind(this));
         } else if (new_mode == "WAITING_FOR_RENDEZVOUS") {
             var t = DomUtl.drawText(this.mode_output_div, "Connecting");
             t.setAttribute("style", "padding:5px;");
@@ -157,7 +159,8 @@ class BeaconUi {
             this.setCopyBeaconButton();
             this.setMessagePlaceholderDiv();
             DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
-                (function() {this.switchMode("ENTER_BEACON")}).bind(this));
+                (function() {this.disconnect()}).bind(this));
+                //(function() {this.switchMode("ENTER_BEACON")}).bind(this));
         } else if (new_mode == "CONNECTED") {
             var t = DomUtl.drawText(this.mode_output_div, "Connecting");
             t.setAttribute("style", "padding:5px;");
@@ -167,8 +170,9 @@ class BeaconUi {
 
             this.setMessagePlaceholderDiv();
             DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
-                (function() {this.switchMode("ENTER_BEACON")}).bind(this));
-        } else if (new_mode == "CONNECT_FAILED") {
+                (function() {this.disconnect()}).bind(this));
+                //(function() {this.switchMode("ENTER_BEACON")}).bind(this));
+        } else if (new_mode == "CONNECTION_FAILED") {
             var t = DomUtl.drawText(this.mode_output_div, "Disconnected");
             t.setAttribute("style", "padding:5px;");
 
@@ -181,6 +185,9 @@ class BeaconUi {
                 (function() {this.switchMode("ENTER_BEACON")}).bind(this));
         }
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////
 
     setCopyBeaconButton() {
         DomUtl.drawButton(this.mode_output_div, "Copy Beacon",
@@ -198,6 +205,8 @@ class BeaconUi {
         t.setAttribute("style", "padding:10px;");
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+
     copyBeacon() {
         navigator.clipboard.writeText(this.beacon_str);
         console.log("copied: " + this.beacon_str);
@@ -208,6 +217,17 @@ class BeaconUi {
         console.log("scan stub")
         this.setMessage("QR scanning not implemented yet");
     }
+
+    generateNewBeacon() {
+        var location = new WebsocketLocation(DEFAULT_HOST, DEFAULT_PORT,
+                                             DEFAULT_USE_TLS);
+        var beacon = new MoneysocketBeacon();
+        beacon.addLocation(location);
+        this.beacon = beacon;
+        this.beacon_str = beacon.toBech32Str();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
 
     attemptConnectFromEnterBeacon() {
         console.log("input children: " + this.input_div.firstChild);
@@ -231,23 +251,23 @@ class BeaconUi {
 
         // TODO call app to start connection cb_obj.connect()
 
-        this.switchMode("CONNECTING_WEBSOCKET");
+        //this.switchMode("CONNECTING_WEBSOCKET");
+
+        this.cb_obj.connect(this.beacon, this.cb_param);
     }
 
     attemptConnectFromGeneratedBeacon() {
         // TODO call app to start connection
+        //this.switchMode("CONNECTING_WEBSOCKET");
 
-        this.switchMode("CONNECTING_WEBSOCKET");
+        this.cb_obj.connect(this.beacon, this.cb_param);
     }
 
-    generateNewBeacon() {
-        var location = new WebsocketLocation(DEFAULT_HOST, DEFAULT_PORT,
-                                             DEFAULT_USE_TLS);
-        var beacon = new MoneysocketBeacon();
-        beacon.addLocation(location);
-        this.beacon = beacon;
-        this.beacon_str = beacon.toBech32Str();
+    disconnect() {
+        this.cb_obj.disconnect(this.cb_param);
     }
+
+    ///////////////////////////////////////////////////////////////////////////
 
 
     getBeacon() {

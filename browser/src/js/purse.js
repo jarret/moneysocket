@@ -5,6 +5,10 @@
 const DomUtl = require('./domutl.js').DomUtl;
 const WebsocketInterconnect = require(
     './moneysocket/socket/websocket.js').WebsocketInterconnect;
+
+const WebsocketLocation = require(
+    './moneysocket/beacon/location/websocket.js').WebsocketLocation;
+
 const BeaconUi = require('./beacon_ui.js').BeaconUi;
 const ConnectProgress = require('./connect_progress.js').ConnectProgress;
 const SharedSeed = require('./moneysocket/beacon/shared_seed.js').SharedSeed;
@@ -246,37 +250,36 @@ class PurseApp {
     // BeaconUI callbacks:
     //////////////////////////////////////////////////////////////////////////
 
-    connect(cb_param) {
-        // BeaconUi calling in to initiate
-        if (cb_param == "wallet") {
-            var ws_url = this.wallet_ui.getWsUrl();
-            var [beacon, err] = this.wallet_ui.getBeacon();
-            if (err != null) {
-                console.error(err);
-                return
-            }
+    connect(beacon, cb_param) {
+        // BeaconUi calling in to initiate connection
 
+        var location = beacon.locations[0];
+        if (cb_param == "wallet") {
+            if (! (location instanceof WebsocketLocation)) {
+                this.purse_ui.updateWalletConnectionState("CONNECTION_FAILED");
+                this.wallet_ui.switchMode("CONNECTION_FAILED");
+                return;
+            }
+            var url = location.toWsUrl();
             var role_info = {'role':   'wallet',
                              'beacon': beacon};
-
-            console.log("connect wallet: " + ws_url);
+            console.log("connect wallet: " + url);
             this.purse_ui.updateWalletConnectionState("CONNECTING_WEBSOCKET");
-
-            this.wi.connect(ws_url, role_info);
+            this.wallet_ui.switchMode("CONNECTING_WEBSOCKET");
+            this.wi.connect(url, role_info);
         } else if (cb_param == "service") {
-            var ws_url = this.service_ui.getWsUrl();
-            var [beacon, err] = this.wallet_ui.getBeacon();
-            if (err != null) {
-                console.error(err);
-                return
+            if (! (location instanceof WebsocketLocation)) {
+                this.purse_ui.updateWalletConnectionState("CONNECTION_FAILED");
+                this.service_ui.switchMode("CONNECTION_FAILED");
+                return;
             }
+            var url = location.toWsUrl();
             var role_info = {'role':   'service',
                              'beacon': beacon};
-
-            console.log("connect service: " + ws_url);
+            console.log("connect service: " + url);
             this.purse_ui.updateServiceConnectionState("CONNECTING_WEBSOCKET");
-
-            this.wi.connect(ws_url, role_info);
+            this.service_ui.switchMode("CONNECTING_WEBSOCKET");
+            this.wi.connect(url, role_info);
         } else {
             console.log("unknown cb_param: " + cb_param);
         }
