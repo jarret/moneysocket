@@ -25,39 +25,41 @@ class ConnectProgress {
         t.setAttribute("style", "padding-bottom:10px;");
     }
 
-    drawDisconnected() {
-        this.setConnectingTitle("Disconnected", "black");
-        this.setProgressLine("");
-    }
-
-    drawConnectingWebsocket() {
-        this.setConnectingTitle("Connecting Websocket", "orange");
-        var s = EGGPLANT + EGGPLANT + EGGPLANT + " " + EGGPLANT;
-        this.setProgressLine(s);
-    }
-
-    drawRequestingRendezvous() {
-        this.setConnectingTitle("Requesting Rendezvous", "orange");
-        var s = MONEY_WING + EGGPLANT + EGGPLANT + " " + EGGPLANT;
-        this.setProgressLine(s);
-    }
-
-    drawWaitingForRendezvousPeer() {
-        this.setConnectingTitle("Waiting For Rendezvous Peer", "orange");
-        var s = MONEY_WING + MONEY_WING + EGGPLANT + " " + EGGPLANT;
-        this.setProgressLine(s);
-    }
-
-    drawConnected() {
-        this.setConnectingTitle("Connected", "green");
-        var s = MONEY_WING + MONEY_WING + MONEY_WING + " " + CHECK_MARK;
-        this.setProgressLine(s);
-    }
-
-    drawConnectionFailed() {
-        this.setConnectingTitle("Connection Failed", "red");
-        var s = CROSS_MARK + CROSS_MARK + CROSS_MARK + " " + CROSS_MARK;
-        this.setProgressLine(s);
+    draw(state) {
+        switch (state) {
+        case "DISCONNECTED":
+            var title = "Disconnected";
+            var color = "black";
+            var line = "";
+            break;
+        case "CONNECTING_WEBSOCKET":
+            var title = "Connecting Websocket";
+            var color = "orange";
+            var line = EGGPLANT + EGGPLANT + EGGPLANT + " " + EGGPLANT;
+            break;
+        case "REQUESTING_RENDEZVOUS":
+            var title = "Requesting Rendezvous";
+            var color = "orange";
+            var line = MONEY_WING + EGGPLANT + EGGPLANT + " " + EGGPLANT;
+            break;
+        case "WAITING_FOR_RENDEZVOUS":
+            var title = "Waiting for Rendezvous";
+            var color = "orange";
+            var line = MONEY_WING + MONEY_WING + EGGPLANT + " " + EGGPLANT;
+            break;
+        case "CONNECTED":
+            var title = "Connected";
+            var color = "green";
+            var line = MONEY_WING + MONEY_WING + MONEY_WING + " " + CHECK_MARK;
+            break;
+        case "CONNECTION_FAILED":
+            var title = "Connection Failed";
+            var color = "red";
+            var line = CROSS_MARK + CROSS_MARK + CROSS_MARK + " " + CROSS_MARK;
+            break;
+        }
+        this.setConnectingTitle(title, color);
+        this.setProgressLine(line);
     }
 }
 

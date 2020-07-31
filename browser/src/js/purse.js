@@ -6,6 +6,7 @@ const DomUtl = require('./domutl.js').DomUtl;
 const WebsocketInterconnect = require(
     './moneysocket/socket/websocket.js').WebsocketInterconnect;
 const BeaconUi = require('./beacon_ui.js').BeaconUi;
+const ConnectProgress = require('./connect_progress.js').ConnectProgress;
 const SharedSeed = require('./moneysocket/beacon/shared_seed.js').SharedSeed;
 
 const  RequestRendezvous = require(
@@ -44,14 +45,15 @@ class PurseStatusUi {
         DomUtl.drawBr(this.my_div);
 
         this.wallet_role_div = DomUtl.emptyDiv(this.my_div);
-        DomUtl.drawText(this.wallet_role_div, "Wallet Role: ");
-        DomUtl.drawColoredText(this.wallet_role_div, "Not Connected", "red");
+
+        this.drawRoleConnectionState(this.wallet_role_div, "Wallet Role",
+                                     "DISCONNECTED");
 
         DomUtl.drawBr(this.my_div);
 
         this.service_role_div = DomUtl.emptyDiv(this.my_div);
-        DomUtl.drawText(this.service_role_div, "Service Role: ");
-        DomUtl.drawColoredText(this.service_role_div, "Not Connected", "red");
+        this.drawRoleConnectionState(this.service_role_div, "Service Role",
+                                     "DISCONNECTED");
 
         DomUtl.drawBr(this.my_div);
 
@@ -68,6 +70,16 @@ class PurseStatusUi {
         DomUtl.deleteChildren(this.spendable_div)
         DomUtl.drawBigBalance(this.spendable_div, 0.0);
     }
+
+    //////////////////////////////////////////////////////////////////////////
+
+    drawRoleConnectionState(role_div, role_title, state) {
+        DomUtl.drawText(role_div, role_title);
+        var p = new ConnectProgress(role_div);
+        p.draw(state);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 
     updateWalletRoleConnected() {
         DomUtl.deleteChildren(this.wallet_role_div)
@@ -158,6 +170,7 @@ class PurseApp {
     //////////////////////////////////////////////////////////////////////////
 
     newSocket(socket, cb_param) {
+        // interconnect announcing new socket
         console.log("got new socket: " + socket.toString());
         console.log("cb_param: " + cb_param);
 
@@ -190,6 +203,7 @@ class PurseApp {
     }
 
     socketClose(socket, cb_param) {
+        // interconnect announcing socket cloesed
         console.log("got socket close: " + socket.toString());
         console.log("cb_param: " + cb_param);
         if (cb_param == "wallet") {
