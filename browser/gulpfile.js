@@ -45,14 +45,14 @@ gulp.task('imageMin', function imageMin(cb) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-gulp.task('purseFull', function () {
+gulp.task('walletFull', function () {
     var b = browserify({
-      entries: './src/js/purse.js',
+      entries: './src/js/wallet.js',
       debug: true
     });
 
     return b.bundle()
-      .pipe(source('./purse.js'))
+      .pipe(source('./wallet.js'))
       .pipe(buffer())
       .pipe(sourcemaps.init({loadMaps: true}))
       .pipe(babel({
@@ -64,14 +64,14 @@ gulp.task('purseFull', function () {
       .pipe(gulp.dest('./htdocs/js/'));
 });
 
-gulp.task('purseQuick', function () {
+gulp.task('walletQuick', function () {
     var b = browserify({
-      entries: './src/js/purse.js',
+      entries: './src/js/wallet.js',
       debug: true
     });
 
     return b.bundle()
-      .pipe(source('./purse.js'))
+      .pipe(source('./wallet.js'))
       .pipe(buffer())
       .pipe(sourcemaps.init({loadMaps: true}))
       .pipe(sourcemaps.write('./'))
@@ -189,7 +189,7 @@ gulp.task('full', gulp.series(['clean',
                                'copyMisc',
                                'copyHtml',
                                'imageMin',
-                               'purseFull',
+                               'walletFull',
                                'buyerFull',
                                'sellerFull',
                                'encodeDecodeFull',
@@ -201,7 +201,7 @@ gulp.task('full_watch', function () {
                             'copyMisc',
                             'copyHtml',
                             'imageMin',
-                            'purseFull',
+                            'walletFull',
                             'buyerFull',
                             'sellerFull',
                             'encodeDecodeFull',
@@ -211,7 +211,7 @@ gulp.task('full_watch', function () {
 gulp.task('quick', gulp.series(['clean',
                                'copyMisc',
                                'copyHtml',
-                               'purseQuick',
+                               'walletQuick',
                                'buyerQuick',
                                'sellerQuick',
                                'encodeDecodeQuick',
@@ -222,7 +222,7 @@ gulp.task('quick_watch', function () {
                gulp.series(['clean',
                             'copyMisc',
                             'copyHtml',
-                            'purseQuick',
+                            'walletQuick',
                             'buyerQuick',
                             'sellerQuick',
                             'encodeDecodeQuick',

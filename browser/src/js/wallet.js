@@ -35,9 +35,9 @@ class PurseStatusUi {
         this.parent_div = div;
         this.my_div = null;
         this.spendable_div = null;
-        this.wallet_role_div = null;
-        this.service_role_div = null;
-        this.wallet_counterpart_div = null;
+        this.provider_role_div = null;
+        this.consumer_role_div = null;
+        this.provider_counterpart_div = null;
     }
 
     draw(style) {
@@ -48,21 +48,21 @@ class PurseStatusUi {
         DomUtl.drawBigBalance(this.spendable_div, 0.0);
         DomUtl.drawBr(this.my_div);
 
-        this.wallet_role_div = DomUtl.emptyDiv(this.my_div);
+        this.provider_role_div = DomUtl.emptyDiv(this.my_div);
 
-        this.drawRoleConnectionState(this.wallet_role_div, "Upstream Consumer",
-                                     "DISCONNECTED");
+        this.drawRoleConnectionState(this.provider_role_div,
+                                     "Upstream Consumer", "DISCONNECTED");
 
         DomUtl.drawBr(this.my_div);
 
-        this.service_role_div = DomUtl.emptyDiv(this.my_div);
-        this.drawRoleConnectionState(this.service_role_div,
+        this.consumer_role_div = DomUtl.emptyDiv(this.my_div);
+        this.drawRoleConnectionState(this.consumer_role_div,
                                      "Downstream Provider", "DISCONNECTED");
 
         DomUtl.drawBr(this.my_div);
 
-        this.wallet_counterpart_div = DomUtl.emptyDiv(this.my_div);
-        DomUtl.drawText(this.wallet_counterpart_div,
+        this.provider_counterpart_div = DomUtl.emptyDiv(this.my_div);
+        DomUtl.drawText(this.provider_counterpart_div,
                         "Downstream Provider Balance: N/A");
 
         DomUtl.drawBr(this.my_div);
@@ -84,21 +84,21 @@ class PurseStatusUi {
         p.draw(state);
     }
 
-    updateWalletConnectionState(state) {
-        this.drawRoleConnectionState(this.wallet_role_div, "Wallet Role",
-                                     state);
+    updateProviderConnectionState(state) {
+        this.drawRoleConnectionState(this.provider_role_div,
+                                     "Upstream Consumer", state);
     }
 
-    updateServiceConnectionState(state) {
-        this.drawRoleConnectionState(this.service_role_div, "Service Role",
-                                     state);
+    updateConsumerConnectionState(state) {
+        this.drawRoleConnectionState(this.consumer_role_div,
+                                     "Downstream Provider", state);
     }
 
     //////////////////////////////////////////////////////////////////////////
 
     updateWalletCounterpartBalance(msats) {
-        DomUtl.deleteChildren(this.wallet_counterpart_div)
-        DomUtl.drawText(this.wallet_counterpart_div,
+        DomUtl.deleteChildren(this.provider_counterpart_div)
+        DomUtl.drawText(this.provider_counterpart_div,
             "Wallet Provider Balance: " + DomUtl.balanceFmt(msats));
     }
 
@@ -109,14 +109,14 @@ class PurseApp {
         this.parent_div = document.getElementById("ui");
         this.my_div = null;
         this.purse_ui = null;
-        this.wallet_ui = null;
-        this.service_ui = null;
+        this.provider_ui = null;
+        this.consumer_ui = null;
 
-        this.wallet_role = null;
-        this.service_role = null;
+        this.provider_role = null;
+        this.consumer_role = null;
 
-        this.wallet_socket = null;
-        this.service_socket = null;
+        this.provider_socket = null;
+        this.consumer_socket = null;
 
         this.wi = new WebsocketInterconnect(this);
     }
@@ -132,12 +132,12 @@ class PurseApp {
 
         DomUtl.drawBr(this.my_div);
         var wtitle = "Connect Upstream Consumer";
-        this.wallet_ui = new BeaconUi(this.my_div, wtitle, this, "wallet");
-        this.wallet_ui.draw("left");
+        this.provider_ui = new BeaconUi(this.my_div, wtitle, this, "wallet");
+        this.provider_ui.draw("left");
 
         var stitle = "Connect Downstream Provider";
-        this.service_ui = new BeaconUi(this.my_div, stitle, this, "service");
-        this.service_ui.draw("right");
+        this.consumer_ui = new BeaconUi(this.my_div, stitle, this, "service");
+        this.consumer_ui.draw("right");
         DomUtl.drawBr(this.my_div);
         DomUtl.drawBr(this.my_div);
 
@@ -159,25 +159,25 @@ class PurseApp {
         socket.registerSharedSeed(beacon.shared_seed);
 
         if (role_info['role'] == "wallet") {
-            this.wallet_socket = socket;
+            this.provider_socket = socket;
 
-            this.purse_ui.updateWalletConnectionState(
+            this.purse_ui.updateProviderConnectionState(
                 "REQUESTING_RENDEZVOUS");
-            this.wallet_ui.switchMode("REQUESTING_RENDEZVOUS");
+            this.provider_ui.switchMode("REQUESTING_RENDEZVOUS");
 
-            this.wallet_role = new Role("wallet");
-            this.wallet_role.addSocket(socket);
-            this.wallet_role.startRendezvous(rid);
+            this.provider_role = new Role("wallet");
+            this.provider_role.addSocket(socket);
+            this.provider_role.startRendezvous(rid);
         } else if (role_info['role'] == "service") {
-            this.service_socket = socket;
+            this.consumer_socket = socket;
 
-            this.purse_ui.updateServiceConnectionState(
+            this.purse_ui.updateConsumerConnectionState(
                 "REQUESTING_RENDEZVOUS");
-            this.service_ui.switchMode("REQUESTING_RENDEZVOUS");
+            this.consumer_ui.switchMode("REQUESTING_RENDEZVOUS");
 
-            this.service_role = new Role("service");
-            this.service_role.addSocket(socket);
-            this.service_role.startRendezvous(rid);
+            this.consumer_role = new Role("service");
+            this.consumer_role.addSocket(socket);
+            this.consumer_role.startRendezvous(rid);
         } else {
             console.log("unknown cb param");
         }
@@ -186,25 +186,25 @@ class PurseApp {
     socketClose(socket) {
         // interconnect announcing socket cloesed
         console.log("got socket close: " + socket.toString());
-        if ((this.wallet_socket != null) &&
-            (socket.uuid == this.wallet_socket.uuid))
+        if ((this.provider_socket != null) &&
+            (socket.uuid == this.provider_socket.uuid))
         {
             console.log("got wallet socket closed");
-            this.wallet_socket = null;
-            this.wallet_role = null;
+            this.provider_socket = null;
+            this.provider_role = null;
 
-            this.purse_ui.updateWalletConnectionState("DISCONNECTED");
-            this.wallet_ui.switchMode(this.wallet_ui.return_mode);
+            this.purse_ui.updateProviderConnectionState("DISCONNECTED");
+            this.provider_ui.switchMode(this.provider_ui.return_mode);
         }
-        else if ((this.service_socket != null) &&
-                 (socket.uuid == this.service_socket.uuid))
+        else if ((this.consumer_socket != null) &&
+                 (socket.uuid == this.consumer_socket.uuid))
         {
             console.log("got service socket closed");
-            this.service_socket = null;
-            this.service_role = null;
+            this.consumer_socket = null;
+            this.consumer_role = null;
 
-            this.purse_ui.updateServiceConnectionState("DISCONNECTED");
-            this.service_ui.switchMode(this.service_ui.return_mode);
+            this.purse_ui.updateConsumerConnectionState("DISCONNECTED");
+            this.consumer_ui.switchMode(this.consumer_ui.return_mode);
         } else {
             console.log("got unknown socket closed");
         }
@@ -220,29 +220,31 @@ class PurseApp {
         var location = beacon.locations[0];
         if (cb_param == "wallet") {
             if (! (location instanceof WebsocketLocation)) {
-                this.purse_ui.updateWalletConnectionState("CONNECTION_FAILED");
-                this.wallet_ui.switchMode("CONNECTION_FAILED");
+                this.purse_ui.updateProviderConnectionState(
+                    "CONNECTION_FAILED");
+                this.provider_ui.switchMode("CONNECTION_FAILED");
                 return;
             }
             var url = location.toWsUrl();
             var role_info = {'role':   'wallet',
                              'beacon': beacon};
             console.log("connect wallet: " + url);
-            this.purse_ui.updateWalletConnectionState("CONNECTING_WEBSOCKET");
-            this.wallet_ui.switchMode("CONNECTING_WEBSOCKET");
+            this.purse_ui.updateProviderConnectionState("CONNECTING_WEBSOCKET");
+            this.provider_ui.switchMode("CONNECTING_WEBSOCKET");
             this.wi.connect(url, role_info);
         } else if (cb_param == "service") {
             if (! (location instanceof WebsocketLocation)) {
-                this.purse_ui.updateWalletConnectionState("CONNECTION_FAILED");
-                this.service_ui.switchMode("CONNECTION_FAILED");
+                this.purse_ui.updateProviderConnectionState(
+                    "CONNECTION_FAILED");
+                this.consumer_ui.switchMode("CONNECTION_FAILED");
                 return;
             }
             var url = location.toWsUrl();
             var role_info = {'role':   'service',
                              'beacon': beacon};
             console.log("connect service: " + url);
-            this.purse_ui.updateServiceConnectionState("CONNECTING_WEBSOCKET");
-            this.service_ui.switchMode("CONNECTING_WEBSOCKET");
+            this.purse_ui.updateConsumerConnectionState("CONNECTING_WEBSOCKET");
+            this.consumer_ui.switchMode("CONNECTING_WEBSOCKET");
             this.wi.connect(url, role_info);
         } else {
             console.log("unknown cb_param: " + cb_param);
@@ -252,16 +254,16 @@ class PurseApp {
     disconnect(cb_param) {
         if (cb_param == "wallet") {
             console.log("disconnect wallet");
-            if (this.wallet_socket != null) {
-                this.wallet_socket.close();
+            if (this.provider_socket != null) {
+                this.provider_socket.close();
             }
-            this.purse_ui.updateWalletConnectionState("DISCONNECTED");
+            this.purse_ui.updateProviderConnectionState("DISCONNECTED");
         } else if (cb_param == "service") {
             console.log("disconnect service");
-            if (this.service_socket != null) {
-                this.service_socket.close();
+            if (this.consumer_socket != null) {
+                this.consumer_socket.close();
             }
-            this.purse_ui.updateServiceConnectionState("DISCONNECTED");
+            this.purse_ui.updateConsumerConnectionState("DISCONNECTED");
         } else {
             console.log("unknown cb_param: " + cb_param);
         }
