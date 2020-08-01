@@ -92,7 +92,7 @@ class OutgoingSocket {
         console.log("ms: " + this.ms);
         if (this.interconnect != null) {
             console.log("close cb sent");
-            this.interconnect.socketClose(this.ms, this.cb_param);
+            this.interconnect.socketClose(this.ms);
         }
     }
 }

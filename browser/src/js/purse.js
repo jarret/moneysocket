@@ -176,28 +176,29 @@ class PurseApp {
             this.service_ui.switchMode("REQUESTING_RENDEZVOUS");
 
             this.service_role = new Role("service");
-            this.serivce_role.addSocket(socket);
+            this.service_role.addSocket(socket);
             this.service_role.startRendezvous(rid);
         } else {
             console.log("unknown cb param");
         }
     }
 
-    socketClose(socket, cb_param) {
+    socketClose(socket) {
         // interconnect announcing socket cloesed
         console.log("got socket close: " + socket.toString());
-        console.log("cb_param: " + cb_param);
-        var role_info = cb_param;
-        if (role_info['role'] == "wallet") {
+        if ((this.wallet_socket != null) &&
+            (socket.uuid == this.wallet_socket.uuid))
+        {
             console.log("got wallet socket closed");
             this.wallet_socket = null;
             this.wallet_role = null;
 
             this.purse_ui.updateWalletConnectionState("DISCONNECTED");
             this.wallet_ui.switchMode(this.wallet_ui.return_mode);
-
-
-        } else if (role_info['role'] == "service") {
+        }
+        else if ((this.service_socket != null) &&
+                 (socket.uuid == this.service_socket.uuid))
+        {
             console.log("got service socket closed");
             this.service_socket = null;
             this.service_role = null;
