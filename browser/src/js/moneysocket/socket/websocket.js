@@ -3,6 +3,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
 
+const BinUtl = require('../utl/bin.js').BinUtl;
 const MoneysocketSocket = require('./socket.js').MoneysocketSocket;
 const MoneysocketInterconnect = require('./socket.js').MoneysocketInterconnect;
 
@@ -66,8 +67,8 @@ class OutgoingSocket {
         this.interconnect.socketClose(this.ms);
     }
 
-    initiateSend(msg_dict) {
-        this.websocket.send(JSON.stringify(msg_dict));
+    initiateSend(msg_bytes) {
+        this.websocket.send(msg_bytes.buffer);
     }
 
     handleOpen(event) {
@@ -75,11 +76,19 @@ class OutgoingSocket {
         this.interconnect.newSocket(this.ms, this.cb_param);
     }
 
-    handleMessage(event) {
-        console.log("ws recv: " + event.data);
-        // TODO - binary message?
-        // TODO - unparsable?
-        this.ms.msgRecv(JSON.parse(event.data));
+    handleMessageCb(msg_bytes) {
+
+    }
+
+    async handleMessage(event) {
+        if (event.data instanceof Blob) {
+            console.log("ws recv data: " + event.data);
+            var msg_bytes = await BinUtl.blob2Uint8Array(event.data);
+            console.log("msg_bytes data: " + BinUtl.b2h(msg_bytes));
+            this.ms.msgRecv(msg_bytes);
+        } else {
+            console.error("received unexpected non-binary message");
+        }
     }
 
     handleClose(event) {

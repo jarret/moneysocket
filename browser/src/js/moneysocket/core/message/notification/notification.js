@@ -25,7 +25,7 @@ class MoneysocketNotification extends MoneysocketMessage {
     }
 
     static checkValidMsgDict(msg_dict) {
-        if (! ('notfication_uuid' in msg_dict)) {
+        if (! ('notification_uuid' in msg_dict)) {
             return "no notification_uuid included";
         }
         if (typeof msg_dict['notification_uuid'] != 'string') {

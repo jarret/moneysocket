@@ -17,7 +17,7 @@ class Match(object):
     def _derive_rid(self, beacon_str):
         b, err = MoneysocketBeacon.from_bech32_str(beacon_str)
         assert not err, "unexpected err: %s" % err
-        return b.shared_seed.derive_rendezvous_id()
+        return b.shared_seed.derive_rendezvous_id().hex()
 
     def assoc_wallet(self, wallet, beacon_str):
         assert wallet.name not in self.wallets, "double-added wallet/"

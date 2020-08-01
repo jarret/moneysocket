@@ -13,16 +13,18 @@ const MessageReceiver = require("./receiver.js").MessageReceiver;
 class MoneysocketCrypt {
 
     static isClear(msg_bytes) {
+        console.log("checking clear: " + msg_bytes);
         try {
             var msg_txt = StringUtl.fromUtf8(msg_bytes);
             var msg_dict = JSON.parse(msg_txt);
         } catch (err) {
+            console.log("err: " + err);
             return false;
         }
         return true;
     }
     static isCyphertext(msg_bytes) {
-        return ! MoneysocketCrypt.isClear();
+        return ! MoneysocketCrypt.isClear(msg_bytes);
     }
 
     static pad(msg_bytes) {
@@ -70,6 +72,7 @@ class MoneysocketCrypt {
     }
 
     static wireDecode(msg_bytes, shared_seed) {
+        console.log("wire decod: " + msg_bytes);
         var is_cyphertext = MoneysocketCrypt.isCyphertext(msg_bytes);
         if (is_cyphertext && shared_seed == null) {
             return [null, "no seed to decrypt cyphertext"];

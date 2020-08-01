@@ -46,8 +46,10 @@ class MoneysocketSocket(object):
             logging.error("no send initialized")
             return
 
+        print("encoding wire msg")
         msg_bytes = MoneysocketCrypt.wire_encode(msg,
                                                  shared_seed=self.shared_seed)
+        print("encoded wire msg len: %d" % len(msg_bytes))
         self.initiate_send_func(msg_bytes)
 
     def write_raw(self, msg_bytes):

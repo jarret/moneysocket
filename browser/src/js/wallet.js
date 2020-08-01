@@ -145,6 +145,36 @@ class PurseApp {
     }
 
     //////////////////////////////////////////////////////////////////////////
+    // Role callbacks:
+    //////////////////////////////////////////////////////////////////////////
+
+    rendezvousBecomingReadyHookCb(cb_param) {
+        if (cb_param == "wallet") {
+            this.purse_ui.updateProviderConnectionState(
+                "WAITING_FOR_RENDEZVOUS");
+            this.provider_ui.switchMode("WAITING_FOR_RENDEZVOUS");
+        } else if (cb_param == "service") {
+            this.purse_ui.updateConsumerConnectionState(
+                "WAITING_FOR_RENDEZVOUS");
+            this.consumer_ui.switchMode("WAITING_FOR_RENDEZVOUS");
+        } else {
+            console.log("unknown cb param");
+        }
+    }
+
+    connectedHookCb(cb_param) {
+        if (cb_param == "wallet") {
+            this.purse_ui.updateProviderConnectionState("CONNECTED");
+            this.provider_ui.switchMode("CONNECTED");
+        } else if (cb_param == "service") {
+            this.purse_ui.updateConsumerConnectionState("CONNECTED");
+            this.consumer_ui.switchMode("CONNECTED");
+        } else {
+            console.log("unknown cb param");
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     // WebsocketInterconnect callbacks:
     //////////////////////////////////////////////////////////////////////////
 
@@ -167,6 +197,7 @@ class PurseApp {
 
             this.provider_role = new Role("wallet");
             this.provider_role.addSocket(socket);
+            this.provider_role.registerAppHook(this, "wallet");
             this.provider_role.startRendezvous(rid);
         } else if (role_info['role'] == "service") {
             this.consumer_socket = socket;
@@ -177,6 +208,7 @@ class PurseApp {
 
             this.consumer_role = new Role("service");
             this.consumer_role.addSocket(socket);
+            this.consumer_role.registerAppHook(this, "service");
             this.consumer_role.startRendezvous(rid);
         } else {
             console.log("unknown cb param");

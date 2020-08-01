@@ -87,6 +87,13 @@ class BinUtl {
         c.set(b, a.length);
         return c;
     }
+
+    static async blob2Uint8Array(blob) {
+        var p = new Response(blob).arrayBuffer().then(console.log("foof"));
+        var ab = await p;
+        console.log("ab: " + ab);
+        return new Uint8Array(ab);
+    }
 }
 
 

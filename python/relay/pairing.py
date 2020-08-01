@@ -68,14 +68,15 @@ class Pairing(object):
 
         if socket.uuid in self.unpaired_rids_by_uuid:
             self._exit_unpaired(socket.uuid)
+            return "QUIET_CLOSE", None, None
 
         if socket.uuid not in self.pairs_by_uuid:
             return "QUIET_CLOSE", None, None
 
-        unpaired_uuid = self.pairs_by_uuid[socket_uuid]['peer_uuid']
-        broken_rid = self.pairs_by_uuid[socket_uuid]['rid']
+        unpaired_uuid = self.pairs_by_uuid[socket.uuid]['peer_uuid']
+        broken_rid = self.pairs_by_uuid[socket.uuid]['rid']
         self._exit_paired(socket.uuid)
-        self._exit_unpaired(socket.uuid)
+        #self._exit_unpaired(socket.uuid)
         return "RENDEZVOUS_END", unpaired_uuid, broken_rid
 
     ###########################################################################
@@ -90,7 +91,7 @@ class Pairing(object):
             # yes, pair them up
             peer_uuid = self.unpaired_uuids_by_rid[rid]
             peer_req_ref_uuid = self.req_ref_by_uuid[peer_uuid]
-            self._exit_unpaired(peer_uuid, rid)
+            self._exit_unpaired(peer_uuid)
             self._enter_paired(rid, socket.uuid, peer_uuid)
             return "PAIRED", peer_uuid, peer_req_ref_uuid
         # no, wait for pair

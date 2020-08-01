@@ -31,6 +31,8 @@ class Role {
         this.state = null;
         this.setState("INIT");
         this.outstanding_pings = {};
+        this.hook_cb_obj = null;
+        this.hook_cb_obj_param = null;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -93,6 +95,7 @@ class Role {
             return;
         }
         this.setState("ROLE_OPERATE");
+        this.hook_cb_obj.connectedHookCb(this.hook_cb_obj_param);
     }
 
     handleNotifyRendezvousBecomingReady(msg) {
@@ -105,6 +108,7 @@ class Role {
         // TODO - hook for app
         console.info("waiting for peer to rendezvous");
         this.setState("RENDEZVOUS_SETUP");
+        this.hook_cb_obj.rendezvousBecomingReadyHookCb(this.hook_cb_obj_param);
     }
 
     handleNotifyRendezvousEnd(msg) {
@@ -129,7 +133,7 @@ class Role {
         var start_time = this.outstanding_pings[req_ref_uuid]
         elapsed = Timestamp.getNowTimestamp() - starr_time;
         // TODO hook for app;
-        logging.info("PING TIME: " + (elapsed * 1000).toString() + "ms");
+        console.log("PING TIME: " + (elapsed * 1000).toString() + "ms");
     }
 
     handleNotifyError(msg) {
@@ -156,6 +160,7 @@ class Role {
     ///////////////////////////////////////////////////////////////////////////
 
     msgRecvCb(socket, msg) {
+        console.log("this: " + this);
         console.assert(socket.uuid == this.socket.uuid);
         console.log("role received msg: " + msg.toJson());
         if (msg['message_class'] == "REQUEST") {
@@ -188,10 +193,17 @@ class Role {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    registerAppHook(cb_obj, cb_param) {
+        this.hook_cb_obj = cb_obj;
+        this.hook_cb_obj_param = cb_param;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     addSocket(socket) {
         console.log(this.name + " is adding socket " + socket.toString());
         this.socket = socket;
-        this.socket.registerRecvCb(this.msgRecvCb);
+        this.socket.registerRecvCbObj(this);
     }
 
     hasSocket() {

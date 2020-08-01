@@ -95,7 +95,7 @@ class Relay(object):
         else:
             assert result == "PAIRED"
             peer_socket = self.pairing.get_socket(peer_uuid)
-            rendezvous_id = self.pairing.get_rid(uuid)
+            rendezvous_id = self.pairing.get_rid(peer_uuid)
 
             notify = NotifyRendezvous(rendezvous_id, req_ref_uuid)
             logging.info("send rendezvous 1: %s" % notify)
@@ -119,7 +119,7 @@ class Relay(object):
     ###########################################################################
 
     def send_rendezvous_end(self, socket, rid):
-        notify = NotifyRedezvousEnd(rid)
+        notify = NotifyRendezvousEnd(rid)
         socket.write(notify)
 
     ###########################################################################

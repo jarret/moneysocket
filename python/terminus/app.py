@@ -109,7 +109,7 @@ class Terminus(object):
     def handle_request_rendezvous(self, socket, msg):
         rid = msg['rendezvous_id']
         if not self.match.rid_is_known(rid):
-            req_ref_uuid = msg['request_reference_uuid']
+            req_ref_uuid = msg['request_uuid']
             socket.write(NotifyError("unknown rendezvous_id",
                                      request_reference_uuid=req_ref_uuid))
             return
@@ -119,7 +119,7 @@ class Terminus(object):
         beacon_str = self.match.get_beacon(wallet.name)
         beacon, err = MoneysocketBeacon.from_bech32_str(beacon_str)
         assert not err, "unexpected err: %s" % err
-        assert rid == beacon.derive_rendezvous_id(), "unexpected rid"
+        assert rid == beacon.shared_seed.derive_rendezvous_id().hex(), "unexpected rid"
         socket.register_shared_seed(beacon.shared_seed)
         wallet.add_socket(socket)
 

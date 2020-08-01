@@ -4,10 +4,12 @@
 
 const Uuid = require('../utl/uuid.js').Uuid;
 
+const MoneysocketCrypt = require('../core/message/crypt.js').MoneysocketCrypt;
+
 class MoneysocketSocket {
     constructor(initiate_cb_obj) {
         this.uuid = Uuid.uuidv4();
-        this.msg_recv_cb = null;
+        this.msg_recv_cb_obj = null;
         console.assert(typeof initiate_cb_obj.initiateClose == 'function');
         console.assert(typeof initiate_cb_obj.initiateSend == 'function');
         this.initiate_cb_obj = initiate_cb_obj;
@@ -20,8 +22,9 @@ class MoneysocketSocket {
 
     //////////////////////////////////////////////////////////////////////////
 
-    registerRecvCb(cb) {
-        this.msg_recv_cb = cb;
+    registerRecvCbObj(cb_obj) {
+        console.assert(typeof cb_obj.msgRecvCb == 'function');
+        this.msg_recv_cb_obj = cb_obj;
     }
 
     registerSharedSeed(shared_seed) {
@@ -35,14 +38,34 @@ class MoneysocketSocket {
         this.initiate_cb_obj.initiateClose();
     }
 
-    write(msg_dict) {
-        // TODO wire encode
-        this.initiate_cb_obj.initiateSend(msg_dict);
+    write(msg) {
+        var msg_bytes = MoneysocketCrypt.wireEncode(msg, this.shared_seed);
+        this.initiate_cb_obj.initiateSend(msg_bytes);
     }
 
-    msgRecv(msg_dict) {
+    msgRecv(msg_bytes) {
         // TODO wire decode
-        this.msg_recv_cb(msg_dict);
+        if (this.msg_recv_cb_obj == null) {
+            console.error("no recv callback registered!");
+            return;
+        }
+
+        console.log("rec msg_bytes" + msg_bytes);
+        if (MoneysocketCrypt.isCyphertext(msg_bytes) &&
+            (this.shared_seed == null))
+        {
+            console.error("could not interpret message bytes");
+            return;
+        }
+        console.log("msg_bytes len: " + msg_bytes.length);
+
+        var [msg, err] = MoneysocketCrypt.wireDecode(msg_bytes,
+                                                     this.shared_seed);
+        if (err != null) {
+            console.error("got bad message? " + err);
+            return;
+        }
+        this.msg_recv_cb_obj.msgRecvCb(this, msg);
     }
 }
 

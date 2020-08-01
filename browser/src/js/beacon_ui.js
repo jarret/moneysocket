@@ -30,7 +30,7 @@ const MODES = new Set(["ENTER_BEACON",
                        "GENERATED_BEACON",
                        "CONNECTING_WEBSOCKET",
                        "REQUESTING_RENDEZVOUS",
-                       "WAITING_FOR_RENDZVOUS",
+                       "WAITING_FOR_RENDEZVOUS",
                        "CONNECTED",
                        "CONNECTION_FAILED",
                       ]);

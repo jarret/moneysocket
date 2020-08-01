@@ -75,17 +75,17 @@ class Role(object):
 
     def handle_request_rendezvous(self, msg):
         # TODO has this always been pre-screened by the app?
-        req_ref_uuid = msg['request_reference_uuid']
+        req_ref_uuid = msg['request_uuid']
         rid = msg['rendezvous_id']
-        if self.state != "INIT":
-            self.socket.write(NotifyError("not in state to rendezvous",
-                                          request_reference_uuid=req_ref_uuid))
-            return
+      #  if self.state != "INIT":
+      #      self.socket.write(NotifyError("not in state to rendezvous",
+      #                                    request_reference_uuid=req_ref_uuid))
+      #      return
         self.socket.write(NotifyRendezvous(rid, req_ref_uuid))
         self.set_state("ROLE_OPERATE")
 
     def handle_request_ping(self, msg):
-        req_ref_uuid = msg['request_reference_uuid']
+        req_ref_uuid = msg['request_uuid']
         if self.state != "ROLE_OPERATE":
             self.socket.write(NotifyError("not in state to respond to ping",
                                           request_reference_uuid=req_ref_uuid))
@@ -115,10 +115,10 @@ class Role(object):
 
     def handle_notify_rendezvous_becoming_ready(self, msg):
         rid = msg['rendezvous_id']
-        if self.state != "RENDEZVOUS_SETUP":
-            logging.error("not in rendezvousing setup state")
+        #if self.state != "RENDEZVOUS_SETUP":
+        #    logging.error("not in rendezvousing setup state")
             # TODO do we notify on error?
-            return
+            #return
 
         # TODO - hook for app
         logging.info("waiting for peer to rendezvous")
@@ -179,14 +179,14 @@ class Role(object):
     ###########################################################################
 
     def send_ping(self):
-        self.assert_state("ROLE_OPERATE")
+        #self.assert_state("ROLE_OPERATE")
         msg = RequestPing()
         req_ref_uuid = msg['request_uuid']
         self.outstanding_pings[req_ref_uuid] = time.time()
         self.socket.write(msg)
 
     def start_rendezvous(self, rid):
-        self.assert_state("INIT")
+        #self.assert_state("INIT")
         self.set_state("RENDEZVOUS_SETUP")
         msg = RequestRendezvous(rid.hex())
         logging.info("sending: %s" % msg)
