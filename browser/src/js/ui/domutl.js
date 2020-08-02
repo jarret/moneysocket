@@ -98,7 +98,7 @@ class DomUtl {
         return (msats / 1000.0).toFixed(3) + " sats";
     }
 
-    static brawBalance(div, msats) {
+    static drawBalance(div, msats) {
         var d = document.createElement("div");
         var s = DomUtl.balanceFmt(msats);
         var t = document.createTextNode(s);
@@ -144,6 +144,19 @@ class DomUtl {
         b.appendChild(qr);
         b.appendChild(copied);
         div.appendChild(b);
+    }
+
+    static drawSlider(div) {
+        var d = document.createElement("div");
+        var i = document.createElement("input");
+        i.setAttribute("type", "range");
+        i.setAttribute("min", "0");
+        i.setAttribute("max", "100");
+        i.setAttribute("value", "50");
+        i.setAttribute("class", "slider");
+        d.appendChild(i);
+        div.appendChild(d);
+        return d;
     }
 
 }

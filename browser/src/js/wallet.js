@@ -15,6 +15,13 @@ const Role = require('./moneysocket/core/role.js').Role;
 
 ///////////////////////////////////////////////////////////////////////////////
 
+const MODES = new Set(["DISCONNECTED",
+                       "MAIN",
+                       "SEND",
+                       "RECEIVE",
+                      ]);
+
+
 class WalletUi {
     constructor(div) {
         this.parent_div = div;
@@ -23,25 +30,118 @@ class WalletUi {
         this.provider_role_div = null;
         this.consumer_role_div = null;
         this.provider_counterpart_div = null;
+        this.mode = null;
+
+
+        this.provided_msats = 1000000;
+        this.provide_msats = 500000;
+
+
+        this.balance_div = null;
+        this.slider_input = null;
+
+        this.send_input_div = null;
+
     }
 
     draw(style) {
         this.my_div = document.createElement("div");
         this.my_div.setAttribute("class", style);
 
-        this.spendable_div = DomUtl.emptyDiv(this.my_div);
-        DomUtl.drawBigBalance(this.spendable_div, 0.0);
-        DomUtl.drawBr(this.my_div);
+
+        this.wallet_mode_div = DomUtl.emptyDiv(this.my_div);
+        this.wallet_mode_div.setAttribute("class", "wallet-mode-output");
 
 
+        //this.spendable_div = DomUtl.emptyDiv(this.my_div);
+        //DomUtl.drawBigBalance(this.spendable_div, 0.0);
+        //DomUtl.drawBr(this.my_div);
 
-        this.provider_counterpart_div = DomUtl.emptyDiv(this.my_div);
-        DomUtl.drawText(this.provider_counterpart_div,
-                        "Downstream Provider Balance: N/A");
+        //this.provider_counterpart_div = DomUtl.emptyDiv(this.my_div);
+        //DomUtl.drawText(this.provider_counterpart_div,
+        //                "Downstream Provider Balance: N/A");
+        //
+        //DomUtl.drawBr(this.my_div);
 
-        DomUtl.drawBr(this.my_div);
+        //this.switchMode("DISCONNECTED");
+        this.switchMode("MAIN");
 
         this.parent_div.appendChild(this.my_div);
+    }
+
+    switchMode(new_mode) {
+        console.assert(MODES.has(new_mode));
+        this.mode = new_mode;
+        DomUtl.deleteChildren(this.wallet_mode_div);
+
+        if (new_mode == "DISCONNECTED") {
+            var t = DomUtl.drawText(this.wallet_mode_div,
+                "Please connect to downstream Moneysocket wallet provider.");
+            t.setAttribute("style", "padding:5px;");
+        } else if (new_mode == "MAIN") {
+            this.balance_div = DomUtl.emptyDiv(this.wallet_mode_div);
+            DomUtl.drawBigBalance(this.balance_div, this.provide_msats);
+            DomUtl.drawBr(this.wallet_mode_div);
+            DomUtl.drawButton(this.wallet_mode_div, "Manual Send",
+                (function() {
+                    this.switchMode("SEND");
+                }).bind(this));
+            DomUtl.drawBr(this.wallet_mode_div);
+            DomUtl.drawBr(this.wallet_mode_div);
+            DomUtl.drawButton(this.wallet_mode_div, "Manual Receive",
+                (function() {
+                    this.switchMode("RECEIVE");
+                }).bind(this));
+            DomUtl.drawBr(this.wallet_mode_div);
+            DomUtl.drawBr(this.wallet_mode_div);
+            var t = DomUtl.drawText(this.wallet_mode_div,
+                                    "Provide Upstream Balance:");
+            t.setAttribute("style", "padding:5px;");
+            var s = DomUtl.drawSlider(this.wallet_mode_div);
+            DomUtl.drawBr(this.wallet_mode_div);
+            DomUtl.drawText(this.wallet_mode_div, "Provided Balance: " +
+                            DomUtl.balanceFmt(this.provided_msats));
+            this.slider_input = s.firstChild;
+            this.slider_input.oninput = (function () {
+                var slider_val = this.slider_input.value;
+                console.log("input slider: " + slider_val);
+                this.provide_msats = this.provided_msats * (slider_val / 100);
+                DomUtl.deleteChildren(this.balance_div);
+                DomUtl.drawBigBalance(this.balance_div, this.provide_msats);
+            }.bind(this));
+        } else if (new_mode == "SEND") {
+            this.balance_div = DomUtl.emptyDiv(this.wallet_mode_div);
+            DomUtl.drawBigBalance(this.balance_div, this.provide_msats);
+            DomUtl.drawBr(this.wallet_mode_div);
+
+            var t = DomUtl.drawText(this.wallet_mode_div, "Provide Bolt11");
+            t.setAttribute("style", "padding:5px;");
+            this.input_div = DomUtl.drawTextInput(this.wallet_mode_div, "");
+            DomUtl.drawButton(this.wallet_mode_div, "Scan QR",
+                (function() {
+                    console.log("qr scan not implemented yet");
+                }).bind(this));
+            DomUtl.drawBr(this.wallet_mode_div);
+            DomUtl.drawBr(this.wallet_mode_div);
+            DomUtl.drawButton(this.wallet_mode_div, "Back",
+                (function() {
+                    this.switchMode("MAIN");
+                }).bind(this));
+
+        } else if (new_mode == "RECEIVE") {
+            this.balance_div = DomUtl.emptyDiv(this.wallet_mode_div);
+            DomUtl.drawBigBalance(this.balance_div, this.provide_msats);
+            DomUtl.drawBr(this.wallet_mode_div);
+            var t = DomUtl.drawText(this.wallet_mode_div, "Request sats:");
+            t.setAttribute("style", "padding:5px;");
+            this.input_div = DomUtl.drawTextInput(this.wallet_mode_div, "0");
+            this.input_div.firstChild.setAttribute("size", "8");
+            DomUtl.drawBr(this.wallet_mode_div);
+            DomUtl.drawButton(this.wallet_mode_div, "Back",
+                (function() {
+                    this.switchMode("MAIN");
+                }).bind(this));
+        }
     }
 
     updateSpendable(new_spendable) {

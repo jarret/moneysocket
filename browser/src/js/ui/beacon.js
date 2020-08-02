@@ -65,10 +65,8 @@ class BeaconUi {
         DomUtl.drawTitle(this.my_div, this.title, "h5");
         this.my_div.setAttribute("class", style);
 
-
         this.mode_output_div = DomUtl.emptyDiv(this.my_div);
-
-        this.mode_output_div.setAttribute("class", "mode-output");
+        this.mode_output_div.setAttribute("class", "beacon-mode-output");
         DomUtl.drawBr(this.my_div);
         this.mode_switch_button_div = DomUtl.emptyDiv(this.my_div);
 
@@ -87,7 +85,7 @@ class BeaconUi {
 
         if (new_mode == "ENTER_BEACON") {
             this.return_mode = "ENTER_BEACON";
-            var t = DomUtl.drawText(this.mode_output_div, "Enter Beacon");
+            var t = DomUtl.drawText(this.mode_output_div, "Provide Beacon");
             t.setAttribute("style", "padding:5px;");
 
             DomUtl.drawBr(this.mode_output_div);
