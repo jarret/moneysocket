@@ -148,11 +148,21 @@ class IncomingWebsocketInterconnect(MoneysocketInterconnect):
 
         if tls_info:
             logging.info("listening with TLS")
+            print("tls info: %s" % tls_info)
             contextFactory = ssl.DefaultOpenSSLContextFactory(
                 tls_info['key_file'], tls_info['cert_file'],
                 sslmethod=tls_info['sslmethod'])
+
+            if tls_info['cert_chain_file']:
+                print("using chain file")
+                ctx = contextFactory.getContext()
+                ctx.use_certificate_chain_file(tls_info['cert_chain_file'])
+            
             factory = WebSocketServerFactory(listen_ws_url)
             factory.protocol = IncomingSocket
+            factory.setProtocolOptions(openHandshakeTimeout=30,
+                                       autoPingInterval=30,
+                                       autoPingTimeout=5)
             factory.ms_interconnect = self
             factory.ms_cb_param = cb_param
             self.listener = listenWS(factory, contextFactory)
