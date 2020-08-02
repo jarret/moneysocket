@@ -5,32 +5,17 @@
 const DomUtl = require('./domutl.js').DomUtl;
 const WebsocketInterconnect = require(
     './moneysocket/socket/websocket.js').WebsocketInterconnect;
-
 const WebsocketLocation = require(
     './moneysocket/beacon/location/websocket.js').WebsocketLocation;
-
 const BeaconUi = require('./beacon_ui.js').BeaconUi;
 const ConnectProgress = require('./connect_progress.js').ConnectProgress;
-const SharedSeed = require('./moneysocket/beacon/shared_seed.js').SharedSeed;
-
-const  RequestRendezvous = require(
-    './moneysocket/core/message/request/rendezvous.js').RequestRendezvous;
-
-const  RequestPing = require(
-    './moneysocket/core/message/request/ping.js').RequestPing;
-
-const  MessageReceiver = require(
-    './moneysocket/core/message/receiver.js').MessageReceiver;
-
-const  MoneysocketCrypt = require(
-    './moneysocket/core/message/crypt.js').MoneysocketCrypt;
-
-const BinUtl = require('./moneysocket/utl/bin.js').BinUtl;
-
 const Role = require('./moneysocket/core/role.js').Role;
 
 
-class PurseStatusUi {
+
+///////////////////////////////////////////////////////////////////////////////
+
+class WalletUi {
     constructor(div) {
         this.parent_div = div;
         this.my_div = null;
@@ -48,18 +33,7 @@ class PurseStatusUi {
         DomUtl.drawBigBalance(this.spendable_div, 0.0);
         DomUtl.drawBr(this.my_div);
 
-        this.provider_role_div = DomUtl.emptyDiv(this.my_div);
 
-        this.drawRoleConnectionState(this.provider_role_div,
-                                     "Upstream Consumer", "DISCONNECTED");
-
-        DomUtl.drawBr(this.my_div);
-
-        this.consumer_role_div = DomUtl.emptyDiv(this.my_div);
-        this.drawRoleConnectionState(this.consumer_role_div,
-                                     "Downstream Provider", "DISCONNECTED");
-
-        DomUtl.drawBr(this.my_div);
 
         this.provider_counterpart_div = DomUtl.emptyDiv(this.my_div);
         DomUtl.drawText(this.provider_counterpart_div,
@@ -75,27 +49,6 @@ class PurseStatusUi {
         DomUtl.drawBigBalance(this.spendable_div, 0.0);
     }
 
-    //////////////////////////////////////////////////////////////////////////
-
-    drawRoleConnectionState(role_div, role_title, state) {
-        DomUtl.deleteChildren(role_div)
-        DomUtl.drawText(role_div, role_title);
-        var p = new ConnectProgress(role_div);
-        p.draw(state);
-    }
-
-    updateProviderConnectionState(state) {
-        this.drawRoleConnectionState(this.provider_role_div,
-                                     "Upstream Consumer", state);
-    }
-
-    updateConsumerConnectionState(state) {
-        this.drawRoleConnectionState(this.consumer_role_div,
-                                     "Downstream Provider", state);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-
     updateWalletCounterpartBalance(msats) {
         DomUtl.deleteChildren(this.provider_counterpart_div)
         DomUtl.drawText(this.provider_counterpart_div,
@@ -104,11 +57,13 @@ class PurseStatusUi {
 
 }
 
-class PurseApp {
+///////////////////////////////////////////////////////////////////////////////
+
+class WebWalletApp {
     constructor() {
         this.parent_div = document.getElementById("ui");
         this.my_div = null;
-        this.purse_ui = null;
+        this.wallet_ui = null;
         this.provider_ui = null;
         this.consumer_ui = null;
 
@@ -121,14 +76,13 @@ class PurseApp {
         this.wi = new WebsocketInterconnect(this);
     }
 
-
-    drawPurseUi() {
+    drawWalletAppUi() {
         this.my_div = document.createElement("div");
         this.my_div.setAttribute("class", "bordered");
-        DomUtl.drawTitle(this.my_div, "Wallet App", "h1");
+        DomUtl.drawTitle(this.my_div, "Moneysocket Web Wallet", "h2");
 
-        this.purse_ui = new PurseStatusUi(this.my_div);
-        this.purse_ui.draw("center");
+        this.wallet_ui = new WalletUi(this.my_div);
+        this.wallet_ui.draw("center");
 
         DomUtl.drawBr(this.my_div);
         var wtitle = "Connect Upstream Consumer";
@@ -150,12 +104,8 @@ class PurseApp {
 
     rendezvousBecomingReadyHookCb(cb_param) {
         if (cb_param == "wallet") {
-            this.purse_ui.updateProviderConnectionState(
-                "WAITING_FOR_RENDEZVOUS");
             this.provider_ui.switchMode("WAITING_FOR_RENDEZVOUS");
         } else if (cb_param == "service") {
-            this.purse_ui.updateConsumerConnectionState(
-                "WAITING_FOR_RENDEZVOUS");
             this.consumer_ui.switchMode("WAITING_FOR_RENDEZVOUS");
         } else {
             console.log("unknown cb param");
@@ -164,10 +114,8 @@ class PurseApp {
 
     connectedHookCb(cb_param) {
         if (cb_param == "wallet") {
-            this.purse_ui.updateProviderConnectionState("CONNECTED");
             this.provider_ui.switchMode("CONNECTED");
         } else if (cb_param == "service") {
-            this.purse_ui.updateConsumerConnectionState("CONNECTED");
             this.consumer_ui.switchMode("CONNECTED");
         } else {
             console.log("unknown cb param");
@@ -191,8 +139,6 @@ class PurseApp {
         if (role_info['role'] == "wallet") {
             this.provider_socket = socket;
 
-            this.purse_ui.updateProviderConnectionState(
-                "REQUESTING_RENDEZVOUS");
             this.provider_ui.switchMode("REQUESTING_RENDEZVOUS");
 
             this.provider_role = new Role("wallet");
@@ -201,9 +147,6 @@ class PurseApp {
             this.provider_role.startRendezvous(rid);
         } else if (role_info['role'] == "service") {
             this.consumer_socket = socket;
-
-            this.purse_ui.updateConsumerConnectionState(
-                "REQUESTING_RENDEZVOUS");
             this.consumer_ui.switchMode("REQUESTING_RENDEZVOUS");
 
             this.consumer_role = new Role("service");
@@ -225,7 +168,6 @@ class PurseApp {
             this.provider_socket = null;
             this.provider_role = null;
 
-            this.purse_ui.updateProviderConnectionState("DISCONNECTED");
             this.provider_ui.switchMode(this.provider_ui.return_mode);
         }
         else if ((this.consumer_socket != null) &&
@@ -235,7 +177,6 @@ class PurseApp {
             this.consumer_socket = null;
             this.consumer_role = null;
 
-            this.purse_ui.updateConsumerConnectionState("DISCONNECTED");
             this.consumer_ui.switchMode(this.consumer_ui.return_mode);
         } else {
             console.log("got unknown socket closed");
@@ -252,8 +193,6 @@ class PurseApp {
         var location = beacon.locations[0];
         if (cb_param == "wallet") {
             if (! (location instanceof WebsocketLocation)) {
-                this.purse_ui.updateProviderConnectionState(
-                    "CONNECTION_FAILED");
                 this.provider_ui.switchMode("CONNECTION_FAILED");
                 return;
             }
@@ -261,13 +200,10 @@ class PurseApp {
             var role_info = {'role':   'wallet',
                              'beacon': beacon};
             console.log("connect wallet: " + url);
-            this.purse_ui.updateProviderConnectionState("CONNECTING_WEBSOCKET");
             this.provider_ui.switchMode("CONNECTING_WEBSOCKET");
             this.wi.connect(url, role_info);
         } else if (cb_param == "service") {
             if (! (location instanceof WebsocketLocation)) {
-                this.purse_ui.updateProviderConnectionState(
-                    "CONNECTION_FAILED");
                 this.consumer_ui.switchMode("CONNECTION_FAILED");
                 return;
             }
@@ -275,7 +211,6 @@ class PurseApp {
             var role_info = {'role':   'service',
                              'beacon': beacon};
             console.log("connect service: " + url);
-            this.purse_ui.updateConsumerConnectionState("CONNECTING_WEBSOCKET");
             this.consumer_ui.switchMode("CONNECTING_WEBSOCKET");
             this.wi.connect(url, role_info);
         } else {
@@ -289,25 +224,34 @@ class PurseApp {
             if (this.provider_socket != null) {
                 this.provider_socket.close();
             }
-            this.purse_ui.updateProviderConnectionState("DISCONNECTED");
         } else if (cb_param == "service") {
             console.log("disconnect service");
             if (this.consumer_socket != null) {
                 this.consumer_socket.close();
             }
-            this.purse_ui.updateConsumerConnectionState("DISCONNECTED");
         } else {
             console.log("unknown cb_param: " + cb_param);
         }
     }
 }
 
-window.app = new PurseApp();
+window.app = new WebWalletApp();
 
 
 //////////////////////////////////////////////////////////////////////////
 // some random test stuff:
 //////////////////////////////////////////////////////////////////////////
+
+const SharedSeed = require('./moneysocket/beacon/shared_seed.js').SharedSeed;
+const  RequestRendezvous = require(
+    './moneysocket/core/message/request/rendezvous.js').RequestRendezvous;
+const  RequestPing = require(
+    './moneysocket/core/message/request/ping.js').RequestPing;
+const  MessageReceiver = require(
+    './moneysocket/core/message/receiver.js').MessageReceiver;
+const  MoneysocketCrypt = require(
+    './moneysocket/core/message/crypt.js').MoneysocketCrypt;
+const BinUtl = require('./moneysocket/utl/bin.js').BinUtl;
 
 function smokeTest() {
     var ss = new SharedSeed();
@@ -330,11 +274,6 @@ function smokeTest() {
     var rp2j = rp2.toJson();
     console.log("rp2j: " + rp2j);
 
-
-
-    //var encoded = MoneysocketCrypt.wireEncode(rr, ss);
-    //console.log("rr encoded: " + BinUtl.b2h(encoded));
-
     var encoded = MoneysocketCrypt.wireEncode(rp, ss);
     console.log("rp encoded: " + BinUtl.b2h(encoded));
 
@@ -355,7 +294,7 @@ function smokeTest() {
 }
 
 function drawFirstUi() {
-    window.app.drawPurseUi()
+    window.app.drawWalletAppUi()
 
     //smokeTest();
 }
