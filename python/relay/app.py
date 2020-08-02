@@ -61,7 +61,7 @@ class Relay(object):
                     'key_file':  os.path.abspath(config_section['CertKey'])}
         tls_info['cert_chain_file'] = (
             os.path.abspath(config_section['CertChainFile']) if
-            config_section['SelfSignedCert'] == "True" else None)
+            config_section['SelfSignedCert'] == "False" else None)
         return tls_info
 
     ###########################################################################
