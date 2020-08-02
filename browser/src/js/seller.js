@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
-const DomUtl = require('./domutl.js').DomUtl;
+const DomUtl = require('./ui/domutl.js').DomUtl;
 const WebsocketInterconnect = require(
     './moneysocket/socket/websocket.js').WebsocketInterconnect;
-const BeaconUi = require('./beacon_ui.js').BeaconUi;
+const BeaconUi = require('./ui/beacon.js').BeaconUi;
 
 class OpinionUi {
     constructor(div) {

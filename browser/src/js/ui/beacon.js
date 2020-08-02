@@ -5,9 +5,9 @@
 const DomUtl = require('./domutl.js').DomUtl;
 
 const MoneysocketBeacon = require(
-    './moneysocket/beacon/beacon.js').MoneysocketBeacon;
+    '../moneysocket/beacon/beacon.js').MoneysocketBeacon;
 const WebsocketLocation = require(
-    './moneysocket/beacon/location/websocket.js').WebsocketLocation;
+    '../moneysocket/beacon/location/websocket.js').WebsocketLocation;
 
 const ConnectProgress = require('./connect_progress.js').ConnectProgress;
 

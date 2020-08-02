@@ -2,13 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
-const DomUtl = require('./domutl.js').DomUtl;
+const DomUtl = require('./ui/domutl.js').DomUtl;
 const WebsocketInterconnect = require(
     './moneysocket/socket/websocket.js').WebsocketInterconnect;
 const WebsocketLocation = require(
     './moneysocket/beacon/location/websocket.js').WebsocketLocation;
-const BeaconUi = require('./beacon_ui.js').BeaconUi;
-const ConnectProgress = require('./connect_progress.js').ConnectProgress;
+const BeaconUi = require('./ui/beacon.js').BeaconUi;
+const ConnectProgress = require('./ui/connect_progress.js').ConnectProgress;
 const Role = require('./moneysocket/core/role.js').Role;
 
 
@@ -54,7 +54,6 @@ class WalletUi {
         DomUtl.drawText(this.provider_counterpart_div,
             "Wallet Provider Balance: " + DomUtl.balanceFmt(msats));
     }
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////

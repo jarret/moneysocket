@@ -5,7 +5,7 @@
 const Crypto = require('crypto');
 const Kjua = require('kjua');
 
-const DomUtl = require('./domutl.js').DomUtl;
+const DomUtl = require('./ui/domutl.js').DomUtl;
 const SharedSeed = require('./moneysocket/beacon/shared_seed.js').SharedSeed;
 const BinUtl = require('./moneysocket/utl/bin.js').BinUtl;
 const MoneysocketBeacon = require(
