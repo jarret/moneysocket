@@ -27,7 +27,7 @@ class DownstreamStatusUi {
         this.ping_div = DomUtl.emptyDiv(this.my_div);
         this.balance_div = DomUtl.emptyDiv(this.my_div);
 
-        this.ping_time = 110;
+        this.ping_time = 0;
         this.provided_msats = 1234567;
         this.updateDisconnected();
 

@@ -48,7 +48,6 @@ class WalletUi {
 
         this.send_input_div = null;
 
-        this.outstanding_pings = {};
     }
 
     draw(style) {
@@ -192,6 +191,7 @@ class WebWalletApp {
         this.consumer_socket = null;
 
         this.ping_interval = null;
+        this.outstanding_pings = {};
 
         this.wi = new WebsocketInterconnect(this);
     }
@@ -221,10 +221,21 @@ class WebWalletApp {
     //////////////////////////////////////////////////////////////////////////
 
     sendPing() {
-        //console.log("ping");
+        console.log("ping");
         var msg = this.consumer_role.sendPing();
         var req_ref_uuid = msg['request_uuid'];
-        this.outstandingPings[req_ref_uuid] = Timestamp.getNowTimestamp();
+        this.outstanding_pings[req_ref_uuid] = Timestamp.getNowTimestamp();
+    }
+
+    handlePong(msg) {
+        var req_ref_uuid = msg['request_reference_uuid'];
+        if (! (req_ref_uuid in this.outstanding_pings)) {
+            console.error("got pong with unknown request uuid");
+            return;
+        }
+        var start_time = this.outstanding_pings[req_ref_uuid];
+        var ping_time = (Timestamp.getNowTimestamp() - start_time) * 1000;
+        this.wallet_ui.updateProviderPing(Math.round(ping_time));
     }
 
     startPinging() {
@@ -233,6 +244,7 @@ class WebWalletApp {
             function() {
                 this.sendPing();
             }.bind(this), 3000);
+        this.sendPing();
     }
 
     stopPinging() {
@@ -249,21 +261,17 @@ class WebWalletApp {
     //////////////////////////////////////////////////////////////////////////
 
     pongHook(msg, role) {
-        var req_ref_uuid = msg['request_reference_uuid'];
-        if (! (req_ref_uuid in this.outstanding_pings)) {
-            console.error("got pong with unknown request uuid");
-            return;
-        }
-        var start_time = this.outstanding_pings[req_ref_uuid]
-        elapsed_ms = (Timestamp.getNowTimestamp() - start_time) * 1000;
-        this.wallet_ui.updateProviderPing();
+        this.handlePong(msg);
     }
 
     rendezvousBecomingReadyHook(msg, role) {
+        console.log("becoming ready");
         if (role.name == "wallet") {
+            console.log("becoming ready 1");
             this.provider_ui.switchMode("WAITING_FOR_RENDEZVOUS");
             this.wallet_ui.providerDisconnected();
         } else if (role.name == "service") {
+            console.log("becoming ready 2");
             this.consumer_ui.switchMode("WAITING_FOR_RENDEZVOUS");
             this.wallet_ui.consumerDisconnected();
             this.stopPinging()
@@ -352,6 +360,7 @@ class WebWalletApp {
 
             this.provider_ui.switchMode(this.provider_ui.return_mode);
             this.wallet_ui.providerDisconnected();
+            this.stopPinging()
         }
         else if ((this.consumer_socket != null) &&
                  (socket.uuid == this.consumer_socket.uuid))
@@ -362,6 +371,7 @@ class WebWalletApp {
 
             this.consumer_ui.switchMode(this.consumer_ui.return_mode);
             this.wallet_ui.consumerDisconnected();
+            this.stopPinging()
         } else {
             console.log("got unknown socket closed");
         }

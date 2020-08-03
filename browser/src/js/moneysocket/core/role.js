@@ -74,13 +74,13 @@ class Role {
     }
 
     handleRequest(msg) {
-        n = msg['request_name']
-        if (n == "REQUEST_RENDEZVOUS") {
+        var name = msg['request_name']
+        if (name == "REQUEST_RENDEZVOUS") {
             this.handleRequestRendezvous(msg);
-        } else if (n == "REQUEST_PING") {
+        } else if (name == "REQUEST_PING") {
             this.handleRequestPing(msg);
         } else {
-            console.error("unknown request?: " + n);
+            console.error("unknown request?: " + name);
         }
     }
 
@@ -110,7 +110,7 @@ class Role {
         console.info("waiting for peer to rendezvous");
         this.setState("RENDEZVOUS_SETUP");
 
-        if ("NOTIFY_RENZEZVOUS_BECOMING_READY" in this.hooks) {
+        if ("NOTIFY_RENDEZVOUS_BECOMING_READY" in this.hooks) {
             this.hooks['NOTIFY_RENDEZVOUS_BECOMING_READY'](msg, this);
         }
     }

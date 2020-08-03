@@ -10,8 +10,8 @@ let NOTIFICATION_SUBCLASSES = require(
 
 
 class NotifyPong extends MoneysocketNotification {
-    constructor() {
-        super("NOTIFY_PONG");
+    constructor(request_reference_uuid) {
+        super("NOTIFY_PONG", request_reference_uuid);
     }
 
     cryptLevel() {
@@ -19,7 +19,7 @@ class NotifyPong extends MoneysocketNotification {
     }
 
     static castClass(msg_dict) {
-        var c = new NotifyPong();
+        var c = new NotifyPong(msg_dict['request_reference_uuid']);
         Object.keys(msg_dict).forEach(key => {
             c[key] = msg_dict[key];
         });
