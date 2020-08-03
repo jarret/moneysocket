@@ -158,7 +158,6 @@ class Role {
     ///////////////////////////////////////////////////////////////////////////
 
     msgRecvCb(socket, msg) {
-        console.log("this: " + this);
         console.assert(socket.uuid == this.socket.uuid);
         console.log("role received msg: " + msg.toJson());
         if (msg['message_class'] == "REQUEST") {

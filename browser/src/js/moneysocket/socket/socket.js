@@ -50,14 +50,14 @@ class MoneysocketSocket {
             return;
         }
 
-        console.log("rec msg_bytes" + msg_bytes);
+        //console.log("rec msg_bytes" + msg_bytes);
         if (MoneysocketCrypt.isCyphertext(msg_bytes) &&
             (this.shared_seed == null))
         {
             console.error("could not interpret message bytes");
             return;
         }
-        console.log("msg_bytes len: " + msg_bytes.length);
+        //console.log("msg_bytes len: " + msg_bytes.length);
 
         var [msg, err] = MoneysocketCrypt.wireDecode(msg_bytes,
                                                      this.shared_seed);

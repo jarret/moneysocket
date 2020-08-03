@@ -14,10 +14,10 @@ class WebsocketInterconnect extends MoneysocketInterconnect {
         this.outgoing = new Array();
     }
 
-    connect(connect_ws_url, cb_param) {
+    connect(websocket_location, cb_param) {
         var o = new OutgoingWebsocketInterconnect(this.cb_obj);
         this.outgoing.push(o);
-        o.connect(connect_ws_url, cb_param);
+        o.connect(websocket_location, cb_param);
     }
 
     initiateClose() {
@@ -30,8 +30,8 @@ class WebsocketInterconnect extends MoneysocketInterconnect {
 
 
 class OutgoingWebsocketInterconnect extends MoneysocketInterconnect {
-    connect(connect_ws_url, cb_param) {
-        var ws = new OutgoingSocket(connect_ws_url, this, cb_param);
+    connect(websocket_location, cb_param) {
+        var ws = new OutgoingSocket(websocket_location, this, cb_param);
         // TODO - handle failure.
     }
 }
@@ -41,8 +41,9 @@ class OutgoingWebsocketInterconnect extends MoneysocketInterconnect {
  * to figure out what to do about listening as a websocket server and managing
  * incoming sockets. */
 class OutgoingSocket {
-    constructor(connect_ws_url, interconnect, cb_param) {
-        this.websocket = new WebSocket(connect_ws_url);
+    constructor(websocket_location, interconnect, cb_param) {
+        var ws_url = websocket_location.toWsUrl();
+        this.websocket = new WebSocket(ws_url);
         this.cb_param = cb_param;
 
         this.websocket.onmessage = (function(event) {
@@ -82,9 +83,9 @@ class OutgoingSocket {
 
     async handleMessage(event) {
         if (event.data instanceof Blob) {
-            console.log("ws recv data: " + event.data);
+            //console.log("ws recv data: " + event.data);
             var msg_bytes = await BinUtl.blob2Uint8Array(event.data);
-            console.log("msg_bytes data: " + BinUtl.b2h(msg_bytes));
+            //console.log("msg_bytes data: " + BinUtl.b2h(msg_bytes));
             this.ms.msgRecv(msg_bytes);
         } else {
             console.error("received unexpected non-binary message");

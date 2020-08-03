@@ -42,9 +42,6 @@ class MoneysocketMessage {
         if (! ('message_class' in msg_dict)) {
             return "no message_class included";
         }
-        console.log("class: ", msg_dict['message_class']);
-        console.log("Str: ", typeof msg_dict['message_class']);
-
         if (typeof msg_dict['message_class'] != 'string') {
             return "unknown message_class type";
         }

@@ -162,9 +162,6 @@ class BeaconUi {
                 (function() {this.disconnect()}).bind(this));
                 //(function() {this.switchMode("ENTER_BEACON")}).bind(this));
         } else if (new_mode == "CONNECTED") {
-            var t = DomUtl.drawText(this.mode_output_div, "Connecting");
-            t.setAttribute("style", "padding:5px;");
-
             var progress = new ConnectProgress(this.mode_output_div);
             progress.draw("CONNECTED");
 

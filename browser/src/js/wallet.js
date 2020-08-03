@@ -395,18 +395,18 @@ class WebWalletApp {
                              'beacon': beacon};
             console.log("connect wallet: " + url);
             this.provider_ui.switchMode("CONNECTING_WEBSOCKET");
-            this.wi.connect(url, role_info);
+            this.wi.connect(location, role_info);
         } else if (cb_param == "service") {
             if (! (location instanceof WebsocketLocation)) {
                 this.consumer_ui.switchMode("CONNECTION_FAILED");
                 return;
             }
-            var url = location.toWsUrl();
             var role_info = {'role':   'service',
                              'beacon': beacon};
+            var url = location.toWsUrl();
             console.log("connect service: " + url);
             this.consumer_ui.switchMode("CONNECTING_WEBSOCKET");
-            this.wi.connect(url, role_info);
+            this.wi.connect(location, role_info);
         } else {
             console.log("unknown cb_param: " + cb_param);
         }

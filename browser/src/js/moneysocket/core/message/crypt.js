@@ -18,7 +18,7 @@ class MoneysocketCrypt {
             var msg_txt = StringUtl.fromUtf8(msg_bytes);
             var msg_dict = JSON.parse(msg_txt);
         } catch (err) {
-            console.log("err: " + err);
+            //console.log("err: " + err);
             return false;
         }
         return true;

@@ -13,7 +13,7 @@ const NotificationReceiver = require(
 class MessageReceiver {
     static decodeJson(msg_txt) {
         var msg_dict;
-       console.log("decodejson txt : " + msg_txt);
+        // console.log("decodejson txt : " + msg_txt);
         try {
             msg_dict = JSON.parse(msg_txt);
         } catch (err) {
