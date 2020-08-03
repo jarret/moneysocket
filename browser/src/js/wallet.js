@@ -139,7 +139,6 @@ class WalletUi {
 
     updateProvideMsats() {
         var slider_val = this.slider_input.value;
-        console.log("input slider: " + slider_val);
         this.provide_msats = this.provider_msats * (slider_val / 100);
         DomUtl.deleteChildren(this.balance_div);
         DomUtl.drawBigBalance(this.balance_div, this.provide_msats);
@@ -190,6 +189,8 @@ class WebWalletApp {
         this.provider_socket = null;
         this.consumer_socket = null;
 
+        this.ping_interval = null;
+
         this.wi = new WebsocketInterconnect(this);
     }
 
@@ -216,6 +217,19 @@ class WebWalletApp {
     }
 
     //////////////////////////////////////////////////////////////////////////
+
+    sendPing() {
+        //console.log("ping");
+    }
+
+    startPinging() {
+        this.ping_interval = setInterval(
+            function() {
+                this.sendPing();
+            }.bind(this), 3000);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     // Role callbacks:
     //////////////////////////////////////////////////////////////////////////
 
@@ -238,6 +252,8 @@ class WebWalletApp {
         } else if (cb_param == "service") {
             this.consumer_ui.switchMode("CONNECTED");
             this.wallet_ui.consumerConnected();
+            console.log("start pinging");
+            this.startPinging();
         } else {
             console.log("unknown cb param");
         }
