@@ -3,6 +3,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
 const DomUtl = require('./ui/domutl.js').DomUtl;
+const Timestamp = require('./moneysocket/utl/timestamp.js').Timestamp;
 const WebsocketInterconnect = require(
     './moneysocket/socket/websocket.js').WebsocketInterconnect;
 const WebsocketLocation = require(
@@ -47,6 +48,7 @@ class WalletUi {
 
         this.send_input_div = null;
 
+        this.outstanding_pings = {};
     }
 
     draw(style) {
@@ -220,43 +222,84 @@ class WebWalletApp {
 
     sendPing() {
         //console.log("ping");
+        var msg = this.consumer_role.sendPing();
+        var req_ref_uuid = msg['request_uuid'];
+        this.outstandingPings[req_ref_uuid] = Timestamp.getNowTimestamp();
     }
 
     startPinging() {
+        console.log("ping starting");
         this.ping_interval = setInterval(
             function() {
                 this.sendPing();
             }.bind(this), 3000);
     }
 
+    stopPinging() {
+        if (this.ping_interval == null) {
+            return;
+        }
+        console.log("ping stopping");
+        clearInterval(this.ping_interval);
+        this.ping_interval == null;
+    }
+
     //////////////////////////////////////////////////////////////////////////
     // Role callbacks:
     //////////////////////////////////////////////////////////////////////////
 
-    rendezvousBecomingReadyHookCb(cb_param) {
-        if (cb_param == "wallet") {
+    pongHook(msg, role) {
+        var req_ref_uuid = msg['request_reference_uuid'];
+        if (! (req_ref_uuid in this.outstanding_pings)) {
+            console.error("got pong with unknown request uuid");
+            return;
+        }
+        var start_time = this.outstanding_pings[req_ref_uuid]
+        elapsed_ms = (Timestamp.getNowTimestamp() - start_time) * 1000;
+        this.wallet_ui.updateProviderPing();
+    }
+
+    rendezvousBecomingReadyHook(msg, role) {
+        if (role.name == "wallet") {
             this.provider_ui.switchMode("WAITING_FOR_RENDEZVOUS");
             this.wallet_ui.providerDisconnected();
-        } else if (cb_param == "service") {
+        } else if (role.name == "service") {
             this.consumer_ui.switchMode("WAITING_FOR_RENDEZVOUS");
             this.wallet_ui.consumerDisconnected();
+            this.stopPinging()
         } else {
             console.log("unknown cb param");
         }
     }
 
-    connectedHookCb(cb_param) {
-        if (cb_param == "wallet") {
+    rendezvousHook(msg, role) {
+        if (role.name == "wallet") {
             this.provider_ui.switchMode("CONNECTED");
             this.wallet_ui.providerConnected();
-        } else if (cb_param == "service") {
+        } else if (role.name == "service") {
             this.consumer_ui.switchMode("CONNECTED");
             this.wallet_ui.consumerConnected();
-            console.log("start pinging");
             this.startPinging();
         } else {
             console.log("unknown cb param");
         }
+    }
+
+
+    registerHooks(role) {
+        console.log("REGISTERING");
+        var hooks = {
+            'NOTIFY_RENDEZVOUS': function (msg) {
+                this.rendezvousHook(msg, role);
+            }.bind(this),
+            'NOTIFY_RENDEZVOUS_BECOMING_READY': function (msg) {
+                this.rendezvousBecomingReadyHook(msg, role);
+            }.bind(this),
+            'NOTIFY_PONG': function (msg) {
+                this.pongHook(msg, role);
+            }.bind(this),
+        }
+        role.registerAppHooks(hooks);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -280,7 +323,8 @@ class WebWalletApp {
 
             this.provider_role = new Role("wallet");
             this.provider_role.addSocket(socket);
-            this.provider_role.registerAppHook(this, "wallet");
+            //this.provider_role.registerAppHook(this, "wallet");
+            this.registerHooks(this.provider_role);
             this.provider_role.startRendezvous(rid);
         } else if (role_info['role'] == "service") {
             this.consumer_socket = socket;
@@ -288,7 +332,8 @@ class WebWalletApp {
 
             this.consumer_role = new Role("service");
             this.consumer_role.addSocket(socket);
-            this.consumer_role.registerAppHook(this, "service");
+            //this.consumer_role.registerAppHook(this, "service");
+            this.registerHooks(this.consumer_role);
             this.consumer_role.startRendezvous(rid);
         } else {
             console.log("unknown cb param");

@@ -14,6 +14,7 @@ const NotifyPong = require('./message/notification/pong.js').NotifyPong;
 
 const RequestRendezvous = require(
     './message/request/rendezvous.js').RequestRendezvous;
+const RequestPing = require( './message/request/ping.js').RequestPing;
 
 
 
@@ -30,9 +31,7 @@ class Role {
 
         this.state = null;
         this.setState("INIT");
-        this.outstanding_pings = {};
-        this.hook_cb_obj = null;
-        this.hook_cb_obj_param = null;
+        this.hooks = null;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -52,7 +51,7 @@ class Role {
 
     handleRequestRendezvous(msg) {
         // TODO will this come to browser javascript ever?
-        var req_ref_uuid = msg['request_reference_uuid'];
+        var req_ref_uuid = msg['request_uuid'];
         var rid = msg['rendezvous_id'];
         if (this.state != "INIT") {
             socket.write(new NotifyError("not in state to rendezvous",
@@ -63,7 +62,7 @@ class Role {
     }
 
     handleRequestPing(msg) {
-        var req_ref_uuid = msg['request_reference_uuid'];
+        var req_ref_uuid = msg['request_uuid'];
         if (this.state != "ROLE_OPERATE") {
             this.socket.write(
                 new NotifyError("not in state to respond to ping",
@@ -95,20 +94,25 @@ class Role {
             return;
         }
         this.setState("ROLE_OPERATE");
-        this.hook_cb_obj.connectedHookCb(this.hook_cb_obj_param);
+        if ("NOTIFY_RENDEZVOUS" in this.hooks) {
+            this.hooks['NOTIFY_RENDEZVOUS'](msg, this);
+        }
     }
 
     handleNotifyRendezvousBecomingReady(msg) {
         var rid = msg['rendezvous_id'];
-        if (this.state != "RENDEZVOUS_SETUP") {
-            console.error("not in rendezvousing setup state");
+        //if (this.state != "RENDEZVOUS_SETUP") {
+       //     console.error("not in rendezvousing setup state");
             // TODO do we notify on error?
-            return;
-        }
+        //    return;
+       // }
         // TODO - hook for app
         console.info("waiting for peer to rendezvous");
         this.setState("RENDEZVOUS_SETUP");
-        this.hook_cb_obj.rendezvousBecomingReadyHookCb(this.hook_cb_obj_param);
+
+        if ("NOTIFY_RENZEZVOUS_BECOMING_READY" in this.hooks) {
+            this.hooks['NOTIFY_RENDEZVOUS_BECOMING_READY'](msg, this);
+        }
     }
 
     handleNotifyRendezvousEnd(msg) {
@@ -125,15 +129,9 @@ class Role {
             console.error("got unexpected pong");
             return;
         }
-        if (! (req_ref_uuid in this.outstanding_pings)) {
-            console.error("got pong with unknown request uuid");
-            return;
+        if ("NOTIFY_PONG" in this.hooks) {
+            this.hooks['NOTIFY_PONG'](msg, this);
         }
-
-        var start_time = this.outstanding_pings[req_ref_uuid]
-        elapsed = Timestamp.getNowTimestamp() - starr_time;
-        // TODO hook for app;
-        console.log("PING TIME: " + (elapsed * 1000).toString() + "ms");
     }
 
     handleNotifyError(msg) {
@@ -177,9 +175,8 @@ class Role {
     sendPing() {
         this.assertState("ROLE_OPERATE");
         var msg = new RequestPing();
-        var req_ref_uuid = msg['request_uuid'];
-        this.outstandingPings[req_ref_uuid] = Timestamp.getNowTimestamp();
         this.socket.write(msg);
+        return msg;
     }
 
     startRendezvous(rid) {
@@ -193,10 +190,16 @@ class Role {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    registerAppHooks(hook_dict) {
+        this.hooks = hook_dict;
+    }
+
+/*
     registerAppHook(cb_obj, cb_param) {
         this.hook_cb_obj = cb_obj;
         this.hook_cb_obj_param = cb_param;
     }
+*/
 
     ///////////////////////////////////////////////////////////////////////////
 
