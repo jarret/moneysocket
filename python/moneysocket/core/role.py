@@ -10,6 +10,7 @@ import time
 from moneysocket.core.message.request.rendezvous import RequestRendezvous
 from moneysocket.core.message.notification.rendezvous import NotifyRendezvous
 from moneysocket.core.message.notification.error import NotifyError
+from moneysocket.core.message.notification.pong import NotifyPong
 
 
 STATE_NAMES = ["INIT",

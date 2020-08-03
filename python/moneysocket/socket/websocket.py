@@ -43,11 +43,15 @@ class WebsocketInterconnect(MoneysocketInterconnect):
         i = self.incoming[listen_ws_url]
         i.stop_listening()
 
-    def connect(self, connect_ws_url, cb_param=None):
-        logging.info("connecting: %s" % connect_ws_url)
+    def connect(self, websocket_location, cb_param=None):
+        logging.info("connecting: %s" % websocket_location)
         o = OutgoingWebsocketInterconnect(self._new_socket, self._socket_close)
         self.outgoing.append(o)
-        return o.connect(connect_ws_url, cb_param)
+
+        if websocket_location.use_tls:
+            return o.connect_tls(websocket_location, cb_param)
+        else:
+            return o.connect(websocket_location, cb_param)
 
     def initiate_close(self):
         for i in self.incoming.values():
@@ -207,7 +211,8 @@ class OutgoingSocket(WebSocketClientProtocol):
             self.handle_text(payload)
 
     def onClose(self, wasClean, code, reason):
-        logging.info("WebSocket connection closed: {0}".format(reason))
+        #logging.info("WebSocket connection closed: {0}".format(reason))
+        logging.info("connection closed %s %s %s" % (wasClean, code, reason))
         if self.ms:
             self.factory.ms_interconnect._socket_close(self.ms)
             self.ms = None
@@ -233,27 +238,27 @@ class OutgoingSocket(WebSocketClientProtocol):
 
 
 class OutgoingWebsocketInterconnect(MoneysocketInterconnect):
-    def connect(self, connect_ws_url, cb_param):
-        logging.info("connect")
-        factory = WebSocketClientFactory(connect_ws_url)
-        logging.info("factory: %s" % factory)
+    def connect(self, websocket_location, cb_param):
+        #logging.info("connect")
+        factory = WebSocketClientFactory(str(websocket_location))
+        #logging.info("factory: %s" % factory)
         factory.protocol = OutgoingSocket
-        logging.info("factory 2 : %s" % factory)
+        #logging.info("factory 2 : %s" % factory)
         factory.ms_interconnect = self
         factory.ms_cb_param = cb_param
-        logging.info("factory 3h: %s" % factory)
+        #logging.info("factory 3h: %s" % factory)
         logging.info("connecting")
         c = connectWS(factory, timeout=10)
         logging.info("connect: %s" % c)
         return WebsocketConnectionAttempt(c)
 
-    def connect_tls(self, ws_url, cb_param):
-        logging.info("connect: %s" % c)
-        factory = WebSocketClientFactory(connect_ws_url)
+    def connect_tls(self, websocket_location, cb_param):
+        ws_url = str(websocket_location)
+        factory = WebSocketClientFactory(ws_url)
         factory.protocol = OutgoingSocket
         factory.ms_interconnect = self
         factory.ms_cb_param = cb_param
-        contextFactory = ssl.ClientContextFactory()
-        c = connectWS(factory, contextFactory)
+        options = ssl.optionsForClientTLS(hostname=websocket_location.host)
+        c = connectWS(factory, options)
         return WebsocketConnectionAttempt(c)
 

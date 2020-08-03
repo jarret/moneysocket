@@ -224,15 +224,13 @@ class Terminus(object):
             return "*** could not decode beacon: %s" % err
         location = beacon.locations[0]
         assert location.to_dict()['type'] == "WebSocket", "can't connect beacon"
-        ws_url = str(location)
-
         self.match.assoc_wallet(wallet, beacon_str)
-        connection_attempt = self.interconnect.connect(ws_url,
+        connection_attempt = self.interconnect.connect(location,
                                                        cb_param=beacon_str)
         wallet.add_connection_attempt(connection_attempt)
         self.add_connect_beacon_attributes(wallet, beacon_str)
         self.is_connecting[wallet_name] = beacon_str
-        return "connected: %s to %s" % (wallet_name, ws_url)
+        return "connected: %s to %s" % (wallet_name, str(location))
 
 
     ##########################################################################
@@ -328,9 +326,8 @@ class Terminus(object):
 
                 beacon, err = MoneysocketBeacon.from_bech32_str(beacon_str)
                 location = beacon.locations[0]
-                ws_url = str(location)
                 connection_attempt = self.interconnect.connect(
-                    ws_url, cb_param=beacon_str)
+                    location, cb_param=beacon_str)
                 wallet.add_connection_attempt(connection_attempt)
 
     ##########################################################################
