@@ -9,6 +9,15 @@ const MONEY_WING = "💸";
 const CHECK_MARK = "✅";
 const EGGPLANT = "🍆";
 
+const LIGHT_BULB = "💡";
+const PLUG = "🔌";
+
+const COMPLETE = CHECK_MARK;
+const INCOMPLETE = CROSS_MARK;
+
+const GOOD = LIGHT_BULB;
+const BAD = PLUG;
+
 class ConnectProgress {
     constructor(div) {
         this.parent_div = div;
@@ -35,29 +44,27 @@ class ConnectProgress {
         case "CONNECTING_WEBSOCKET":
             var title = "Connecting Websocket";
             var color = "orange";
-            var line = EGGPLANT + EGGPLANT + EGGPLANT + "   " + EGGPLANT;
+            var line = BAD + BAD + BAD + "   " + BAD;
             break;
         case "REQUESTING_RENDEZVOUS":
             var title = "Requesting Rendezvous";
             var color = "orange";
-            var line = MONEY_WING + EGGPLANT + EGGPLANT + "   " + EGGPLANT;
+            var line = GOOD + BAD + BAD + "   " + BAD;
             break;
         case "WAITING_FOR_RENDEZVOUS":
             var title = "Waiting for Rendezvous";
             var color = "orange";
-            var line = MONEY_WING + MONEY_WING + EGGPLANT + "   " + EGGPLANT;
+            var line = GOOD + GOOD + BAD + "   " + BAD;
             break;
         case "CONNECTED":
             var title = "Connected";
             var color = "green";
-            var line = (MONEY_WING + MONEY_WING + MONEY_WING + "   " +
-                        CHECK_MARK);
+            var line = (GOOD + GOOD + GOOD + "   " + COMPLETE);
             break;
         case "CONNECTION_FAILED":
             var title = "Connection Failed";
             var color = "red";
-            var line = (CROSS_MARK + CROSS_MARK + CROSS_MARK + "   " +
-                        CROSS_MARK);
+            var line = (BAD + BAD + BAD + "   " + INCOMPLETE);
             break;
         }
         this.setConnectingTitle(title, color);

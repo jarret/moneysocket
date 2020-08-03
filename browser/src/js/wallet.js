@@ -11,6 +11,9 @@ const BeaconUi = require('./ui/beacon.js').BeaconUi;
 const ConnectProgress = require('./ui/connect_progress.js').ConnectProgress;
 const Role = require('./moneysocket/core/role.js').Role;
 
+const UpstreamStatusUi = require('./ui/upstream_status.js').UpstreamStatusUi;
+const DownstreamStatusUi = require(
+    './ui/downstream_status.js').DownstreamStatusUi;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -32,8 +35,10 @@ class WalletUi {
         this.provider_counterpart_div = null;
         this.mode = null;
 
+        this.upstream_ui = null;
+        this.downstream_ui = null;
 
-        this.provided_msats = 1000000;
+        this.provider_msats = 1000000;
         this.provide_msats = 500000;
 
 
@@ -52,18 +57,12 @@ class WalletUi {
         this.wallet_mode_div = DomUtl.emptyDiv(this.my_div);
         this.wallet_mode_div.setAttribute("class", "wallet-mode-output");
 
+        DomUtl.drawBr(this.my_div);
+        this.upstream_ui = new UpstreamStatusUi(this.my_div);
+        this.upstream_ui.draw();
+        this.downstream_ui = new DownstreamStatusUi(this.my_div);
+        this.downstream_ui.draw();
 
-        //this.spendable_div = DomUtl.emptyDiv(this.my_div);
-        //DomUtl.drawBigBalance(this.spendable_div, 0.0);
-        //DomUtl.drawBr(this.my_div);
-
-        //this.provider_counterpart_div = DomUtl.emptyDiv(this.my_div);
-        //DomUtl.drawText(this.provider_counterpart_div,
-        //                "Downstream Provider Balance: N/A");
-        //
-        //DomUtl.drawBr(this.my_div);
-
-        //this.switchMode("DISCONNECTED");
         this.switchMode("MAIN");
 
         this.parent_div.appendChild(this.my_div);
@@ -99,15 +98,9 @@ class WalletUi {
             t.setAttribute("style", "padding:5px;");
             var s = DomUtl.drawSlider(this.wallet_mode_div);
             DomUtl.drawBr(this.wallet_mode_div);
-            DomUtl.drawText(this.wallet_mode_div, "Provided Balance: " +
-                            DomUtl.balanceFmt(this.provided_msats));
             this.slider_input = s.firstChild;
             this.slider_input.oninput = (function () {
-                var slider_val = this.slider_input.value;
-                console.log("input slider: " + slider_val);
-                this.provide_msats = this.provided_msats * (slider_val / 100);
-                DomUtl.deleteChildren(this.balance_div);
-                DomUtl.drawBigBalance(this.balance_div, this.provide_msats);
+                this.updateProvideMsats();
             }.bind(this));
         } else if (new_mode == "SEND") {
             this.balance_div = DomUtl.emptyDiv(this.wallet_mode_div);
@@ -144,15 +137,40 @@ class WalletUi {
         }
     }
 
-    updateSpendable(new_spendable) {
-        DomUtl.deleteChildren(this.spendable_div)
-        DomUtl.drawBigBalance(this.spendable_div, 0.0);
+    updateProvideMsats() {
+        var slider_val = this.slider_input.value;
+        console.log("input slider: " + slider_val);
+        this.provide_msats = this.provider_msats * (slider_val / 100);
+        DomUtl.deleteChildren(this.balance_div);
+        DomUtl.drawBigBalance(this.balance_div, this.provide_msats);
     }
 
-    updateWalletCounterpartBalance(msats) {
-        DomUtl.deleteChildren(this.provider_counterpart_div)
-        DomUtl.drawText(this.provider_counterpart_div,
-            "Wallet Provider Balance: " + DomUtl.balanceFmt(msats));
+    ///////////////////////////////////////////////////////////////////////////
+
+    updateProviderPing(ping_time) {
+        this.downstream_ui.updatePingTime(ping_time);
+    }
+
+    updateProviderMsats(msats) {
+        this.provider_msats = msats;
+        this.updateProvideMsats();
+        this.downstream_ui.updateProviderMsats(msats);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    providerConnected() {
+        this.upstream_ui.updateConnected();
+    }
+    providerDisconnected() {
+        this.upstream_ui.updateDisconnected();
+    }
+
+    consumerConnected() {
+        this.downstream_ui.updateConnected();
+    }
+    consumerDisconnected() {
+        this.downstream_ui.updateDisconnected();
     }
 }
 
@@ -204,8 +222,10 @@ class WebWalletApp {
     rendezvousBecomingReadyHookCb(cb_param) {
         if (cb_param == "wallet") {
             this.provider_ui.switchMode("WAITING_FOR_RENDEZVOUS");
+            this.wallet_ui.providerDisconnected();
         } else if (cb_param == "service") {
             this.consumer_ui.switchMode("WAITING_FOR_RENDEZVOUS");
+            this.wallet_ui.consumerDisconnected();
         } else {
             console.log("unknown cb param");
         }
@@ -214,8 +234,10 @@ class WebWalletApp {
     connectedHookCb(cb_param) {
         if (cb_param == "wallet") {
             this.provider_ui.switchMode("CONNECTED");
+            this.wallet_ui.providerConnected();
         } else if (cb_param == "service") {
             this.consumer_ui.switchMode("CONNECTED");
+            this.wallet_ui.consumerConnected();
         } else {
             console.log("unknown cb param");
         }
@@ -268,6 +290,7 @@ class WebWalletApp {
             this.provider_role = null;
 
             this.provider_ui.switchMode(this.provider_ui.return_mode);
+            this.wallet_ui.providerDisconnected();
         }
         else if ((this.consumer_socket != null) &&
                  (socket.uuid == this.consumer_socket.uuid))
@@ -277,6 +300,7 @@ class WebWalletApp {
             this.consumer_role = null;
 
             this.consumer_ui.switchMode(this.consumer_ui.return_mode);
+            this.wallet_ui.consumerDisconnected();
         } else {
             console.log("got unknown socket closed");
         }

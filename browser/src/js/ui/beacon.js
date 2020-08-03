@@ -15,13 +15,13 @@ const ConnectProgress = require('./connect_progress.js').ConnectProgress;
 
 const PROTOCOL_PREFIX = "moneysocket:"
 
-//const DEFAULT_HOST = "relay.socket.money";
-//const DEFAULT_PORT = 443;
-//const DEFAULT_USE_TLS = true;
+const DEFAULT_HOST = "relay.socket.money";
+const DEFAULT_PORT = 443;
+const DEFAULT_USE_TLS = true;
 
-const DEFAULT_HOST = "127.0.0.1";
-const DEFAULT_PORT = 11060;
-const DEFAULT_USE_TLS = false;
+//const DEFAULT_HOST = "127.0.0.1";
+//const DEFAULT_PORT = 11060;
+//const DEFAULT_USE_TLS = false;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -85,7 +85,7 @@ class BeaconUi {
 
         if (new_mode == "ENTER_BEACON") {
             this.return_mode = "ENTER_BEACON";
-            var t = DomUtl.drawText(this.mode_output_div, "Provide Beacon");
+            var t = DomUtl.drawText(this.mode_output_div, "Input Beacon");
             t.setAttribute("style", "padding:5px;");
 
             DomUtl.drawBr(this.mode_output_div);
@@ -115,12 +115,13 @@ class BeaconUi {
             DomUtl.qrCode(this.mode_output_div, this.beacon_str,
                           PROTOCOL_PREFIX);
             this.setCopyBeaconButton();
+            DomUtl.drawBr(this.mode_output_div);
             DomUtl.drawButton(this.mode_output_div, "Connect",
                 (function() {
                     this.attemptConnectFromGeneratedBeacon();
                 }).bind(this));
             this.setMessagePlaceholderDiv();
-            DomUtl.drawButton(this.mode_switch_button_div, "Enter Beacon",
+            DomUtl.drawButton(this.mode_switch_button_div, "Input Beacon",
                 (function() {this.switchMode("ENTER_BEACON")}).bind(this));
 
         } else if (new_mode == "CONNECTING_WEBSOCKET") {
