@@ -132,15 +132,6 @@ class DomUtl {
             quiet:   0,
         });
 
-        /*
-        b.onclick = function copyToClipboard() {
-            //window.clipboardData.setData("Text", copy_str);
-            navigator.clipboard.writeText(copy_str);
-            DomUtl.deleteChildren(copied);
-            var t = document.createTextNode("copied!");
-            copied.appendChild(t);
-        };
-        */
         b.appendChild(qr);
         b.appendChild(copied);
         div.appendChild(b);
