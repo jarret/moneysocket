@@ -127,7 +127,7 @@ class Relay(object):
     def new_socket_cb(self, socket, cb_param):
         logging.info("got new socket: %s %s" % (socket, cb_param))
         socket.register_recv_cb(self.msg_recv_cb)
-        socket.register_cyphertext_recv_cb(self.msg_recv_cb)
+        socket.register_cyphertext_recv_cb(self.cyphertext_recv_cb)
         # no shared seed to register for for relay
 
         self.pairing.new_socket(socket)
