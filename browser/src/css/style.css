@@ -1,0 +1,110 @@
+/* Copyright (c) 2020 Jarret Dyrbye
+ * Distributed under the MIT software license, see the accompanying
+ * file LICENSE or http://www.opensource.org/licenses/mit-license.php
+*/
+
+
+.container {
+  width: 98%;
+  margin: 0 auto;
+  padding: 5px;
+}
+.bordered {
+    border: 2px solid blue ;
+    text-align: center;
+    box-sizing: border-box;
+    float:left;
+    padding: 5px;
+    width: 500px;
+    margin: 0 auto;
+}
+.left {
+    border: 1px solid blue ;
+    width: 230px;
+    text-align: center;
+    float: left;
+    padding: 5px;
+}
+.right {
+    border: 1px solid blue ;
+    width: 230px;
+    text-align: center;
+    float: right;
+    padding: 5px;
+    margin: 0 auto;
+}
+.center {
+    width: 90%;
+    height: 320px;
+    text-align: center;
+    float: center;
+    padding: 5px;
+    margin: 0 auto;
+}
+.balance {
+    font-size: 200%;
+}
+
+.upstream-status {
+    border: 1px solid blue ;
+    float: left;
+    padding: 5px;
+    text-align: center;
+    width: 200px;
+}
+
+.downstream-status {
+    border: 1px solid blue ;
+    float: right;
+    padding: 5px;
+    text-align: center;
+    width: 200px;
+}
+
+.beacon-mode-output {
+    border: 1px solid black ;
+    float: center;
+    margin: 0 auto;
+    width: 205px;
+    height: 205px;
+    padding: 3px;
+}
+
+.wallet-mode-output {
+    float: center;
+    margin: 0 auto;
+    width: 350px;
+    height: 210px;
+    padding: 10px;
+}
+
+.slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 15px;
+  border-radius: 5px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #4CAF50;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #4CAF50;
+  cursor: pointer;
+}
+
