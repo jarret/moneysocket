@@ -9,7 +9,6 @@ const WebsocketInterconnect = require(
 const WebsocketLocation = require(
     './moneysocket/beacon/location/websocket.js').WebsocketLocation;
 const BeaconUi = require('./ui/beacon.js').BeaconUi;
-const ConnectProgress = require('./ui/connect_progress.js').ConnectProgress;
 const Role = require('./moneysocket/core/role.js').Role;
 
 const UpstreamStatusUi = require('./ui/upstream_status.js').UpstreamStatusUi;
@@ -354,7 +353,6 @@ class WebWalletApp {
         if ((this.provider_socket != null) &&
             (socket.uuid == this.provider_socket.uuid))
         {
-            console.log("got wallet socket closed");
             this.provider_socket = null;
             this.provider_role = null;
 
@@ -365,7 +363,6 @@ class WebWalletApp {
         else if ((this.consumer_socket != null) &&
                  (socket.uuid == this.consumer_socket.uuid))
         {
-            console.log("got service socket closed");
             this.consumer_socket = null;
             this.consumer_role = null;
 
