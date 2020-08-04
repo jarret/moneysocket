@@ -30,6 +30,7 @@ class Role(object):
         self.state = None
         self.set_state("INIT")
         self.outstanding_pings = {}
+        self.hooks = {}
 
     def __hash__(self):
         return hash(self.name)
@@ -78,10 +79,6 @@ class Role(object):
         # TODO has this always been pre-screened by the app?
         req_ref_uuid = msg['request_uuid']
         rid = msg['rendezvous_id']
-      #  if self.state != "INIT":
-      #      self.socket.write(NotifyError("not in state to rendezvous",
-      #                                    request_reference_uuid=req_ref_uuid))
-      #      return
         self.socket.write(NotifyRendezvous(rid, req_ref_uuid))
         self.set_state("ROLE_OPERATE")
 
@@ -91,7 +88,6 @@ class Role(object):
             self.socket.write(NotifyError("not in state to respond to ping",
                                           request_reference_uuid=req_ref_uuid))
             return
-        # TODO hook for app to decide how to respond
         self.socket.write(NotifyPong(req_ref_uuid))
 
     def handle_request(self, msg):
@@ -114,16 +110,16 @@ class Role(object):
             return
         self.set_state("ROLE_OPERATE")
 
+        if "NOTIFY_RENDEZVOUS" in self.hooks:
+            self.hooks['NOTIFY_RENDEZVOUS'](msg, self)
+
     def handle_notify_rendezvous_becoming_ready(self, msg):
         rid = msg['rendezvous_id']
-        #if self.state != "RENDEZVOUS_SETUP":
-        #    logging.error("not in rendezvousing setup state")
-            # TODO do we notify on error?
-            #return
-
-        # TODO - hook for app
         logging.info("waiting for peer to rendezvous")
         self.set_state("RENDEZVOUS_SETUP")
+
+        if "NOTIFY_RENDEZVOUS_BECOMING_READY" in self.hooks:
+            self.hooks['NOTIFY_RENDEZVOUS_BECOMING_READY'](msg, self)
 
     def handle_notify_rendezvous_end(self, msg):
         rid = msg['rendezvous_id']
@@ -137,13 +133,8 @@ class Role(object):
         if self.state != "ROLE_OPERATE":
             logging.error("got unexpected pong")
             return
-        if req_ref_uuid not in self.outstanding_pings:
-            logging.error("got pong with unknown request uuid")
-            return
-
-        start_time = self.outstanding_pings[req_ref_uuid]
-        elapsed = time.time() - start_time
-        logging.info("PING TIME: %.3fms" % (elapsed * 1000))
+        if "NOTIFY_PONG" in self.hooks:
+            self.hooks['NOTIFY_PONG'](msg, self)
 
     def handle_notify_error(self, msg):
         logging.error("got error: %s" % msg['error_msg'])
@@ -193,6 +184,11 @@ class Role(object):
         logging.info("sending: %s" % msg)
         self.socket.write(msg)
         logging.info("writing request rendezvous: %s" % rid.hex())
+
+    ###########################################################################
+
+    def register_app_hooks(self, hook_dict):
+        self.hooks = hook_dict;
 
     ###########################################################################
 
