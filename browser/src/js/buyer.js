@@ -132,12 +132,12 @@ class BuyerApp {
         DomUtl.drawBr(this.my_div);
 
         this.seller_consumer_ui = new BeaconUi(this.my_div,
-                                               "Connect to seller",
-                                               this, "seller_consumer");
+            "Connect to a Downstream Opinion Seller", this, "seller_consumer");
         this.seller_consumer_ui.draw("left");
 
-        this.my_consumer_ui = new BeaconUi(this.my_div, "Connect to my wallet",
-                                 this, "my_consumer");
+        this.my_consumer_ui = new BeaconUi(this.my_div,
+            "Connect to my Downstream Moneysocket Provider", this,
+            "my_consumer");
         this.my_consumer_ui.draw("right");
         DomUtl.drawBr(this.my_div);
 

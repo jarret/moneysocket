@@ -53,7 +53,6 @@ class WalletUi {
         this.my_div = document.createElement("div");
         this.my_div.setAttribute("class", style);
 
-
         this.wallet_mode_div = DomUtl.emptyDiv(this.my_div);
         this.wallet_mode_div.setAttribute("class", "wallet-mode-output");
 
@@ -204,12 +203,12 @@ class WebWalletApp {
         this.wallet_ui.draw("center");
 
         DomUtl.drawBr(this.my_div);
-        var wtitle = "Connect Upstream Consumer";
-        this.provider_ui = new BeaconUi(this.my_div, wtitle, this, "wallet");
+        var wtitle = "Connect to an Upstream Moneysocket Consumer";
+        this.provider_ui = new BeaconUi(this.my_div, wtitle, this, "provider");
         this.provider_ui.draw("left");
 
-        var stitle = "Connect Downstream Provider";
-        this.consumer_ui = new BeaconUi(this.my_div, stitle, this, "service");
+        var stitle = "Connect to my Downstream Moneysocket Provider";
+        this.consumer_ui = new BeaconUi(this.my_div, stitle, this, "consumer");
         this.consumer_ui.draw("right");
         DomUtl.drawBr(this.my_div);
         DomUtl.drawBr(this.my_div);
@@ -265,11 +264,11 @@ class WebWalletApp {
 
     rendezvousBecomingReadyHook(msg, role) {
         console.log("becoming ready");
-        if (role.name == "wallet") {
+        if (role.name == "provider") {
             console.log("becoming ready 1");
             this.provider_ui.switchMode("WAITING_FOR_RENDEZVOUS");
             this.wallet_ui.providerDisconnected();
-        } else if (role.name == "service") {
+        } else if (role.name == "consumer") {
             console.log("becoming ready 2");
             this.consumer_ui.switchMode("WAITING_FOR_RENDEZVOUS");
             this.wallet_ui.consumerDisconnected();
@@ -280,10 +279,10 @@ class WebWalletApp {
     }
 
     rendezvousHook(msg, role) {
-        if (role.name == "wallet") {
+        if (role.name == "provider") {
             this.provider_ui.switchMode("CONNECTED");
             this.wallet_ui.providerConnected();
-        } else if (role.name == "service") {
+        } else if (role.name == "consumer") {
             this.consumer_ui.switchMode("CONNECTED");
             this.wallet_ui.consumerConnected();
             this.startPinging();
@@ -323,23 +322,23 @@ class WebWalletApp {
         var rid = beacon.shared_seed.deriveRendezvousId();
         socket.registerSharedSeed(beacon.shared_seed);
 
-        if (role_info['role'] == "wallet") {
+        if (role_info['role'] == "provider") {
             this.provider_socket = socket;
 
             this.provider_ui.switchMode("REQUESTING_RENDEZVOUS");
 
-            this.provider_role = new Role("wallet");
+            this.provider_role = new Role("provider");
             this.provider_role.addSocket(socket);
             //this.provider_role.registerAppHook(this, "wallet");
             this.registerHooks(this.provider_role);
             this.provider_role.startRendezvous(rid);
-        } else if (role_info['role'] == "service") {
+        } else if (role_info['role'] == "consumer") {
             this.consumer_socket = socket;
             this.consumer_ui.switchMode("REQUESTING_RENDEZVOUS");
 
-            this.consumer_role = new Role("service");
+            this.consumer_role = new Role("consumer");
             this.consumer_role.addSocket(socket);
-            //this.consumer_role.registerAppHook(this, "service");
+            //this.consumer_role.registerAppHook(this, "consumer");
             this.registerHooks(this.consumer_role);
             this.consumer_role.startRendezvous(rid);
         } else {
@@ -382,26 +381,26 @@ class WebWalletApp {
         // BeaconUi calling in to initiate connection
 
         var location = beacon.locations[0];
-        if (cb_param == "wallet") {
+        if (cb_param == "provider") {
             if (! (location instanceof WebsocketLocation)) {
                 this.provider_ui.switchMode("CONNECTION_FAILED");
                 return;
             }
             var url = location.toWsUrl();
-            var role_info = {'role':   'wallet',
+            var role_info = {'role':   'provider',
                              'beacon': beacon};
-            console.log("connect wallet: " + url);
+            console.log("connect provider: " + url);
             this.provider_ui.switchMode("CONNECTING_WEBSOCKET");
             this.wi.connect(location, role_info);
-        } else if (cb_param == "service") {
+        } else if (cb_param == "consumer") {
             if (! (location instanceof WebsocketLocation)) {
                 this.consumer_ui.switchMode("CONNECTION_FAILED");
                 return;
             }
-            var role_info = {'role':   'service',
+            var role_info = {'role':   'consumer',
                              'beacon': beacon};
             var url = location.toWsUrl();
-            console.log("connect service: " + url);
+            console.log("connect consumer: " + url);
             this.consumer_ui.switchMode("CONNECTING_WEBSOCKET");
             this.wi.connect(location, role_info);
         } else {
@@ -410,13 +409,13 @@ class WebWalletApp {
     }
 
     disconnect(cb_param) {
-        if (cb_param == "wallet") {
-            console.log("disconnect wallet");
+        if (cb_param == "provider") {
+            console.log("disconnect provider");
             if (this.provider_socket != null) {
                 this.provider_socket.close();
             }
-        } else if (cb_param == "service") {
-            console.log("disconnect service");
+        } else if (cb_param == "consumer") {
+            console.log("disconnect consumer");
             if (this.consumer_socket != null) {
                 this.consumer_socket.close();
             }
