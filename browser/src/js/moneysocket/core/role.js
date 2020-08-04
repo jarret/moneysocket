@@ -31,7 +31,7 @@ class Role {
 
         this.state = null;
         this.setState("INIT");
-        this.hooks = null;
+        this.hooks = {};
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -101,12 +101,6 @@ class Role {
 
     handleNotifyRendezvousBecomingReady(msg) {
         var rid = msg['rendezvous_id'];
-        //if (this.state != "RENDEZVOUS_SETUP") {
-       //     console.error("not in rendezvousing setup state");
-            // TODO do we notify on error?
-        //    return;
-       // }
-        // TODO - hook for app
         console.info("waiting for peer to rendezvous");
         this.setState("RENDEZVOUS_SETUP");
 
@@ -192,13 +186,6 @@ class Role {
     registerAppHooks(hook_dict) {
         this.hooks = hook_dict;
     }
-
-/*
-    registerAppHook(cb_obj, cb_param) {
-        this.hook_cb_obj = cb_obj;
-        this.hook_cb_obj_param = cb_param;
-    }
-*/
 
     ///////////////////////////////////////////////////////////////////////////
 
