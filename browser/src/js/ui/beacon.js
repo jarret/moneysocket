@@ -57,7 +57,6 @@ class BeaconUi {
         this.message_div = null;
         this.mode_output_div = null;
         this.mode_switch_button_div = null;
-
     }
 
     draw(style) {

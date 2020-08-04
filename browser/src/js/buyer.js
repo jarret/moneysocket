@@ -48,7 +48,7 @@ class BuyerUi {
         DomUtl.drawBr(this.my_div);
 
         DomUtl.drawBr(this.my_div);
-        this.seller_ui = new DownstreamStatusUi(this.my_div, "Seller Wallet");
+        this.seller_ui = new DownstreamStatusUi(this.my_div, "Seller");
         this.seller_ui.draw('downstream-status-left');
         this.my_ui = new DownstreamStatusUi(this.my_div, "My Wallet");
         this.my_ui.draw('downstream-status-right');

@@ -3,19 +3,23 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
 const DomUtl = require('./ui/domutl.js').DomUtl;
+const Timestamp = require('./moneysocket/utl/timestamp.js').Timestamp;
 const WebsocketInterconnect = require(
     './moneysocket/socket/websocket.js').WebsocketInterconnect;
+const WebsocketLocation = require(
+    './moneysocket/beacon/location/websocket.js').WebsocketLocation;
 const BeaconUi = require('./ui/beacon.js').BeaconUi;
+const Role = require('./moneysocket/core/role.js').Role;
+const UpstreamStatusUi = require('./ui/upstream_status.js').UpstreamStatusUi;
+const DownstreamStatusUi = require(
+    './ui/downstream_status.js').DownstreamStatusUi;
 
-class OpinionUi {
+
+class SellerUi {
     constructor(div) {
         this.parent_div = div;
         this.my_div = null;
-        this.wallet_role_div = null;
-        this.service_role_div = null;
-        this.wallet_counterpart_div = null;
         this.opinion = "Bullish"
-        this.opinion_1_div = null;
     }
 
     draw(style) {
@@ -45,15 +49,11 @@ class OpinionUi {
         DomUtl.drawBr(this.my_div);
         DomUtl.drawBr(this.my_div);
 
-        this.service_role_div = DomUtl.emptyDiv(this.my_div);
-        DomUtl.drawText(this.service_role_div, "Service Role: ");
-        DomUtl.drawColoredText(this.service_role_div, "Not Connected", "red");
+        this.downstream_ui = new DownstreamStatusUi(this.my_div, "Downstream");
+        this.downstream_ui.draw("downstream-status-left");
 
-        DomUtl.drawBr(this.my_div);
-
-        this.wallet_role_div = DomUtl.emptyDiv(this.my_div);
-        DomUtl.drawText(this.wallet_role_div, "Wallet Role: ");
-        DomUtl.drawColoredText(this.wallet_role_div, "Not Connected", "red");
+        this.upstream_ui = new UpstreamStatusUi(this.my_div, "Buyer");
+        this.upstream_ui.draw("upstream-status-right");
 
         DomUtl.drawBr(this.my_div);
 
@@ -68,40 +68,28 @@ class OpinionUi {
         DomUtl.drawBigText(this.opinion_div, opinion);
     }
 
-    updateWalletRoleConnected() {
-        DomUtl.deleteChildren(this.wallet_role_div)
-        DomUtl.drawText(this.wallet_role_div, "Wallet Role: ");
-        DomUtl.drawColoredText(this.wallet_role_div, "Connected", "green");
+    updateProviderPing(ping_time) {
+        this.downstream_ui.updatePingTime(ping_time);
     }
 
-    updateWalletRoleConnecting() {
-        DomUtl.deleteChildren(this.wallet_role_div)
-        DomUtl.drawText(this.wallet_role_div, "Wallet Role: ");
-        DomUtl.drawColoredText(this.wallet_role_div, "Connecting", "orange");
+    updateProviderMsats(msats) {
+        this.provider_msats = msats;
+        this.updateProvideMsats();
+        this.downstream_ui.updateProviderMsats(msats);
     }
 
-    updateWalletRoleDisconnected() {
-        DomUtl.deleteChildren(this.wallet_role_div)
-        DomUtl.drawText(this.wallet_role_div, "Wallet Role: ");
-        DomUtl.drawColoredText(this.wallet_role_div, "Not Connected", "red");
+    providerConnected() {
+        this.upstream_ui.updateConnected();
+    }
+    providerDisconnected() {
+        this.upstream_ui.updateDisconnected();
     }
 
-    updateServiceRoleConnected() {
-        DomUtl.deleteChildren(this.service_role_div)
-        DomUtl.drawText(this.service_role_div, "Service Role: ");
-        DomUtl.drawColoredText(this.service_role_div, "Connected", "green");
+    consumerConnected() {
+        this.downstream_ui.updateConnected();
     }
-
-    updateServiceRoleConnecting() {
-        DomUtl.deleteChildren(this.service_role_div)
-        DomUtl.drawText(this.service_role_div, "Service Role: ");
-        DomUtl.drawColoredText(this.service_role_div, "Connecting", "orange");
-    }
-
-    updateServiceRoleDisconnected() {
-        DomUtl.deleteChildren(this.service_role_div)
-        DomUtl.drawText(this.service_role_div, "Service Role: ");
-        DomUtl.drawColoredText(this.service_role_div, "Not Connected", "red");
+    consumerDisconnected() {
+        this.downstream_ui.updateDisconnected();
     }
 }
 
@@ -109,13 +97,18 @@ class SellerApp {
     constructor() {
         this.parent_div = document.getElementById("ui");
         this.my_div = null;
-        this.psu = null;
-        this.wcu = null;
-        this.scu = null;
 
-        this.wallet_socket = null;
-        this.service_socket = null;
+        this.provider_ui = null;
+        this.consumer_ui = null;
 
+        this.provider_role = null;
+        this.consumer_role = null;
+
+        this.provider_socket = null;
+        this.consumer_socket = null;
+
+        this.ping_interval = null;
+        this.outstanding_pings = {};
 
         this.wi = new WebsocketInterconnect(this);
     }
@@ -126,92 +119,214 @@ class SellerApp {
         this.my_div.setAttribute("class", "bordered");
         DomUtl.drawTitle(this.my_div, "Opinion Seller App", "h1");
 
-        this.psu = new OpinionUi(this.my_div);
-        this.psu.draw("center");
+        this.seller_ui = new SellerUi(this.my_div);
+        this.seller_ui.draw("center");
         DomUtl.drawBr(this.my_div);
 
-        this.scu = new BeaconUi(this.my_div,
-                                "SERVICE Connect to External WALLET",
-                                this, "service");
-        this.scu.draw("left");
+        this.consumer_ui = new BeaconUi(this.my_div,
+            "Connect to Downstream Moneysocket Provider", this, "consumer");
+        this.consumer_ui.draw("left");
 
-        this.wcu = new BeaconUi(this.my_div, "WALLET Connect to Buyer SERVICE",
-                                this, "wallet");
-        this.wcu.draw("right");
+        this.provider_ui = new BeaconUi(this.my_div,
+            "Connect to Upstream Opinion Buyer", this, "provider");
+        this.provider_ui.draw("right");
+
         DomUtl.drawBr(this.my_div);
-
         DomUtl.drawBr(this.my_div);
 
         this.parent_div.appendChild(this.my_div);
     }
 
 
-    newSocket(socket, cb_param) {
-        console.log("got new socket: " + socket.toString());
-        console.log("cb_param: " + cb_param);
-        if (cb_param == "wallet") {
-            this.wallet_socket = socket;
-            this.psu.updateWalletRoleConnected();
-            this.wcu.drawDisconnectButton();
-            // TODO wallet role object,
-        } else if (cb_param == "service") {
-            this.service_socket = socket;
-            this.psu.updateServiceRoleConnected();
-            this.scu.drawDisconnectButton();
-            // TODO service role object,
+    //////////////////////////////////////////////////////////////////////////
+
+    sendPing() {
+        console.log("ping");
+        var msg = this.consumer_role.sendPing();
+        var req_ref_uuid = msg['request_uuid'];
+        this.outstanding_pings[req_ref_uuid] = Timestamp.getNowTimestamp();
+    }
+
+    handlePong(msg) {
+        var req_ref_uuid = msg['request_reference_uuid'];
+        if (! (req_ref_uuid in this.outstanding_pings)) {
+            console.error("got pong with unknown request uuid");
+            return;
+        }
+        var start_time = this.outstanding_pings[req_ref_uuid];
+        var ping_time = (Timestamp.getNowTimestamp() - start_time) * 1000;
+        this.seller_ui.updateProviderPing(Math.round(ping_time));
+    }
+
+    startPinging() {
+        console.log("ping starting");
+        this.ping_interval = setInterval(
+            function() {
+                this.sendPing();
+            }.bind(this), 3000);
+        this.sendPing();
+    }
+
+    stopPinging() {
+        if (this.ping_interval == null) {
+            return;
+        }
+        console.log("ping stopping");
+        clearInterval(this.ping_interval);
+        this.ping_interval == null;
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////
+    // Role callbacks:
+    //////////////////////////////////////////////////////////////////////////
+
+    pongHook(msg, role) {
+        this.handlePong(msg);
+    }
+
+    rendezvousBecomingReadyHook(msg, role) {
+        console.log("becoming ready");
+        if (role.name == "consumer") {
+            this.consumer_ui.switchMode("WAITING_FOR_RENDEZVOUS");
+            this.seller_ui.consumerDisconnected();
+            this.stopPinging()
+        } else if (role.name == "provider") {
+            this.provider_ui.switchMode("WAITING_FOR_RENDEZVOUS");
+            this.seller_ui.providerDisconnected();
         } else {
             console.log("unknown cb param");
         }
     }
 
-    socketClose(socket, cb_param) {
-        console.log("got socket close: " + socket.toString());
+    rendezvousHook(msg, role) {
+        if (role.name == "consumer") {
+            this.consumer_ui.switchMode("CONNECTED");
+            this.seller_ui.consumerConnected();
+            this.startPinging();
+        } else if (role.name == "provider") {
+            this.provider_ui.switchMode("CONNECTED");
+            this.seller_ui.providerConnected();
+        } else {
+            console.log("unknown cb param");
+        }
+    }
+
+
+    registerHooks(role) {
+        console.log("REGISTERING");
+        var hooks = {
+            'NOTIFY_RENDEZVOUS': function (msg) {
+                this.rendezvousHook(msg, role);
+            }.bind(this),
+            'NOTIFY_RENDEZVOUS_BECOMING_READY': function (msg) {
+                this.rendezvousBecomingReadyHook(msg, role);
+            }.bind(this),
+            'NOTIFY_PONG': function (msg) {
+                this.pongHook(msg, role);
+            }.bind(this),
+        }
+        role.registerAppHooks(hooks);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // WebsocketInterconnect callbacks:
+    //////////////////////////////////////////////////////////////////////////
+
+    newSocket(socket, cb_param) {
+        console.log("got new socket: " + socket.toString());
         console.log("cb_param: " + cb_param);
-        if (cb_param == "wallet") {
-            console.log("got wallet socket closed");
-            this.wallet_socket = null;
-            this.psu.updateWalletRoleDisconnected();
-            this.wcu.drawConnectButton();
-            // TODO wallet role object
-        } else if (cb_param == "service") {
-            console.log("got service socket closed");
-            this.service_socket = null;
-            this.psu.updateServiceRoleDisconnected();
-            this.scu.drawConnectButton();
-            // TODO service role object
+
+        var role_info = cb_param;
+        var beacon = role_info['beacon']
+        var rid = beacon.shared_seed.deriveRendezvousId();
+        socket.registerSharedSeed(beacon.shared_seed);
+
+        if (role_info['role'] == "consumer") {
+            this.consumer_socket = socket;
+            this.consumer_ui.switchMode("REQUESTING_RENDEZVOUS");
+            this.consumer_role = new Role("consumer");
+            this.consumer_role.addSocket(socket);
+            this.registerHooks(this.consumer_role);
+            this.consumer_role.startRendezvous(rid);
+        } else if (role_info['role'] == "provider") {
+            this.provider_socket = socket;
+            this.provider_ui.switchMode("REQUESTING_RENDEZVOUS");
+            this.provider_role = new Role("provider");
+            this.provider_role.addSocket(socket);
+            this.registerHooks(this.provider_role);
+            this.provider_role.startRendezvous(rid);
+        } else {
+            console.log("unknown cb param");
+        }
+    }
+
+    socketClose(socket) {
+        console.log("got socket close: " + socket.toString());
+        if ((this.consumer_socket != null) &&
+            (socket.uuid == this.consumer_socket.uuid))
+        {
+            this.consumer_socket = null;
+            this.consumer_role = null;
+            this.consumer_ui.switchMode(this.consumer_ui.return_mode);
+            this.seller_ui.consumerDisconnected();
+            this.stopPinging()
+        } else if ((this.provider_socket != null) &&
+            (socket.uuid == this.provider_socket.uuid))
+        {
+            this.provider_socket = null;
+            this.provider_role = null;
+            this.provider_ui.switchMode(this.provider_ui.return_mode);
+            this.seller_ui.providerDisconnected();
         } else {
             console.log("got unknown socket closed");
         }
     }
 
-    connect(cb_param) {
-        if (cb_param == "wallet") {
-            var ws_url = this.wcu.getWsUrl();
-            console.log("connect wallet: " + ws_url);
-            this.psu.updateWalletRoleConnecting();
-            this.wcu.drawConnecting();
-            this.wi.connect(ws_url, "wallet");
-        } else if (cb_param == "service") {
-            var ws_url = this.scu.getWsUrl();
-            console.log("connect service: " + ws_url);
-            this.psu.updateServiceRoleConnecting();
-            this.scu.drawConnecting();
-            this.wi.connect(ws_url, "service");
+    //////////////////////////////////////////////////////////////////////////
+    // BeaconUI callbacks:
+    //////////////////////////////////////////////////////////////////////////
+
+    connect(beacon, cb_param) {
+        var location = beacon.locations[0];
+        if (cb_param == "consumer") {
+            if (! (location instanceof WebsocketLocation)) {
+                this.consumer_ui.switchMode("CONNECTION_FAILED");
+                return;
+            }
+            var role_info = {'role':   'consumer',
+                             'beacon': beacon};
+            var url = location.toWsUrl();
+            console.log("connect consumer: " + url);
+            this.consumer_ui.switchMode("CONNECTING_WEBSOCKET");
+            this.wi.connect(location, role_info);
+
+        } else if (cb_param == "provider") {
+            if (! (location instanceof WebsocketLocation)) {
+                this.provider_ui.switchMode("CONNECTION_FAILED");
+                return;
+            }
+            var url = location.toWsUrl();
+            var role_info = {'role':   'provider',
+                             'beacon': beacon};
+            console.log("connect provider: " + url);
+            this.provider_ui.switchMode("CONNECTING_WEBSOCKET");
+            this.wi.connect(location, role_info);
         } else {
             console.log("unknown cb_param: " + cb_param);
         }
     }
 
     disconnect(cb_param) {
-        if (cb_param == "wallet") {
-            console.log("disconnect wallet");
-            if (this.wallet_socket != null) {
-                this.wallet_socket.close();
+        if (cb_param == "consumer") {
+            console.log("disconnect consumer");
+            if (this.consumer_socket != null) {
+                this.consumer_socket.close();
             }
-        } else if (cb_param == "service") {
-            console.log("disconnect service");
-            if (this.service_socket != null) {
-                this.service_socket.close();
+        } else if (cb_param == "provider") {
+            console.log("disconnect provider");
+            if (this.provider_socket != null) {
+                this.provider_socket.close();
             }
         } else {
             console.log("unknown cb_param: " + cb_param);

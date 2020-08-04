@@ -8,27 +8,27 @@ const CHECK_MARK = "✅";
 const PLUG = "🔌";
 
 class UpstreamStatusUi {
-    constructor(div) {
+    constructor(div, title) {
         this.parent_div = div;
         this.my_div = null;
+        this.title = title
     }
 
-    draw() {
+    draw(divclass) {
         this.my_div = document.createElement("div");
+        this.my_div.setAttribute("class", divclass);
         this.updateDisconnected();
         this.parent_div.appendChild(this.my_div);
     }
 
     updateDisconnected() {
         DomUtl.deleteChildren(this.my_div);
-        DomUtl.drawText(this.my_div, "Upstream: " + PLUG);
-        this.my_div.setAttribute("class", "upstream-status");
+        DomUtl.drawText(this.my_div, this.title + ": " + PLUG);
     }
 
     updateConnected() {
         DomUtl.deleteChildren(this.my_div);
-        DomUtl.drawText(this.my_div, "Upstream: " + CHECK_MARK);
-        this.my_div.setAttribute("class", "upstream-status");
+        DomUtl.drawText(this.my_div, this.title + ": " + CHECK_MARK);
     }
 }
 

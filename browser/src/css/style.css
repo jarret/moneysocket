@@ -45,9 +45,17 @@
     font-size: 200%;
 }
 
-.upstream-status {
+.upstream-status-left {
     border: 1px solid blue ;
     float: left;
+    padding: 5px;
+    text-align: center;
+    width: 200px;
+}
+
+.upstream-status-right {
+    border: 1px solid blue ;
+    float: right;
     padding: 5px;
     text-align: center;
     width: 200px;

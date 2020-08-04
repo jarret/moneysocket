@@ -57,8 +57,8 @@ class WalletUi {
         this.wallet_mode_div.setAttribute("class", "wallet-mode-output");
 
         DomUtl.drawBr(this.my_div);
-        this.upstream_ui = new UpstreamStatusUi(this.my_div);
-        this.upstream_ui.draw();
+        this.upstream_ui = new UpstreamStatusUi(this.my_div, "Upstream");
+        this.upstream_ui.draw("upstream-status-left");
         this.downstream_ui = new DownstreamStatusUi(this.my_div, "Downstream");
         this.downstream_ui.draw("downstream-status-right");
 
@@ -324,21 +324,16 @@ class WebWalletApp {
 
         if (role_info['role'] == "provider") {
             this.provider_socket = socket;
-
             this.provider_ui.switchMode("REQUESTING_RENDEZVOUS");
-
             this.provider_role = new Role("provider");
             this.provider_role.addSocket(socket);
-            //this.provider_role.registerAppHook(this, "wallet");
             this.registerHooks(this.provider_role);
             this.provider_role.startRendezvous(rid);
         } else if (role_info['role'] == "consumer") {
             this.consumer_socket = socket;
             this.consumer_ui.switchMode("REQUESTING_RENDEZVOUS");
-
             this.consumer_role = new Role("consumer");
             this.consumer_role.addSocket(socket);
-            //this.consumer_role.registerAppHook(this, "consumer");
             this.registerHooks(this.consumer_role);
             this.consumer_role.startRendezvous(rid);
         } else {
@@ -347,14 +342,12 @@ class WebWalletApp {
     }
 
     socketClose(socket) {
-        // interconnect announcing socket cloesed
         console.log("got socket close: " + socket.toString());
         if ((this.provider_socket != null) &&
             (socket.uuid == this.provider_socket.uuid))
         {
             this.provider_socket = null;
             this.provider_role = null;
-
             this.provider_ui.switchMode(this.provider_ui.return_mode);
             this.wallet_ui.providerDisconnected();
             this.stopPinging()
@@ -364,7 +357,6 @@ class WebWalletApp {
         {
             this.consumer_socket = null;
             this.consumer_role = null;
-
             this.consumer_ui.switchMode(this.consumer_ui.return_mode);
             this.wallet_ui.consumerDisconnected();
             this.stopPinging()
