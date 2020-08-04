@@ -90,12 +90,29 @@ class Role(object):
             return
         self.socket.write(NotifyPong(req_ref_uuid))
 
+    def handle_request_wallet(self, msg):
+        req_ref_uuid = msg['request_uuid']
+        if self.state != "ROLE_OPERATE":
+            self.socket.write(
+                NotifyError("not in state to handle wallet request",
+                            request_reference_uuid=req_ref_uuid))
+            return
+
+        if "REQUEST_WALLET" not in self.hooks:
+            NotifyError("no wallet here",
+                        request_reference_uuid=req_ref_uuid))
+            return
+        wallet_msg = self.hooks['REQUEST_WALLET'](msg, self)
+        self.socket.write(wallet_msg)
+
     def handle_request(self, msg):
         n = msg['request_name']
         if n == "REQUEST_RENDEZVOUS":
             self.handle_request_rendezvous(msg)
         elif n == "REQUEST_PING":
             self.handle_request_ping(msg)
+        elif n == "REQUEST_WALLET":
+            self.handle_request_wallet(msg)
         else:
             logging.error("unknown request?: %s" % n)
             pass

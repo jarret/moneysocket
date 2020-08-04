@@ -13,6 +13,7 @@ from moneysocket.core.wallet import Wallet
 from moneysocket.persistence.db import PersistenceDb
 
 from moneysocket.core.message.notification.error import NotifyError
+from moneysocket.core.message.notification.wallet import NotifyWallet
 
 from moneysocket.beacon.beacon import MoneysocketBeacon
 from moneysocket.beacon.location.websocket import WebsocketLocation
@@ -89,6 +90,19 @@ class Terminus(object):
 
     ##########################################################################
 
+    def request_wallet(self, msg, role):
+        logging.info("requested wallet")
+
+        req_ref_uuid = msg['request_uuid']
+        msg = NotifyWallet(request_reference_uuid=request_ref_uuid)
+
+    def register_hooks(self, role):
+        hooks = {"REQUEST_WALLET": self.request_wallet,
+                }
+        role.register_app_hooks(hooks)
+
+    ##########################################################################
+
     def is_request_rendezvous(self, msg):
         if msg['message_class'] != "REQUEST":
             return False
@@ -119,7 +133,8 @@ class Terminus(object):
         beacon_str = self.match.get_beacon(wallet.name)
         beacon, err = MoneysocketBeacon.from_bech32_str(beacon_str)
         assert not err, "unexpected err: %s" % err
-        assert rid == beacon.shared_seed.derive_rendezvous_id().hex(), "unexpected rid"
+        brid = beacon.shared_seed.derive_rendezvous_id().hex()
+        assert rid == brid, "unexpected rid"
         socket.register_shared_seed(beacon.shared_seed)
         wallet.add_socket(socket)
 
