@@ -53,9 +53,17 @@
     width: 200px;
 }
 
-.downstream-status {
+.downstream-status-right {
     border: 1px solid blue ;
     float: right;
+    padding: 5px;
+    text-align: center;
+    width: 200px;
+}
+
+.downstream-status-left {
+    border: 1px solid blue ;
+    float: left;
     padding: 5px;
     text-align: center;
     width: 200px;

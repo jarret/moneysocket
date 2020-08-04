@@ -60,8 +60,8 @@ class WalletUi {
         DomUtl.drawBr(this.my_div);
         this.upstream_ui = new UpstreamStatusUi(this.my_div);
         this.upstream_ui.draw();
-        this.downstream_ui = new DownstreamStatusUi(this.my_div);
-        this.downstream_ui.draw();
+        this.downstream_ui = new DownstreamStatusUi(this.my_div, "Downstream");
+        this.downstream_ui.draw("downstream-status-right");
 
         this.switchMode("MAIN");
 

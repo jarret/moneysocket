@@ -3,6 +3,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
 const DomUtl = require('./ui/domutl.js').DomUtl;
+const Timestamp = require('./moneysocket/utl/timestamp.js').Timestamp;
 const WebsocketInterconnect = require(
     './moneysocket/socket/websocket.js').WebsocketInterconnect;
 const WebsocketLocation = require(
@@ -23,6 +24,8 @@ class BuyerUi {
         this.seller_service_role_div = null;
         this.wallet_counterpart_div = null;
         this.opinion = "N/A";
+
+        this.provider_msats = 1000000;
     }
 
     draw(style) {
@@ -45,10 +48,10 @@ class BuyerUi {
         DomUtl.drawBr(this.my_div);
 
         DomUtl.drawBr(this.my_div);
-        this.upstream_ui = new UpstreamStatusUi(this.my_div);
-        this.upstream_ui.draw();
-        this.downstream_ui = new DownstreamStatusUi(this.my_div);
-        this.downstream_ui.draw();
+        this.seller_ui = new DownstreamStatusUi(this.my_div, "Seller Wallet");
+        this.seller_ui.draw('downstream-status-left');
+        this.my_ui = new DownstreamStatusUi(this.my_div, "My Wallet");
+        this.my_ui.draw('downstream-status-right');
 
         DomUtl.drawBr(this.my_div);
 
@@ -72,17 +75,31 @@ class BuyerUi {
     }
 
     sellerConsumerConnected() {
-        this.upstream_ui.updateConnected();
+        this.seller_ui.updateConnected();
     }
     sellerConsumerDisconnected() {
-        this.upstream_ui.updateDisconnected();
+        this.seller_ui.updateDisconnected();
+    }
+
+    updateSellerConsumerPing(ping_time) {
+        this.seller_ui.updatePingTime(ping_time);
     }
 
     myConsumerConnected() {
-        this.downstream_ui.updateConnected();
+        this.my_ui.updateConnected();
     }
+
     myConsumerDisconnected() {
-        this.downstream_ui.updateDisconnected();
+        this.my_ui.updateDisconnected();
+    }
+
+    updateMyConsumerPing(ping_time) {
+        this.my_ui.updatePingTime(ping_time);
+    }
+
+    updateMyConsumerMsats(msats) {
+        this.provider_msats = msats;
+        this.my_ui.updateProviderMsats(msats);
     }
 }
 
@@ -98,6 +115,10 @@ class BuyerApp {
         this.seller_consumer_socket = null;
 
         this.wi = new WebsocketInterconnect(this);
+
+        this.seller_ping_interval = null;
+        this.my_ping_interval = null;
+        this.outstanding_pings = {};
     }
 
 
@@ -130,10 +151,18 @@ class BuyerApp {
 
     sendPing(role_name) {
         console.log("ping");
-        if (role_name
-        var msg = this.consumer_role.sendPing();
+        var msg;
+        if (role_name == "seller_consumer") {
+            msg = this.seller_consumer_role.sendPing();
+        } else if (role_name == "my_consumer") {
+            msg = this.my_consumer_role.sendPing();
+        } else {
+            console.error("unknown role");
+        }
         var req_ref_uuid = msg['request_uuid'];
-        this.outstanding_pings[req_ref_uuid] = Timestamp.getNowTimestamp();
+        var timestamp = Timestamp.getNowTimestamp();
+        this.outstanding_pings[req_ref_uuid] = {'role_name': role_name,
+                                                'timestamp': timestamp};
     }
 
     handlePong(msg) {
@@ -142,27 +171,50 @@ class BuyerApp {
             console.error("got pong with unknown request uuid");
             return;
         }
-        var start_time = this.outstanding_pings[req_ref_uuid];
+        var start_time = this.outstanding_pings[req_ref_uuid]['timestamp'];
+        var role_name = this.outstanding_pings[req_ref_uuid]['role_name'];
         var ping_time = (Timestamp.getNowTimestamp() - start_time) * 1000;
-        this.wallet_ui.updateProviderPing(Math.round(ping_time));
+        if (role_name == "seller_consumer") {
+            console.log("pong seller");
+            this.buyer_ui.updateSellerConsumerPing(Math.round(ping_time));
+        } else if (role_name == "my_consumer") {
+            console.log("pong my");
+            this.buyer_ui.updateMyConsumerPing(Math.round(ping_time));
+        }
     }
 
     startPinging(role_name) {
         console.log("ping starting");
-        this.ping_interval = setInterval(
-            function() {
-                this.sendPing(role_name);
-            }.bind(this), 3000);
+        if (role_name == "seller_consumer") {
+            this.seller_ping_interval = setInterval(
+                function() {
+                    this.sendPing(role_name);
+                }.bind(this), 3000);
+        } else if (role_name == "my_consumer") {
+            this.my_ping_interval = setInterval(
+                function() {
+                    this.sendPing(role_name);
+                }.bind(this), 3000);
+        }
         this.sendPing(role_name);
     }
 
-    stopPinging() {
-        if (this.ping_interval == null) {
-            return;
+    stopPinging(role_name) {
+        if (role_name == "seller_consumer") {
+            if (this.seller_ping_interval == null) {
+                return;
+            }
+            console.log("seller ping stopping");
+            clearInterval(this.seller_ping_interval);
+            this.seller_ping_interval == null;
+        } else if (role_name == "my_consumer") {
+            if (this.my_ping_interval == null) {
+                return;
+            }
+            console.log("my ping stopping");
+            clearInterval(this.my_ping_interval);
+            this.my_ping_interval == null;
         }
-        console.log("ping stopping");
-        clearInterval(this.ping_interval);
-        this.ping_interval == null;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -179,11 +231,12 @@ class BuyerApp {
             console.log("becoming ready 1");
             this.seller_consumer_ui.switchMode("WAITING_FOR_RENDEZVOUS");
             this.buyer_ui.sellerConsumerDisconnected();
+            this.stopPinging("seller_consumer");
         } else if (role.name == "my_consumer") {
             console.log("becoming ready 2");
             this.my_consumer_ui.switchMode("WAITING_FOR_RENDEZVOUS");
             this.buyer_ui.myConsumerDisconnected();
-            this.stopPinging()
+            this.stopPinging("my_consumer");
         } else {
             console.log("unknown cb param");
         }
@@ -193,6 +246,7 @@ class BuyerApp {
         if (role.name == "seller_consumer") {
             this.seller_consumer_ui.switchMode("CONNECTED");
             this.buyer_ui.sellerConsumerConnected();
+            this.startPinging(role.name);
         } else if (role.name == "my_consumer") {
             this.my_consumer_ui.switchMode("CONNECTED");
             this.buyer_ui.myConsumerConnected();
@@ -261,7 +315,7 @@ class BuyerApp {
             this.seller_consumer_ui.switchMode(
                 this.seller_consumer_ui.return_mode);
             this.buyer_ui.sellerConsumerDisconnected();
-            // stop pinging
+            this.stopPinging("seller_consumer")
         }
         else if ((this.my_consumer_socket != null) &&
                  (socket.uuid == this.my_consumer_socket.uuid))
@@ -271,7 +325,7 @@ class BuyerApp {
             this.my_consumer_ui.switchMode(
                 this.my_consumer_ui.return_mode);
             this.buyer_ui.myConsumerDisconnected();
-            // stop pinging
+            this.stopPinging("my_consumer");
         } else {
             console.log("got unknown socket closed");
         }

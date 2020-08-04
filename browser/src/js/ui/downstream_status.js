@@ -8,7 +8,7 @@ const CHECK_MARK = "✅";
 const PLUG = "🔌";
 
 class DownstreamStatusUi {
-    constructor(div) {
+    constructor(div, title) {
         this.parent_div = div;
         this.my_div = null;
 
@@ -18,9 +18,10 @@ class DownstreamStatusUi {
         this.connected_div = null;
         this.ping_div = null;
         this.balance_div = null;
+        this.title = title;
     }
 
-    draw() {
+    draw(divclass) {
         this.my_div = document.createElement("div");
 
         this.connected_div = DomUtl.emptyDiv(this.my_div);
@@ -31,7 +32,7 @@ class DownstreamStatusUi {
         this.provided_msats = 1234567;
         this.updateDisconnected();
 
-        this.my_div.setAttribute("class", "downstream-status");
+        this.my_div.setAttribute("class", divclass);
         this.parent_div.appendChild(this.my_div);
     }
 
@@ -39,7 +40,7 @@ class DownstreamStatusUi {
         DomUtl.deleteChildren(this.connected_div);
         DomUtl.deleteChildren(this.ping_div);
         DomUtl.deleteChildren(this.balance_div);
-        DomUtl.drawText(this.connected_div, "Downstream: " + PLUG);
+        DomUtl.drawText(this.connected_div, this.title + ": " + PLUG);
         DomUtl.drawText(this.ping_div, "Ping: N/A");
         DomUtl.drawText(this.balance_div, "Provided: N/A");
     }
@@ -48,7 +49,7 @@ class DownstreamStatusUi {
         DomUtl.deleteChildren(this.connected_div);
         DomUtl.deleteChildren(this.ping_div);
         DomUtl.deleteChildren(this.balance_div);
-        DomUtl.drawText(this.connected_div, "Downstream: " + CHECK_MARK);
+        DomUtl.drawText(this.connected_div, this.title + ": " + CHECK_MARK);
         DomUtl.drawText(this.ping_div,
                         "Ping: " + this.ping_time.toString() + "ms");
         DomUtl.drawText(this.balance_div,
