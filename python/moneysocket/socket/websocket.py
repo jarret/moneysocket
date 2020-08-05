@@ -103,7 +103,7 @@ class IncomingSocket(WebSocketServerProtocol):
                                                  self.factory.ms_cb_param)
 
     def onMessage(self, payload, isBinary):
-        logging.info("incoming message")
+        #logging.info("incoming message")
         if isBinary:
             self.handle_binary(payload)
         else:

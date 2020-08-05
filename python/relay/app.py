@@ -74,7 +74,7 @@ class Relay(object):
         if msg['request_name'] != "REQUEST_RENDEZVOUS":
             logging.error("got a request the relay can't understand")
             return
-        logging.info("received msg: %s" % msg)
+        #logging.info("received msg: %s" % msg)
         rid = msg['rendezvous_id']
         req_ref_uuid = msg['request_uuid']
         result, peer_uuid, peer_req_ref_uuid = self.pairing.enter_rendezvous(
@@ -107,7 +107,7 @@ class Relay(object):
 
 
     def cyphertext_recv_cb(self, socket, msg_bytes):
-        logging.info("relay received cyphertext: %s" % len(msg_bytes))
+        #logging.info("relay received cyphertext: %s" % len(msg_bytes))
         if not self.pairing.is_socket_paired(socket.uuid):
             logging.error("got cyphertext from upaired socket" % len(msg_bytes))
             return
