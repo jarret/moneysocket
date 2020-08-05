@@ -17,6 +17,9 @@ const NotifyProvider = require('./provider.js').NotifyProvider;
 const NotifyProviderBecomingReady = require(
     './provider_becoming_ready.js').NotifyProviderBecomingReady;
 
+const NotifyInvoice = require('./invoice.js').NotifyInvoice;
+const NotifyPreimage = require('./preimage.js').NotifyPreimage;
+
 class NotificationReceiver {
 }
 

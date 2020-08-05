@@ -10,6 +10,8 @@
 const RequestRendezvous = require('./rendezvous.js').RequestRendezvous;
 const RequestPing = require('./rendezvous.js').RequestRendezvous;
 const RequestProvider = require('./provider.js').RequestProvider;
+const RequestInvoice = require('./invoice.js').RequestInvoice;
+const RequestPay = require('./pay.js').RequestPay;
 
 class RequestReceiver {
 }

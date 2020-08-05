@@ -6,3 +6,5 @@
 from moneysocket.core.message.request.ping import RequestPing
 from moneysocket.core.message.request.rendezvous import RequestRendezvous
 from moneysocket.core.message.request.provider import RequestProvider
+from moneysocket.core.message.request.invoice import RequestInvoice
+from moneysocket.core.message.request.pay import RequestPay

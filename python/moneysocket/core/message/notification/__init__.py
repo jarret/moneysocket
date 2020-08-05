@@ -13,3 +13,5 @@ from moneysocket.core.message.notification.rendezvous import NotifyRendezvous
 from moneysocket.core.message.notification.provider import NotifyProvider
 from moneysocket.core.message.notification.provider_becoming_ready import (
     NotifyProviderBecomingReady)
+from moneysocket.core.message.notification.invoice import NotifyInvoice
+from moneysocket.core.message.notification.preimage import NotifyPreimage
