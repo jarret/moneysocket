@@ -13,7 +13,8 @@ const Role = require('./moneysocket/core/role.js').Role;
 const UpstreamStatusUi = require('./ui/upstream_status.js').UpstreamStatusUi;
 const DownstreamStatusUi = require(
     './ui/downstream_status.js').DownstreamStatusUi;
-
+const RequestProvider = require(
+    "./moneysocket/core/message/request/provider.js").RequestProvider;
 
 
 class BuyerUi {
@@ -186,11 +187,17 @@ class BuyerApp {
     startPinging(role_name) {
         console.log("ping starting");
         if (role_name == "seller_consumer") {
+            if (this.seller_ping_interval != null) {
+                return;
+            }
             this.seller_ping_interval = setInterval(
                 function() {
                     this.sendPing(role_name);
                 }.bind(this), 3000);
         } else if (role_name == "my_consumer") {
+            if (this.my_ping_interval != null) {
+                return;
+            }
             this.my_ping_interval = setInterval(
                 function() {
                     this.sendPing(role_name);
@@ -206,14 +213,14 @@ class BuyerApp {
             }
             console.log("seller ping stopping");
             clearInterval(this.seller_ping_interval);
-            this.seller_ping_interval == null;
+            this.seller_ping_interval = null;
         } else if (role_name == "my_consumer") {
             if (this.my_ping_interval == null) {
                 return;
             }
             console.log("my ping stopping");
             clearInterval(this.my_ping_interval);
-            this.my_ping_interval == null;
+            this.my_ping_interval = null;
         }
     }
 
@@ -221,11 +228,11 @@ class BuyerApp {
     // Role callbacks:
     //////////////////////////////////////////////////////////////////////////
 
-    pongHook(msg, role) {
+    notifyPongHook(msg, role) {
         this.handlePong(msg);
     }
 
-    rendezvousBecomingReadyHook(msg, role) {
+    notifyRendezvousBecomingReadyHook(msg, role) {
         console.log("becoming ready");
         if (role.name == "seller_consumer") {
             console.log("becoming ready 1");
@@ -242,32 +249,69 @@ class BuyerApp {
         }
     }
 
-    rendezvousHook(msg, role) {
+    notifyRendezvousHook(msg, role) {
         if (role.name == "seller_consumer") {
-            this.seller_consumer_ui.switchMode("CONNECTED");
-            this.buyer_ui.sellerConsumerConnected();
-            this.startPinging(role.name);
+            this.seller_consumer_ui.switchMode("REQUESTING_PROVIDER");
+            role.socket.write(new RequestProvider());
         } else if (role.name == "my_consumer") {
-            this.my_consumer_ui.switchMode("CONNECTED");
-            this.buyer_ui.myConsumerConnected();
-            this.startPinging(role.name);
+            this.my_consumer_ui.switchMode("REQUESTING_PROVIDER");
+            role.socket.write(new RequestProvider());
         } else {
             console.log("unknown cb param");
         }
     }
 
+    notifyProviderBecomingReadyHook(msg, role) {
+        if (role.name == "seller_consumer") {
+            this.seller_consumer_ui.switchMode("WAITING_FOR_PROVIDER");
+            this.buyer_ui.sellerConsumerDisconnected();
+            this.stopPinging("seller_consumer")
+            role.setState("PROVIDER_SETUP")
+        } else if (role.name == "my_consumer") {
+            this.my_consumer_ui.switchMode("WAITING_FOR_PROVIDER");
+            this.buyer_ui.buyerConsumerDisconnected();
+            this.stopPinging("my_consumer")
+            role.setState("PROVIDER_SETUP")
+        } else {
+            console.log("unknown cb param");
+        }
+    }
+
+    notifyProviderHook(msg, role) {
+        if (role.name == "seller_consumer") {
+            this.seller_consumer_ui.switchMode("CONNECTED");
+            this.buyer_ui.sellerConsumerConnected();
+            this.startPinging("seller_consumer");
+        } else if (role.name == "my_consumer") {
+            this.my_consumer_ui.switchMode("CONNECTED");
+            this.buyer_ui.myConsumerConnected();
+            this.buyer_ui.updateMyConsumerMsats(msg['msats']);
+            this.startPinging("my_consumer");
+        } else {
+            console.log("unknown cb param");
+        }
+    }
 
     registerHooks(role) {
         console.log("REGISTERING");
         var hooks = {
             'NOTIFY_RENDEZVOUS': function (msg) {
-                this.rendezvousHook(msg, role);
+                this.notifyRendezvousHook(msg, role);
             }.bind(this),
             'NOTIFY_RENDEZVOUS_BECOMING_READY': function (msg) {
-                this.rendezvousBecomingReadyHook(msg, role);
+                this.notifyRendezvousBecomingReadyHook(msg, role);
             }.bind(this),
             'NOTIFY_PONG': function (msg) {
-                this.pongHook(msg, role);
+                this.notifyPongHook(msg, role);
+            }.bind(this),
+            'NOTIFY_PROVIDER': function (msg) {
+                this.notifyProviderHook(msg, role);
+            }.bind(this),
+            'NOTIFY_PROVIDER_BECOMING_READY': function (msg) {
+                this.notifyProviderBecomingReadyHook(msg, role);
+            }.bind(this),
+            'REQUEST_PROVIDER': function (msg) {
+                return this.requestProviderHook(msg, role);
             }.bind(this),
         }
         role.registerAppHooks(hooks);

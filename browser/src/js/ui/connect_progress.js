@@ -71,6 +71,11 @@ class ConnectProgress {
             var color = "orange";
             var line = GOOD + GOOD + GOOD + BAD + "   " + BAD;
             break;
+        case "WAITING_FOR_CONSUMER":
+            var title = "Waiting For Consumer";
+            var color = "orange";
+            var line = GOOD + GOOD + GOOD + BAD + "   " + BAD;
+            break;
         case "CONNECTED":
             var title = "Connected";
             var color = "green";

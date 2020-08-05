@@ -328,7 +328,7 @@ class WebWalletApp {
 
     notifyRendezvousHook(msg, role) {
         if (role.name == "provider") {
-            this.provider_ui.switchMode("WAITING_FOR_DOWNSTREAM");
+            this.provider_ui.switchMode("WAITING_FOR_CONSUMER");
         } else if (role.name == "consumer") {
             this.consumer_ui.switchMode("REQUESTING_PROVIDER");
             role.socket.write(new RequestProvider());
@@ -346,6 +346,17 @@ class WebWalletApp {
             this.wallet_ui.consumerDisconnected();
             this.stopPinging()
             role.setState("PROVIDER_SETUP")
+
+            if ((this.provider_role != null) &&
+                (this.provider_role.state == "ROLE_OPERATE"))
+            {
+                this.provider_role.setState("PROVIDER_SETUP");
+                this.provider_ui.switchMode("WAITING_FOR_DOWNSTREAM");
+                this.wallet_ui.providerDisconnected();
+                this.provider_socket.write(
+                    new NotifyProviderBecomingReady(null));
+            }
+
         } else {
             console.log("unknown cb param");
         }
