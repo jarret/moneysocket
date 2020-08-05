@@ -107,10 +107,10 @@ class BuyerUi {
             this.balance_div = DomUtl.emptyDiv(this.buyer_mode_div);
             DomUtl.drawBigBalance(this.balance_div, this.available_msats);
 
-            DomUtl.drawButton(this.my_div, "Start",
+            DomUtl.drawButton(this.buyer_mode_div, "Start",
                 (function() {this.startBuyingOpinions()}).bind(this));
             DomUtl.drawBr(this.my_div);
-            DomUtl.drawButton(this.my_div, "Stop",
+            DomUtl.drawButton(this.buyer_mode_div, "Stop",
                 (function() {this.stopBuyingOpinions()}).bind(this));
         } else {
             console.error("unhandled mode");

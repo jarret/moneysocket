@@ -14,12 +14,21 @@ const UpstreamStatusUi = require('./ui/upstream_status.js').UpstreamStatusUi;
 const DownstreamStatusUi = require(
     './ui/downstream_status.js').DownstreamStatusUi;
 
+const RequestProvider = require(
+    "./moneysocket/core/message/request/provider.js").RequestProvider;
+
+const NotifyProvider = require(
+    "./moneysocket/core/message/notification/provider.js").NotifyProvider;
+const NotifyProviderBecomingReady = require(
+    "./moneysocket/core/message/notification/provider_becoming_ready.js"
+    ).NotifyProviderBecomingReady;
 
 class SellerUi {
     constructor(div) {
         this.parent_div = div;
         this.my_div = null;
         this.opinion = "Bullish"
+        this.provider_msats = 0;
     }
 
     draw(style) {
@@ -74,7 +83,6 @@ class SellerUi {
 
     updateProviderMsats(msats) {
         this.provider_msats = msats;
-        this.updateProvideMsats();
         this.downstream_ui.updateProviderMsats(msats);
     }
 
@@ -117,7 +125,7 @@ class SellerApp {
     drawSellerUi() {
         this.my_div = document.createElement("div");
         this.my_div.setAttribute("class", "bordered");
-        DomUtl.drawTitle(this.my_div, "Opinion Seller App", "h1");
+        DomUtl.drawTitle(this.my_div, "Opinion Seller App", "h2");
 
         this.seller_ui = new SellerUi(this.my_div);
         this.seller_ui.draw("center");
@@ -159,6 +167,9 @@ class SellerApp {
     }
 
     startPinging() {
+        if (this.ping_interval != null) {
+            return;
+        }
         console.log("ping starting");
         this.ping_interval = setInterval(
             function() {
@@ -181,16 +192,28 @@ class SellerApp {
     // Role callbacks:
     //////////////////////////////////////////////////////////////////////////
 
-    pongHook(msg, role) {
+    notifyPongHook(msg, role) {
         this.handlePong(msg);
     }
 
-    rendezvousBecomingReadyHook(msg, role) {
+    notifyRendezvousBecomingReadyHook(msg, role) {
         console.log("becoming ready");
         if (role.name == "consumer") {
             this.consumer_ui.switchMode("WAITING_FOR_RENDEZVOUS");
             this.seller_ui.consumerDisconnected();
             this.stopPinging()
+
+
+            if ((this.provider_role != null) &&
+                (this.provider_role.state == "ROLE_OPERATE"))
+            {
+                this.provider_role.setState("PROVIDER_SETUP");
+                this.provider_ui.switchMode("WAITING_FOR_DOWNSTREAM");
+                this.seller_ui.providerDisconnected();
+                this.provider_socket.write(
+                    new NotifyProviderBecomingReady(null));
+            }
+
         } else if (role.name == "provider") {
             this.provider_ui.switchMode("WAITING_FOR_RENDEZVOUS");
             this.seller_ui.providerDisconnected();
@@ -199,31 +222,107 @@ class SellerApp {
         }
     }
 
-    rendezvousHook(msg, role) {
+    notifyRendezvousHook(msg, role) {
         if (role.name == "consumer") {
-            this.consumer_ui.switchMode("CONNECTED");
-            this.seller_ui.consumerConnected();
-            this.startPinging();
+            this.consumer_ui.switchMode("REQUESTING_PROVIDER");
+            role.socket.write(new RequestProvider());
         } else if (role.name == "provider") {
-            this.provider_ui.switchMode("CONNECTED");
-            this.seller_ui.providerConnected();
+            this.provider_ui.switchMode("WAITING_FOR_CONSUMER");
         } else {
             console.log("unknown cb param");
         }
     }
 
+    notifyProviderHook(msg, role) {
+        if (role.name == "consumer") {
+            this.consumer_ui.switchMode("CONNECTED");
+            this.seller_ui.consumerConnected();
+            this.seller_ui.updateProviderMsats(msg['msats']);
+            this.startPinging();
+
+            if ((this.provider_role != null) &&
+                (this.provider_role.state == "PROVIDER_SETUP"))
+            {
+                // TODO - I think there is a race here
+                var uuid = this.provider_role.uuid;
+                var msg = new NotifyProvider(uuid, null, false, true, null);
+                this.provider_role.setState("ROLE_OPERATE");
+                this.provider_socket.write(msg);
+                this.provider_ui.switchMode("CONNECTED");
+                this.seller_ui.providerConnected();
+            }
+        } else if (role.name == "provider") {
+            console.error("unexpected notification");
+            return;
+        } else {
+            console.log("unknown cb param");
+        }
+    }
+
+    notifyProviderBecomingReadyHook(msg, role) {
+        if (role.name == "consumer") {
+            this.consumer_ui.switchMode("WAITING_FOR_PROVIDER");
+            this.seller_ui.consumerDisconnected();
+            this.stopPinging()
+            role.setState("PROVIDER_SETUP")
+
+            if ((this.provider_role != null) &&
+                (this.provider_role.state == "ROLE_OPERATE"))
+            {
+                this.provider_role.setState("PROVIDER_SETUP");
+                this.provider_ui.switchMode("WAITING_FOR_DOWNSTREAM");
+                this.seller_ui.providerDisconnected();
+                this.provider_socket.write(
+                    new NotifyProviderBecomingReady(null));
+            }
+        } else if (role.name == "provider") {
+            console.error("unexpected notification");
+            return;
+        } else {
+            console.log("unknown cb param");
+        }
+    }
+
+    requestProviderHook(msg, role) {
+        if (role.name == "consumer") {
+            return NotifyError("no provider here", req_ref_uuid);
+        } else if (role.name == "provider") {
+            // if consumer is connected, notify ourselves as provider
+            var req_ref_uuid = msg['request_uuid'];
+            if ((this.consumer_role != null) &&
+                (this.consumer_role.state == "ROLE_OPERATE"))
+            {
+                var uuid = this.provider_role.uuid;
+                this.provider_ui.switchMode("CONNECTED");
+                this.seller_ui.providerConnected();
+                return new NotifyProvider(uuid, req_ref_uuid, false, true,
+                                          null);
+            }
+            // else notifiy becoming ready
+            return new NotifyProviderBecomingReady(req_ref_uuid);
+        }
+    }
 
     registerHooks(role) {
         console.log("REGISTERING");
         var hooks = {
             'NOTIFY_RENDEZVOUS': function (msg) {
-                this.rendezvousHook(msg, role);
+                this.notifyRendezvousHook(msg, role);
             }.bind(this),
             'NOTIFY_RENDEZVOUS_BECOMING_READY': function (msg) {
-                this.rendezvousBecomingReadyHook(msg, role);
+                this.notifyRendezvousBecomingReadyHook(msg, role);
             }.bind(this),
             'NOTIFY_PONG': function (msg) {
-                this.pongHook(msg, role);
+                this.notifyPongHook(msg, role);
+            }.bind(this),
+            'NOTIFY_PROVIDER': function (msg) {
+                this.notifyProviderHook(msg, role);
+            }.bind(this),
+            'NOTIFY_PROVIDER_BECOMING_READY': function (msg) {
+                this.notifyProviderBecomingReadyHook(msg, role);
+            }.bind(this),
+            'REQUEST_PROVIDER': function (msg) {
+                return this.requestProviderHook(msg, role);
             }.bind(this),
         }
         role.registerAppHooks(hooks);
@@ -271,6 +370,19 @@ class SellerApp {
             this.consumer_ui.switchMode(this.consumer_ui.return_mode);
             this.seller_ui.consumerDisconnected();
             this.stopPinging()
+
+            // degrade the provider
+            if ((this.provider_role != null) &&
+                (this.provider_role.state == "ROLE_OPERATE"))
+            {
+                this.provider_role.setState("PROVIDER_SETUP");
+                this.provider_ui.switchMode("WAITING_FOR_DOWNSTREAM");
+                this.seller_ui.providerDisconnected();
+                this.provider_socket.write(
+                    new NotifyProviderBecomingReady(null));
+            }
+
+
         } else if ((this.provider_socket != null) &&
             (socket.uuid == this.provider_socket.uuid))
         {
