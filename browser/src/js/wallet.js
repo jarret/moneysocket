@@ -185,7 +185,7 @@ class WalletUi {
     }
     consumerDisconnected() {
         this.downstream_ui.updateDisconnected();
-        this.switchMode("MAIN");
+        this.switchMode("PROVIDER_DISCONNECTED");
     }
 }
 
@@ -263,7 +263,7 @@ class WebWalletApp {
     //////////////////////////////////////////////////////////////////////////
 
     sendPing() {
-        //console.log("ping");
+        console.log("ping");
         var msg = this.consumer_role.sendPing();
         var req_ref_uuid = msg['request_uuid'];
         this.outstanding_pings[req_ref_uuid] = Timestamp.getNowTimestamp();
@@ -281,10 +281,11 @@ class WebWalletApp {
     }
 
     startPinging() {
-        console.log("ping starting");
+        console.log("attempt ping starting");
         if (this.ping_interval != null) {
             return;
         }
+        console.log("ping starting");
         this.ping_interval = setInterval(
             function() {
                 this.sendPing();
@@ -298,7 +299,7 @@ class WebWalletApp {
         }
         console.log("ping stopping");
         clearInterval(this.ping_interval);
-        this.ping_interval == null;
+        this.ping_interval = null;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -327,7 +328,7 @@ class WebWalletApp {
 
     notifyRendezvousHook(msg, role) {
         if (role.name == "provider") {
-            this.provider_ui.switchMode("WAITING_FOR_CONSUMER");
+            this.provider_ui.switchMode("WAITING_FOR_DOWNSTREAM");
         } else if (role.name == "consumer") {
             this.consumer_ui.switchMode("REQUESTING_PROVIDER");
             role.socket.write(new RequestProvider());
@@ -342,6 +343,9 @@ class WebWalletApp {
             return;
         } else if (role.name == "consumer") {
             this.consumer_ui.switchMode("WAITING_FOR_PROVIDER");
+            this.wallet_ui.consumerDisconnected();
+            this.stopPinging()
+            role.setState("PROVIDER_SETUP")
         } else {
             console.log("unknown cb param");
         }
@@ -357,6 +361,19 @@ class WebWalletApp {
             this.wallet_ui.updateProviderMsats(msg['msats']);
             // TODO - what about providers that can't send or can't receive?
             this.startPinging();
+
+            if ((this.provider_role != null) &&
+                (this.provider_role.state == "PROVIDER_SETUP"))
+            {
+                // TODO - I think there is a race here
+                var uuid = this.provider_role.uuid;
+                var msats = this.wallet_ui.getProvideMsats();
+                var msg = new NotifyProvider(uuid, null, true, true, msats);
+                this.provider_role.setState("ROLE_OPERATE");
+                this.provider_socket.write(msg);
+                this.provider_ui.switchMode("CONNECTED");
+                this.wallet_ui.providerConnected();
+            }
         } else {
             console.log("unknown cb param");
         }
@@ -461,6 +478,17 @@ class WebWalletApp {
             this.consumer_ui.switchMode(this.consumer_ui.return_mode);
             this.wallet_ui.consumerDisconnected();
             this.stopPinging()
+
+            // degrade the provider
+            if ((this.provider_role != null) &&
+                (this.provider_role.state == "ROLE_OPERATE"))
+            {
+                this.provider_role.setState("PROVIDER_SETUP");
+                this.provider_ui.switchMode("WAITING_FOR_DOWNSTREAM");
+                this.wallet_ui.providerDisconnected();
+                this.provider_socket.write(
+                    new NotifyProviderBecomingReady(null));
+            }
         } else {
             console.log("got unknown socket closed");
         }

@@ -33,7 +33,7 @@ const MODES = new Set(["ENTER_BEACON",
                        "WAITING_FOR_RENDEZVOUS",
                        "REQUESTING_PROVIDER",
                        "WAITING_FOR_PROVIDER",
-                       "WAITING_FOR_CONSUMER",
+                       "WAITING_FOR_DOWNSTREAM",
                        "CONNECTED",
                        "CONNECTION_FAILED",
                       ]);
@@ -164,7 +164,6 @@ class BeaconUi {
                 (function() {this.disconnect()}).bind(this));
                 //(function() {this.switchMode("ENTER_BEACON")}).bind(this));
         } else if (new_mode == "REQUESTING_PROVIDER") {
-            // TODO
             var progress = new ConnectProgress(this.mode_output_div);
             progress.draw("REQUESTING_PROVIDER");
 
@@ -172,17 +171,15 @@ class BeaconUi {
             DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
                 (function() {this.disconnect()}).bind(this));
         } else if (new_mode == "WAITING_FOR_PROVIDER") {
-            // TODO
             var progress = new ConnectProgress(this.mode_output_div);
             progress.draw("WAITING_FOR_PROVIDER");
 
             this.setMessagePlaceholderDiv();
             DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
                 (function() {this.disconnect()}).bind(this));
-        } else if (new_mode == "WAITING_FOR_CONSUMER") {
-            // TODO
+        } else if (new_mode == "WAITING_FOR_DOWNSTREAM") {
             var progress = new ConnectProgress(this.mode_output_div);
-            progress.draw("WAITING_FOR_CONSUMER");
+            progress.draw("WAITING_FOR_DOWNSTREAM");
 
             this.setMessagePlaceholderDiv();
             DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",

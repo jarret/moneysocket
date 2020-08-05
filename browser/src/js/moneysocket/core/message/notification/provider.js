@@ -47,7 +47,6 @@ class NotifyProvider extends MoneysocketNotification {
         if (typeof msg_dict['payee'] != "boolean") {
             return "payee must be True or False";
         }
-        console.log("payer not bool?" + JSON.stringify(msg_dict));
         if (typeof msg_dict['payer'] != "boolean") {
             return "payer must be True or False";
         }

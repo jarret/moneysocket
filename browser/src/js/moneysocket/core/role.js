@@ -65,10 +65,12 @@ class Role {
     handleRequestPing(msg) {
         var req_ref_uuid = msg['request_uuid'];
         if (this.state != "ROLE_OPERATE") {
-            this.socket.write(
-                new NotifyError("not in state to respond to ping",
-                                req_ref_uuid));
+            // drop on floor in not operating
             return;
+            //this.socket.write(
+            //    new NotifyError("not in state to respond to ping",
+            //                    req_ref_uuid));
+            //return;
         }
        // TODO hook for app to decide how to respond
         this.socket.write(new NotifyPong(req_ref_uuid));
@@ -163,11 +165,11 @@ class Role {
     }
 
     handleNotifyProviderBecomingReady(msg) {
-        if (this.state != "PROVIDER_SETUP") {
-            console.error("not in provider setup state")
-            // TODO do we notify on error?
-            return;
-        }
+       // if (this.state != "PROVIDER_SETUP") {
+       //     console.error("not in provider setup state")
+       //     // TODO do we notify on error?
+       //     return;
+       // }
         if ("NOTIFY_PROVIDER_BECOMING_READY" in this.hooks) {
             this.hooks['NOTIFY_PROVIDER_BECOMING_READY'](msg, this);
         }
