@@ -209,7 +209,7 @@ class BuyerApp {
     drawBuyerUi() {
         this.my_div = document.createElement("div");
         this.my_div.setAttribute("class", "bordered");
-        DomUtl.drawTitle(this.my_div, "Opinion Buyer", "h2");
+        DomUtl.drawTitle(this.my_div, "Opinion Buyer App", "h2");
 
         this.buyer_ui = new BuyerUi(this.my_div);
         this.buyer_ui.draw("center");
