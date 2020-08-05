@@ -288,10 +288,9 @@ class WebWalletApp {
         } else if (role.name == "consumer") {
             //this.consumer_ui.switchMode("CONNECTED");
             //this.wallet_ui.consumerConnected();
-            this.startPinging();
-            // TODO request provider
-            this.provider_ui.switchMode("REQUESTING_PROVIDER");
-            role.socket.write(RequestProvider());
+            //this.startPinging();
+            this.consumer_ui.switchMode("REQUESTING_PROVIDER");
+            role.socket.write(new RequestProvider());
         } else {
             console.log("unknown cb param");
         }

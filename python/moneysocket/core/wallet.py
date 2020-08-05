@@ -15,7 +15,7 @@ class Wallet(Role):
         self.payer = True
 
     def get_notify_msg(self, request_reference_uuid=None):
-        return NotifyProvider(role.uuid,
+        return NotifyProvider(self.uuid,
             request_reference_uuid=request_reference_uuid, payer=self.payer,
             payee=self.payee, msats=self.msatoshis)
 

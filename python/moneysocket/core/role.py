@@ -15,6 +15,7 @@ from moneysocket.core.message.notification.pong import NotifyPong
 
 STATE_NAMES = ["INIT",
                "RENDEZVOUS_SETUP",
+               "PROVIDER_SETUP",
                "ROLE_OPERATE"]
 
 STATES = set(STATE_NAMES)
@@ -65,6 +66,7 @@ class Role(object):
     ###########################################################################
 
     def set_state(self, new_state):
+        logging.info("new state: %s" % new_state)
         assert new_state in STATES
         self.state = new_state
 
@@ -80,7 +82,7 @@ class Role(object):
         req_ref_uuid = msg['request_uuid']
         rid = msg['rendezvous_id']
         self.socket.write(NotifyRendezvous(rid, req_ref_uuid))
-        self.set_state("ROLE_OPERATE")
+        self.set_state("PROVIDER_SETUP")
 
     def handle_request_ping(self, msg):
         req_ref_uuid = msg['request_uuid']
@@ -92,7 +94,7 @@ class Role(object):
 
     def handle_request_provider(self, msg):
         req_ref_uuid = msg['request_uuid']
-        if self.state != "ROLE_OPERATE":
+        if self.state != "PROVIDER_SETUP":
             self.socket.write(
                 NotifyError("not in state to handle provider request",
                             request_reference_uuid=req_ref_uuid))
@@ -105,6 +107,8 @@ class Role(object):
                                           request_reference_uuid=req_ref_uuid))
             return
         provider_msg = self.hooks['REQUEST_PROVIDER'](msg, self)
+        if provider_msg['notification_name'] == "NOTIFY_PROVIDER":
+            self.set_state("ROLE_OPERATE")
         self.socket.write(provider_msg)
 
     def handle_request(self, msg):
@@ -127,7 +131,7 @@ class Role(object):
             logging.error("not in rendezvousing setup state")
             # TODO do we notify on error?
             return
-        self.set_state("ROLE_OPERATE")
+        self.set_state("PROVIDER_SETUP")
 
         if "NOTIFY_RENDEZVOUS" in self.hooks:
             self.hooks['NOTIFY_RENDEZVOUS'](msg, self)
@@ -146,6 +150,7 @@ class Role(object):
         # TODO - can we get this during rendezvouing?
         self.set_state("INIT")
         self.socket.write(RequestRendezvous(rid))
+        pass
 
     def handle_notify_pong(self, msg):
         req_ref_uuid = msg['request_reference_uuid']
@@ -156,16 +161,17 @@ class Role(object):
             self.hooks['NOTIFY_PONG'](msg, self)
 
     def handle_notify_provider(self, msg):
-        if self.state != "ROLE_OPERATE":
-            logging.error("not in rendezvousing setup state")
+        if self.state != "PROVIDER_SETUP":
+            logging.error("not in provider setup state")
             # TODO do we notify on error?
             return
+        self.set_state("ROLE_OPERATE")
         if "NOTIFY_PROVIDER" in self.hooks:
             self.hooks['NOTIFY_PROVIDER'](msg, self)
 
-    def handle_notify_rendezvous_becoming_ready(self, msg):
-        if self.state != "ROLE_OPERATE":
-            logging.error("not in rendezvousing setup state")
+    def handle_notify_provider_becoming_ready(self, msg):
+        if self.state != "PROVIDER_SETUP":
+            logging.error("not in provider setup state")
             # TODO do we notify on error?
             return
         if "NOTIFY_PROVIDER_BECOMING_READY" in self.hooks:
@@ -198,7 +204,7 @@ class Role(object):
 
     def msg_recv_cb(self, socket, msg):
         assert socket.uuid == self.socket.uuid, "crossed socket?"
-        logging.info("role received msg: %s" % msg)
+        #logging.info("role received msg: %s" % msg)
         if msg['message_class'] == "REQUEST":
             self.handle_request(msg)
         elif msg['message_class'] == "NOTIFICATION":

@@ -9,7 +9,7 @@ const MoneysocketNotification = require(
 let NOTIFICATION_SUBCLASSES = require(
     './notification.js').NOTIFICATION_SUBCLASSES;
 
-class NotifyPRoviderBecomingReady extends MoneysocketNotification {
+class NotifyProviderBecomingReady extends MoneysocketNotification {
     constructor(request_reference_uuid) {
         super("NOTIFY_PROVIDER_BECOMING_READY", request_reference_uuid);
     }

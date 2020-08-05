@@ -46,10 +46,11 @@ class MoneysocketSocket(object):
             logging.error("no send initialized")
             return
 
-        print("encoding wire msg")
+        name = (msg['notification_name'] if
+                msg['message_class'] == "NOTIFICATION" else msg['request_name'])
         msg_bytes = MoneysocketCrypt.wire_encode(msg,
                                                  shared_seed=self.shared_seed)
-        print("encoded wire msg len: %d" % len(msg_bytes))
+        logging.info("encoded wire msg: %s len: %d" % (name, len(msg_bytes)))
         self.initiate_send_func(msg_bytes)
 
     def write_raw(self, msg_bytes):
@@ -86,6 +87,7 @@ class MoneysocketSocket(object):
             if self.cyphertext_recv_cb is None:
                 logging.error("nowhere to forward cyphertext?")
                 return
+            logging.info("recieved cyphertext len: %d" % len(msg_bytes))
             self.cyphertext_recv_cb(self, msg_bytes)
             return
 
@@ -94,6 +96,9 @@ class MoneysocketSocket(object):
         if err:
             logging.error("got bad message? len: %d" % len(msg_bytes))
             return
+        name = (msg['notification_name'] if
+                msg['message_class'] == "NOTIFICATION" else msg['request_name'])
+        logging.info("decoded wire msg: %s len: %d" % (name, len(msg_bytes)))
         self.msg_recv_cb(self, msg)
 
 

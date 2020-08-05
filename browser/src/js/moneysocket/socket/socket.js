@@ -39,7 +39,10 @@ class MoneysocketSocket {
     }
 
     write(msg) {
+        var name = ((msg['message_class'] == "NOTIFICATION") ?
+                     msg['notification_name'] : msg['request_name']);
         var msg_bytes = MoneysocketCrypt.wireEncode(msg, this.shared_seed);
+        console.log("encoded wire msg: " + name + " len: " + msg_bytes.length);
         this.initiate_cb_obj.initiateSend(msg_bytes);
     }
 
@@ -65,6 +68,9 @@ class MoneysocketSocket {
             console.error("got bad message? " + err);
             return;
         }
+        var name = ((msg['message_class'] == "NOTIFICATION") ?
+                     msg['notification_name'] : msg['request_name']);
+        console.log("decoded wire msg: " + name + " len: " + msg_bytes.length);
         this.msg_recv_cb_obj.msgRecvCb(this, msg);
     }
 }

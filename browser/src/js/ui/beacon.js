@@ -31,6 +31,9 @@ const MODES = new Set(["ENTER_BEACON",
                        "CONNECTING_WEBSOCKET",
                        "REQUESTING_RENDEZVOUS",
                        "WAITING_FOR_RENDEZVOUS",
+                       "REQUESTING_PROVIDER",
+                       "WAITING_FOR_PROVIDER",
+                       "WAITING_FOR_CONSUMER",
                        "CONNECTED",
                        "CONNECTION_FAILED",
                       ]);
@@ -163,7 +166,7 @@ class BeaconUi {
         } else if (new_mode == "REQUESTING_PROVIDER") {
             // TODO
             var progress = new ConnectProgress(this.mode_output_div);
-            progress.draw("REQUESTNG_PROVIDER");
+            progress.draw("REQUESTING_PROVIDER");
 
             this.setMessagePlaceholderDiv();
             DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",

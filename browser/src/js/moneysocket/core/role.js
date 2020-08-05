@@ -20,6 +20,7 @@ const RequestPing = require( './message/request/ping.js').RequestPing;
 
 const STATES = new Set(["INIT",
                         "RENDEZVOUS_SETUP",
+                        "PROVIDER_SETUP",
                         "ROLE_OPERATE",
                        ]);
 
@@ -75,7 +76,7 @@ class Role {
 
     handleRequestProvider(msg) {
         var req_ref_uuid = msg['request_uuid'];
-        if (this.state != "ROLE_OPERATE") {
+        if (this.state != "PROVIDER_SETUP") {
             this.socket.write(
                 new NotifyError("not in state to handle provider request",
                                 req_ref_uuid));
@@ -86,6 +87,9 @@ class Role {
             return
         }
         provider_msg = self.hooks['REQUEST_PROVIDER'](msg, this);
+        if (provider_msg['notification_name'] == "NOTIFY_PROVIDER") {
+            this.setState("ROLE_OPERATE")
+        }
         this.socket.write(provider_msg);
     }
 
@@ -111,7 +115,7 @@ class Role {
             // TODO do we notify on error?
             return;
         }
-        this.setState("ROLE_OPERATE");
+        this.setState("PROVIDER_SETUP");
         if ("NOTIFY_RENDEZVOUS" in this.hooks) {
             this.hooks['NOTIFY_RENDEZVOUS'](msg, this);
         }
@@ -147,19 +151,20 @@ class Role {
     }
 
     handleNotifyProvider(msg) {
-        if (this.state != "ROLE_OPERATE") {
-            console.error("not in rendezvousing setup state")
+        //if (this.state != "ROLE_OPERATE") {
+        //    console.error("not in rendezvousing setup state")
             // TODO do we notify on error?
-            return;
-        }
+        //    return;
+        //}
+        this.setState("ROLE_OPERATE")
         if ("NOTIFY_PROVIDER" in this.hooks) {
             this.hooks['NOTIFY_PROVIDER'](msg, this);
         }
     }
 
     handleNotifyProviderBecomingReady(msg) {
-        if (this.state != "ROLE_OPERATE") {
-            console.error("not in rendezvousing setup state")
+        if (this.state != "PROVIDER_SETUP") {
+            console.error("not in provider setup state")
             // TODO do we notify on error?
             return;
         }
@@ -197,7 +202,7 @@ class Role {
 
     msgRecvCb(socket, msg) {
         console.assert(socket.uuid == this.socket.uuid);
-        console.log("role received msg: " + msg.toJson());
+        //console.log("role received msg: " + msg.toJson());
         if (msg['message_class'] == "REQUEST") {
             this.handleRequest(msg);
         } else if (msg['message_class'] == "NOTIFICATION") {
@@ -220,9 +225,9 @@ class Role {
         this.assertState("INIT");
         this.setState("RENDEZVOUS_SETUP");
         var msg = new RequestRendezvous(BinUtl.b2h(rid));
-        console.log("sending: " + msg.toJson());
+        //console.log("sending: " + msg.toJson());
         this.socket.write(msg);
-        console.log("writing request rendezvous: " + BinUtl.b2h(rid));
+        //console.log("writing request rendezvous: " + BinUtl.b2h(rid));
     }
 
     ///////////////////////////////////////////////////////////////////////////

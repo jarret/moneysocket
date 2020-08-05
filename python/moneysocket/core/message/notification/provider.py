@@ -15,7 +15,7 @@ class NotifyProvider(MoneysocketNotification):
                  payee=False, msats=None):
         super().__init__("NOTIFY_PROVIDER",
                          request_reference_uuid=request_reference_uuid)
-        self['provider_uuid'] = provider_uuid;
+        self['provider_uuid'] = str(provider_uuid)
         # will this provider pay outgoing invoices
         self['payer'] = payer
         # will this provider generate invoices for incoming payments

@@ -170,6 +170,7 @@ class Terminus(object):
         for wallet in self.wallets.values():
             if wallet.has_this_socket(socket):
                 wallet.remove_socket()
+                wallet.set_state("INIT")
 
     ##########################################################################
 
