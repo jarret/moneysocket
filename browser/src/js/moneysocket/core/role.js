@@ -44,7 +44,7 @@ class Role {
 
     assertState(expected_state) {
         console.assert(STATES.has(expected_state));
-        console.log("expected: " + expected_state + " actual: " + this.state);
+        //console.log("expected: " + expected_state + " actual: " + this.state);
         console.assert(expected_state == this.state);
     }
 
@@ -86,7 +86,7 @@ class Role {
             this.socket.write(NotifyError("no provider here", req_ref_uuid));
             return
         }
-        provider_msg = self.hooks['REQUEST_PROVIDER'](msg, this);
+        var provider_msg = this.hooks['REQUEST_PROVIDER'](msg, this);
         if (provider_msg['notification_name'] == "NOTIFY_PROVIDER") {
             this.setState("ROLE_OPERATE")
         }
@@ -189,7 +189,7 @@ class Role {
             this.handleNotifyPong(msg);
         } else if (n == "NOTIFY_PROVIDER") {
             this.handleNotifyProvider(msg);
-        } else if (n == "NOTIFY_PROVIDER_BECOMING_READ") {
+        } else if (n == "NOTIFY_PROVIDER_BECOMING_READY") {
             this.handleNotifyProviderBecomingReady(msg);
         } else if (n == "NOTIFY_ERROR") {
             this.handleNotifyError(msg);

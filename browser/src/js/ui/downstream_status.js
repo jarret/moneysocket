@@ -29,7 +29,7 @@ class DownstreamStatusUi {
         this.balance_div = DomUtl.emptyDiv(this.my_div);
 
         this.ping_time = 0;
-        this.provided_msats = 1234567;
+        this.provided_msats = 0;
         this.updateDisconnected();
 
         this.my_div.setAttribute("class", divclass);
@@ -62,7 +62,7 @@ class DownstreamStatusUi {
     }
 
     updateProviderMsats(msats) {
-        this.provider_msats = msats;
+        this.provided_msats = msats;
         this.updateConnected();
     }
 }

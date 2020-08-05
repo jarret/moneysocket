@@ -17,10 +17,16 @@ const DownstreamStatusUi = require(
 const RequestProvider = require(
     "./moneysocket/core/message/request/provider.js").RequestProvider;
 
+const NotifyProvider = require(
+    "./moneysocket/core/message/notification/provider.js").NotifyProvider;
+const NotifyProviderBecomingReady = require(
+    "./moneysocket/core/message/notification/provider_becoming_ready.js"
+    ).NotifyProviderBecomingReady;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const MODES = new Set(["DISCONNECTED",
+const MODES = new Set(["PROVIDER_DISCONNECTED",
                        "MAIN",
                        "SEND",
                        "RECEIVE",
@@ -28,8 +34,9 @@ const MODES = new Set(["DISCONNECTED",
 
 
 class WalletUi {
-    constructor(div) {
+    constructor(div, app) {
         this.parent_div = div;
+        this.app = app;
         this.my_div = null;
         this.spendable_div = null;
         this.provider_role_div = null;
@@ -40,8 +47,8 @@ class WalletUi {
         this.upstream_ui = null;
         this.downstream_ui = null;
 
-        this.provider_msats = 1000000;
-        this.provide_msats = 500000;
+        this.provider_msats = 0;
+        this.provide_msats = 0;
 
 
         this.balance_div = null;
@@ -64,7 +71,7 @@ class WalletUi {
         this.downstream_ui = new DownstreamStatusUi(this.my_div, "Downstream");
         this.downstream_ui.draw("downstream-status-right");
 
-        this.switchMode("MAIN");
+        this.switchMode("PROVIDER_DISCONNECTED");
 
         this.parent_div.appendChild(this.my_div);
     }
@@ -74,7 +81,7 @@ class WalletUi {
         this.mode = new_mode;
         DomUtl.deleteChildren(this.wallet_mode_div);
 
-        if (new_mode == "DISCONNECTED") {
+        if (new_mode == "PROVIDER_DISCONNECTED") {
             var t = DomUtl.drawText(this.wallet_mode_div,
                 "Please connect to downstream Moneysocket wallet provider.");
             t.setAttribute("style", "padding:5px;");
@@ -143,6 +150,7 @@ class WalletUi {
         this.provide_msats = this.provider_msats * (slider_val / 100);
         DomUtl.deleteChildren(this.balance_div);
         DomUtl.drawBigBalance(this.balance_div, this.provide_msats);
+        this.app.doUpstreamNotifyProvider();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -152,9 +160,14 @@ class WalletUi {
     }
 
     updateProviderMsats(msats) {
+        // TODO - msats might be null
         this.provider_msats = msats;
         this.updateProvideMsats();
         this.downstream_ui.updateProviderMsats(msats);
+    }
+
+    getProvideMsats(msats) {
+        return this.provide_msats;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -168,9 +181,11 @@ class WalletUi {
 
     consumerConnected() {
         this.downstream_ui.updateConnected();
+        this.switchMode("MAIN");
     }
     consumerDisconnected() {
         this.downstream_ui.updateDisconnected();
+        this.switchMode("MAIN");
     }
 }
 
@@ -201,7 +216,7 @@ class WebWalletApp {
         this.my_div.setAttribute("class", "bordered");
         DomUtl.drawTitle(this.my_div, "Moneysocket Web Wallet", "h2");
 
-        this.wallet_ui = new WalletUi(this.my_div);
+        this.wallet_ui = new WalletUi(this.my_div, this);
         this.wallet_ui.draw("center");
 
         DomUtl.drawBr(this.my_div);
@@ -220,8 +235,35 @@ class WebWalletApp {
 
     //////////////////////////////////////////////////////////////////////////
 
+    doUpstreamNotifyProvider() {
+        // bail if provider not connected
+        if (this.provider_role == null) {
+            console.log("no provider role");
+            return;
+        }
+        if (this.provider_socket == null) {
+            console.log("no provider socket");
+            return;
+        }
+        // shouldn't have UI if consumer not connected
+        if (this.consumer_role == null) {
+            console.error("no consumer?");
+            return;
+        }
+        if (this.consumer_socket == null) {
+            console.error("no consumer socket?");
+            return;
+        }
+        var uuid = this.provider_role.uuid;
+        var msats = this.wallet_ui.getProvideMsats();
+        var msg = new NotifyProvider(uuid, null, true, true, msats);
+        this.provider_socket.write(msg);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+
     sendPing() {
-        console.log("ping");
+        //console.log("ping");
         var msg = this.consumer_role.sendPing();
         var req_ref_uuid = msg['request_uuid'];
         this.outstanding_pings[req_ref_uuid] = Timestamp.getNowTimestamp();
@@ -240,6 +282,9 @@ class WebWalletApp {
 
     startPinging() {
         console.log("ping starting");
+        if (this.ping_interval != null) {
+            return;
+        }
         this.ping_interval = setInterval(
             function() {
                 this.sendPing();
@@ -282,13 +327,8 @@ class WebWalletApp {
 
     notifyRendezvousHook(msg, role) {
         if (role.name == "provider") {
-            //this.provider_ui.switchMode("CONNECTED");
-            //this.wallet_ui.providerConnected();
             this.provider_ui.switchMode("WAITING_FOR_CONSUMER");
         } else if (role.name == "consumer") {
-            //this.consumer_ui.switchMode("CONNECTED");
-            //this.wallet_ui.consumerConnected();
-            //this.startPinging();
             this.consumer_ui.switchMode("REQUESTING_PROVIDER");
             role.socket.write(new RequestProvider());
         } else {
@@ -298,11 +338,10 @@ class WebWalletApp {
 
     notifyProviderBecomingReadyHook(msg, role) {
         if (role.name == "provider") {
+            console.error("unexpected notification");
             return;
         } else if (role.name == "consumer") {
             this.consumer_ui.switchMode("WAITING_FOR_PROVIDER");
-            //this.wallet_ui.consumerConnected();
-            //this.startPinging();
         } else {
             console.log("unknown cb param");
         }
@@ -310,10 +349,13 @@ class WebWalletApp {
 
     notifyProviderHook(msg, role) {
         if (role.name == "provider") {
+            console.error("unexpected notification");
             return;
         } else if (role.name == "consumer") {
             this.consumer_ui.switchMode("CONNECTED");
             this.wallet_ui.consumerConnected();
+            this.wallet_ui.updateProviderMsats(msg['msats']);
+            // TODO - what about providers that can't send or can't receive?
             this.startPinging();
         } else {
             console.log("unknown cb param");
@@ -321,18 +363,23 @@ class WebWalletApp {
     }
 
     requestProviderHook(msg, role) {
-        var req_ref_uuid = msg['request_uuid'];
         if (role.name == "provider") {
-
-            // if cnsumer is connected, notify provider
-            // TODO
-            return NotifyProvider( );
+            // if consumer is connected, notify ourselves as provider
+            var req_ref_uuid = msg['request_uuid'];
+            if ((this.consumer_role != null) &&
+                (this.consumer_role.state == "ROLE_OPERATE"))
+            {
+                var uuid = this.provider_role.uuid;
+                var msats = this.wallet_ui.getProvideMsats();
+                this.provider_ui.switchMode("CONNECTED");
+                this.wallet_ui.providerConnected();
+                return new NotifyProvider(uuid, req_ref_uuid,
+                                          true, true, msats);
+            }
             // else notifiy becoming ready
-
+            return new NotifyProviderBecomingReady(req_ref_uuid);
         } else if (role.name == "consumer") {
             return NotifyError("no provider here", req_ref_uuid);
-        } else {
-            console.log("unknown cb param");
         }
     }
 
@@ -356,7 +403,7 @@ class WebWalletApp {
                 this.notifyProviderBecomingReadyHook(msg, role);
             }.bind(this),
             'REQUEST_PROVIDER': function (msg) {
-                this.notifyProviderHook(msg, role);
+                return this.requestProviderHook(msg, role);
             }.bind(this),
         }
         role.registerAppHooks(hooks);

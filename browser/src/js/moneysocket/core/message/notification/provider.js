@@ -12,7 +12,7 @@ let NOTIFICATION_SUBCLASSES = require(
 
 class NotifyProvider extends MoneysocketNotification {
     constructor(provider_uuid, request_reference_uuid, payer, payee, msats) {
-        super("NOTIFY_RENDEZVOUS", request_reference_uuid);
+        super("NOTIFY_PROVIDER", request_reference_uuid);
         this.provider_uuid = provider_uuid;
         this.payer = payer
         this.payee = payee
@@ -47,6 +47,7 @@ class NotifyProvider extends MoneysocketNotification {
         if (typeof msg_dict['payee'] != "boolean") {
             return "payee must be True or False";
         }
+        console.log("payer not bool?" + JSON.stringify(msg_dict));
         if (typeof msg_dict['payer'] != "boolean") {
             return "payer must be True or False";
         }
