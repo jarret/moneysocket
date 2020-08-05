@@ -87,7 +87,7 @@ class MoneysocketSocket(object):
             if self.cyphertext_recv_cb is None:
                 logging.error("nowhere to forward cyphertext?")
                 return
-            logging.info("recieved cyphertext len: %d" % len(msg_bytes))
+            #logging.info("received cyphertext len: %d" % len(msg_bytes))
             self.cyphertext_recv_cb(self, msg_bytes)
             return
 
