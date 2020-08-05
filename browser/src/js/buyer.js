@@ -32,18 +32,20 @@ class BuyerUi {
         this.my_div = null;
         this.mode = null;
         this.balance_div = null;
+        this.start_stop_div = null;
+        this.log = null;
 
         this.available_msats = 0;
         this.opinion = "N/A";
         this.seller_consumer_connected = false;
         this.my_seller_connected = false;
+        this.buying_running = false;
     }
 
     draw(style) {
         this.my_div = document.createElement("div");
         this.my_div.setAttribute("class", style)
 
-        DomUtl.drawBr(this.my_div);
         this.buyer_mode_div = DomUtl.emptyDiv(this.my_div);
         this.buyer_mode_div.setAttribute("class", "app-mode-output");
 
@@ -53,31 +55,6 @@ class BuyerUi {
         this.my_ui.draw('downstream-status-right');
 
         this.switchMode("BOTH_DISCONNECTED");
-
-        /*
-        this.opinion_div = DomUtl.emptyDiv(this.my_div);
-        this.updateCurrentOpinion(this.opinion);
-
-        DomUtl.drawBr(this.my_div);
-        DomUtl.drawBr(this.my_div);
-
-        DomUtl.drawButton(this.my_div, "Start",
-            (function() {this.startBuyingOpinions()}).bind(this));
-        DomUtl.drawBr(this.my_div);
-        DomUtl.drawButton(this.my_div, "Stop",
-            (function() {this.stopBuyingOpinions()}).bind(this));
-
-        DomUtl.drawBr(this.my_div);
-        DomUtl.drawBr(this.my_div);
-
-        DomUtl.drawBr(this.my_div);
-        this.seller_ui = new DownstreamStatusUi(this.my_div, "Seller");
-        this.seller_ui.draw('downstream-status-left');
-        this.my_ui = new DownstreamStatusUi(this.my_div, "My Wallet");
-        this.my_ui.draw('downstream-status-right');
-
-        DomUtl.drawBr(this.my_div);
-        */
 
         this.parent_div.appendChild(this.my_div);
     }
@@ -107,11 +84,17 @@ class BuyerUi {
             this.balance_div = DomUtl.emptyDiv(this.buyer_mode_div);
             DomUtl.drawBigBalance(this.balance_div, this.available_msats);
 
-            DomUtl.drawButton(this.buyer_mode_div, "Start",
-                (function() {this.startBuyingOpinions()}).bind(this));
-            DomUtl.drawBr(this.my_div);
-            DomUtl.drawButton(this.buyer_mode_div, "Stop",
-                (function() {this.stopBuyingOpinions()}).bind(this));
+            this.start_stop_div = DomUtl.emptyDiv(this.buyer_mode_div);
+            DomUtl.drawButton(this.start_stop_div, "Start",
+                (function() {
+                    this.startBuyingOpinions()
+                }).bind(this));
+            DomUtl.drawBr(this.buyer_mode_div);
+            //DomUtl.drawButton(this.buyer_mode_div, "Stop",
+            //    (function() {this.stopBuyingOpinions()}).bind(this));
+
+            this.log = DomUtl.drawLog(this.buyer_mode_div);
+
         } else {
             console.error("unhandled mode");
         }
@@ -132,12 +115,36 @@ class BuyerUi {
         }
     }
 
-    startBuyingOpinions(opinion) {
-        console.log("starting");
+    buyOpinion() {
+        if (! this.buying_running) {
+            return;
+        }
+        this.logPrint("buying stub");
+        this.scheduleBuyOpinion();
+    }
+    scheduleBuyOpinion() {
+        setTimeout(function() { this.buyOpinion(); }.bind(this), 3000);
     }
 
-    stopBuyingOpinions(opinion) {
-        console.log("stopping");
+    startBuyingOpinions() {
+        this.logPrint("starting");
+        this.buying_running = true;
+        this.scheduleBuyOpinion();
+        DomUtl.deleteChildren(this.start_stop_div);
+        DomUtl.drawButton(this.start_stop_div, "Stop",
+            (function() {
+                this.stopBuyingOpinions()
+            }).bind(this));
+    }
+
+    stopBuyingOpinions() {
+        this.logPrint("stopping");
+        this.buying_running = false;
+        DomUtl.deleteChildren(this.start_stop_div);
+        DomUtl.drawButton(this.start_stop_div, "Start",
+            (function() {
+                this.startBuyingOpinions()
+            }).bind(this));
     }
 
     updateCurrentOpinion(opinion) {
@@ -184,6 +191,13 @@ class BuyerUi {
         this.my_ui.updateProviderMsats(msats);
         DomUtl.deleteChildren(this.balance_div);
         DomUtl.drawBigBalance(this.balance_div, this.available_msats);
+    }
+
+    logPrint(text) {
+        var d = new Date();
+        var line = d.toLocaleString() + "> " + text;
+        this.log.innerHTML += line + '\n';
+        this.log.scrollTop = this.log.scrollHeight;
     }
 }
 

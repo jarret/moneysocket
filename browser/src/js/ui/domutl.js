@@ -150,6 +150,16 @@ class DomUtl {
         return d;
     }
 
+    static drawLog(div) {
+        var p = document.createElement("pre");
+        p.setAttribute("style",
+                       "height: 105px; overflow-y: scroll; " +
+                       "background-color: #faa;" +
+                       "text-align: left;");
+        div.appendChild(p);
+        return p;
+    }
+
 }
 
 exports.DomUtl = DomUtl;
