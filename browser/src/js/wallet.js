@@ -123,6 +123,11 @@ class WalletUi {
                     console.log("qr scan not implemented yet");
                 }).bind(this));
             DomUtl.drawBr(this.wallet_mode_div);
+            DomUtl.drawButton(this.wallet_mode_div, "Pay Bolt11",
+                (function() {
+                    this.payBolt11();
+                }).bind(this));
+            DomUtl.drawBr(this.wallet_mode_div);
             DomUtl.drawBr(this.wallet_mode_div);
             DomUtl.drawButton(this.wallet_mode_div, "Back",
                 (function() {
@@ -138,6 +143,11 @@ class WalletUi {
             this.input_div = DomUtl.drawTextInput(this.wallet_mode_div, "0");
             this.input_div.firstChild.setAttribute("size", "8");
             DomUtl.drawBr(this.wallet_mode_div);
+            DomUtl.drawButton(this.wallet_mode_div, "Request Bolt11",
+                (function() {
+                    this.requestBolt11();
+                }).bind(this));
+            DomUtl.drawBr(this.wallet_mode_div);
             DomUtl.drawButton(this.wallet_mode_div, "Back",
                 (function() {
                     this.switchMode("MAIN");
@@ -151,6 +161,16 @@ class WalletUi {
         DomUtl.deleteChildren(this.balance_div);
         DomUtl.drawBigBalance(this.balance_div, this.provide_msats);
         this.app.doUpstreamNotifyProvider();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    payBolt11() {
+        console.log("pay bolt11 stub")
+    }
+
+    requestBolt11() {
+        console.log("request bolt11 stub")
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -441,8 +461,23 @@ class WebWalletApp {
             'NOTIFY_PROVIDER_BECOMING_READY': function (msg) {
                 this.notifyProviderBecomingReadyHook(msg, role);
             }.bind(this),
+            'NOTIFY_INVOICE': function (msg) {
+                console.log("notify invoice stub");
+            }.bind(this),
+            'NOTIFY_PREIMAGE': function (msg) {
+                console.log("notify preimage stub");
+            }.bind(this),
             'REQUEST_PROVIDER': function (msg) {
                 return this.requestProviderHook(msg, role);
+            }.bind(this),
+            'REQUEST_INVOICE': function (msg) {
+                // if from provider role  pass along to consumer role
+                console.log("request invoice stub");
+                return null;
+            }.bind(this),
+            'REQUEST_PAY': function (msg) {
+                console.log("request pay stub");
+                return null;
             }.bind(this),
         }
         role.registerAppHooks(hooks);

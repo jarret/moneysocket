@@ -321,8 +321,27 @@ class SellerApp {
             'NOTIFY_PROVIDER_BECOMING_READY': function (msg) {
                 this.notifyProviderBecomingReadyHook(msg, role);
             }.bind(this),
+            'NOTIFY_INVOICE': function (msg) {
+                console.log("notify invoice stub");
+                // if from prvider role, pass along terminus
+            }.bind(this),
+            'NOTIFY_PREIMAGE': function (msg) {
+                console.log("notify preimage stub");
+                // if from terminus consumer,
+                // add opinion and pass to provider role
+            }.bind(this),
             'REQUEST_PROVIDER': function (msg) {
                 return this.requestProviderHook(msg, role);
+            }.bind(this),
+            'REQUEST_INVOICE': function (msg) {
+                // if from provider, pass along
+                console.log("request invoice stub");
+                return null;
+            }.bind(this),
+            'REQUEST_PAY': function (msg) {
+                // should not get
+                console.log("request pay stub");
+                return null;
             }.bind(this),
         }
         role.registerAppHooks(hooks);
