@@ -28,4 +28,3 @@ class NotifyProviderBecomingReady(MoneysocketNotification):
 
 MoneysocketNotification.NOTIFICATION_SUBCLASSES[
     'NOTIFY_PROVIDER_BECOMING_READY'] = NotifyProviderBecomingReady
-

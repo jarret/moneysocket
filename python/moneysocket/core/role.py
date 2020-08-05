@@ -101,8 +101,8 @@ class Role(object):
         # TODO can we handle wallet/provider role without touching app code?
 
         if "REQUEST_PROVIDER" not in self.hooks:
-            NotifyError("no provider here",
-                        request_reference_uuid=req_ref_uuid)
+            self.socket.write(NotifyError("no provider here",
+                                          request_reference_uuid=req_ref_uuid))
             return
         provider_msg = self.hooks['REQUEST_PROVIDER'](msg, self)
         self.socket.write(provider_msg)
@@ -155,6 +155,22 @@ class Role(object):
         if "NOTIFY_PONG" in self.hooks:
             self.hooks['NOTIFY_PONG'](msg, self)
 
+    def handle_notify_provider(self, msg):
+        if self.state != "ROLE_OPERATE":
+            logging.error("not in rendezvousing setup state")
+            # TODO do we notify on error?
+            return
+        if "NOTIFY_PROVIDER" in self.hooks:
+            self.hooks['NOTIFY_PROVIDER'](msg, self)
+
+    def handle_notify_rendezvous_becoming_ready(self, msg):
+        if self.state != "ROLE_OPERATE":
+            logging.error("not in rendezvousing setup state")
+            # TODO do we notify on error?
+            return
+        if "NOTIFY_PROVIDER_BECOMING_READY" in self.hooks:
+            self.hooks['NOTIFY_PROVIDER_BECOMING_READY'](msg, self)
+
     def handle_notify_error(self, msg):
         logging.error("got error: %s" % msg['error_msg'])
 
@@ -168,6 +184,10 @@ class Role(object):
             self.handle_notify_rendezvous_end(msg)
         elif n == "NOTIFY_PONG":
             self.handle_notify_pong(msg)
+        elif n == "NOTIFY_PROVIDER":
+            self.handle_notify_provider(msg)
+        elif n == "NOTIFY_PROVIDER_BECOMING_READY":
+            self.handle_notify_provider_becoming_ready(msg)
         elif n == "NOTIFY_ERROR":
             self.handle_notify_error(msg)
         else:

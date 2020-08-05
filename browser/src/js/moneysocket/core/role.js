@@ -73,12 +73,30 @@ class Role {
         this.socket.write(new NotifyPong(req_ref_uuid));
     }
 
+    handleRequestProvider(msg) {
+        var req_ref_uuid = msg['request_uuid'];
+        if (this.state != "ROLE_OPERATE") {
+            this.socket.write(
+                new NotifyError("not in state to handle provider request",
+                                req_ref_uuid));
+            return;
+        }
+        if (! "REQUEST_PROVIDER" in this.hooks) {
+            this.socket.write(NotifyError("no provider here", req_ref_uuid));
+            return
+        }
+        provider_msg = self.hooks['REQUEST_PROVIDER'](msg, this);
+        this.socket.write(provider_msg);
+    }
+
     handleRequest(msg) {
         var name = msg['request_name']
         if (name == "REQUEST_RENDEZVOUS") {
             this.handleRequestRendezvous(msg);
         } else if (name == "REQUEST_PING") {
             this.handleRequestPing(msg);
+        } else if (name == "REQUEST_PROVIDER") {
+            this.handleRequestProvider(msg);
         } else {
             console.error("unknown request?: " + name);
         }
@@ -128,6 +146,28 @@ class Role {
         }
     }
 
+    handleNotifyProvider(msg) {
+        if (this.state != "ROLE_OPERATE") {
+            console.error("not in rendezvousing setup state")
+            // TODO do we notify on error?
+            return;
+        }
+        if ("NOTIFY_PROVIDER" in this.hooks) {
+            this.hooks['NOTIFY_PROVIDER'](msg, this);
+        }
+    }
+
+    handleNotifyProviderBecomingReady(msg) {
+        if (this.state != "ROLE_OPERATE") {
+            console.error("not in rendezvousing setup state")
+            // TODO do we notify on error?
+            return;
+        }
+        if ("NOTIFY_PROVIDER_BECOMING_READY" in this.hooks) {
+            this.hooks['NOTIFY_PROVIDER_BECOMING_READY'](msg, this);
+        }
+    }
+
     handleNotifyError(msg) {
         console.error("got error: " + msg['error_msg']);
     }
@@ -142,6 +182,10 @@ class Role {
             this.handleNotifyRendezvousEnd(msg);
         } else if (n == "NOTIFY_PONG") {
             this.handleNotifyPong(msg);
+        } else if (n == "NOTIFY_PROVIDER") {
+            this.handleNotifyProvider(msg);
+        } else if (n == "NOTIFY_PROVIDER_BECOMING_READ") {
+            this.handleNotifyProviderBecomingReady(msg);
         } else if (n == "NOTIFY_ERROR") {
             this.handleNotifyError(msg);
         } else {

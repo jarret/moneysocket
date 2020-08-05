@@ -160,6 +160,30 @@ class BeaconUi {
             DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
                 (function() {this.disconnect()}).bind(this));
                 //(function() {this.switchMode("ENTER_BEACON")}).bind(this));
+        } else if (new_mode == "REQUESTING_PROVIDER") {
+            // TODO
+            var progress = new ConnectProgress(this.mode_output_div);
+            progress.draw("REQUESTNG_PROVIDER");
+
+            this.setMessagePlaceholderDiv();
+            DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
+                (function() {this.disconnect()}).bind(this));
+        } else if (new_mode == "WAITING_FOR_PROVIDER") {
+            // TODO
+            var progress = new ConnectProgress(this.mode_output_div);
+            progress.draw("WAITING_FOR_PROVIDER");
+
+            this.setMessagePlaceholderDiv();
+            DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
+                (function() {this.disconnect()}).bind(this));
+        } else if (new_mode == "WAITING_FOR_CONSUMER") {
+            // TODO
+            var progress = new ConnectProgress(this.mode_output_div);
+            progress.draw("WAITING_FOR_CONSUMER");
+
+            this.setMessagePlaceholderDiv();
+            DomUtl.drawButton(this.mode_switch_button_div, "Disconnect",
+                (function() {this.disconnect()}).bind(this));
         } else if (new_mode == "CONNECTED") {
             var progress = new ConnectProgress(this.mode_output_div);
             progress.draw("CONNECTED");

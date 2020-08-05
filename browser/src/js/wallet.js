@@ -14,6 +14,8 @@ const Role = require('./moneysocket/core/role.js').Role;
 const UpstreamStatusUi = require('./ui/upstream_status.js').UpstreamStatusUi;
 const DownstreamStatusUi = require(
     './ui/downstream_status.js').DownstreamStatusUi;
+const RequestProvider = require(
+    "./moneysocket/core/message/request/provider.js").RequestProvider;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -258,11 +260,11 @@ class WebWalletApp {
     // Role callbacks:
     //////////////////////////////////////////////////////////////////////////
 
-    pongHook(msg, role) {
+    notifyPongHook(msg, role) {
         this.handlePong(msg);
     }
 
-    rendezvousBecomingReadyHook(msg, role) {
+    notifyRendezvousBecomingReadyHook(msg, role) {
         console.log("becoming ready");
         if (role.name == "provider") {
             console.log("becoming ready 1");
@@ -278,14 +280,58 @@ class WebWalletApp {
         }
     }
 
-    rendezvousHook(msg, role) {
+    notifyRendezvousHook(msg, role) {
         if (role.name == "provider") {
-            this.provider_ui.switchMode("CONNECTED");
-            this.wallet_ui.providerConnected();
+            //this.provider_ui.switchMode("CONNECTED");
+            //this.wallet_ui.providerConnected();
+            this.provider_ui.switchMode("WAITING_FOR_CONSUMER");
+        } else if (role.name == "consumer") {
+            //this.consumer_ui.switchMode("CONNECTED");
+            //this.wallet_ui.consumerConnected();
+            this.startPinging();
+            // TODO request provider
+            this.provider_ui.switchMode("REQUESTING_PROVIDER");
+            role.socket.write(RequestProvider());
+        } else {
+            console.log("unknown cb param");
+        }
+    }
+
+    notifyProviderBecomingReadyHook(msg, role) {
+        if (role.name == "provider") {
+            return;
+        } else if (role.name == "consumer") {
+            this.consumer_ui.switchMode("WAITING_FOR_PROVIDER");
+            //this.wallet_ui.consumerConnected();
+            //this.startPinging();
+        } else {
+            console.log("unknown cb param");
+        }
+    }
+
+    notifyProviderHook(msg, role) {
+        if (role.name == "provider") {
+            return;
         } else if (role.name == "consumer") {
             this.consumer_ui.switchMode("CONNECTED");
             this.wallet_ui.consumerConnected();
             this.startPinging();
+        } else {
+            console.log("unknown cb param");
+        }
+    }
+
+    requestProviderHook(msg, role) {
+        var req_ref_uuid = msg['request_uuid'];
+        if (role.name == "provider") {
+
+            // if cnsumer is connected, notify provider
+            // TODO
+            return NotifyProvider( );
+            // else notifiy becoming ready
+
+        } else if (role.name == "consumer") {
+            return NotifyError("no provider here", req_ref_uuid);
         } else {
             console.log("unknown cb param");
         }
@@ -296,13 +342,22 @@ class WebWalletApp {
         console.log("REGISTERING");
         var hooks = {
             'NOTIFY_RENDEZVOUS': function (msg) {
-                this.rendezvousHook(msg, role);
+                this.notifyRendezvousHook(msg, role);
             }.bind(this),
             'NOTIFY_RENDEZVOUS_BECOMING_READY': function (msg) {
-                this.rendezvousBecomingReadyHook(msg, role);
+                this.notifyRendezvousBecomingReadyHook(msg, role);
             }.bind(this),
             'NOTIFY_PONG': function (msg) {
-                this.pongHook(msg, role);
+                this.notifyPongHook(msg, role);
+            }.bind(this),
+            'NOTIFY_PROVIDER': function (msg) {
+                this.notifyProviderHook(msg, role);
+            }.bind(this),
+            'NOTIFY_PROVIDER_BECOMING_READY': function (msg) {
+                this.notifyProviderBecomingReadyHook(msg, role);
+            }.bind(this),
+            'REQUEST_PROVIDER': function (msg) {
+                this.notifyProviderHook(msg, role);
             }.bind(this),
         }
         role.registerAppHooks(hooks);

@@ -44,27 +44,42 @@ class ConnectProgress {
         case "CONNECTING_WEBSOCKET":
             var title = "Connecting Websocket";
             var color = "orange";
-            var line = BAD + BAD + BAD + "   " + BAD;
+            var line = BAD + BAD + BAD + BAD + "   " + BAD;
             break;
         case "REQUESTING_RENDEZVOUS":
             var title = "Requesting Rendezvous";
             var color = "orange";
-            var line = GOOD + BAD + BAD + "   " + BAD;
+            var line = GOOD + BAD + BAD + BAD + "   " + BAD;
             break;
         case "WAITING_FOR_RENDEZVOUS":
             var title = "Waiting for Rendezvous";
             var color = "orange";
-            var line = GOOD + GOOD + BAD + "   " + BAD;
+            var line = GOOD + GOOD + BAD + BAD + "   " + BAD;
+            break;
+        case "REQUESTING_PROVIDER":
+            var title = "Requesting Provider";
+            var color = "orange";
+            var line = GOOD + GOOD + GOOD + BAD + "   " + BAD;
+            break;
+        case "WAITING_FOR_PROVIDER":
+            var title = "Waiting For Provider";
+            var color = "orange";
+            var line = GOOD + GOOD + GOOD + BAD + "   " + BAD;
+            break;
+        case "WAITING_FOR_CONSUMER":
+            var title = "Waiting For Consumer";
+            var color = "orange";
+            var line = GOOD + GOOD + GOOD + BAD + "   " + BAD;
             break;
         case "CONNECTED":
             var title = "Connected";
             var color = "green";
-            var line = (GOOD + GOOD + GOOD + "   " + COMPLETE);
+            var line = (GOOD + GOOD + GOOD + GOOD + "   " + COMPLETE);
             break;
         case "CONNECTION_FAILED":
             var title = "Connection Failed";
             var color = "red";
-            var line = (BAD + BAD + BAD + "   " + INCOMPLETE);
+            var line = (BAD + BAD + BAD + BAD + "   " + INCOMPLETE);
             break;
         }
         this.setConnectingTitle(title, color);
