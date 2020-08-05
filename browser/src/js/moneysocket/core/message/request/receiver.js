@@ -9,6 +9,7 @@
 
 const RequestRendezvous = require('./rendezvous.js').RequestRendezvous;
 const RequestPing = require('./rendezvous.js').RequestRendezvous;
+const RequestProvider = require('./provider.js').RequestProvider;
 
 class RequestReceiver {
 }

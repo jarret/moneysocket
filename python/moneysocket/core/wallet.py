@@ -4,12 +4,20 @@
 
 from moneysocket.core.role import Role
 
+from moneysocket.core.message.notification.provider import NotifyProvider
 
 class Wallet(Role):
     """ LN WALLET role """
     def __init__(self, name, msatoshis):
         super().__init__(name)
         self.msatoshis = msatoshis
+        self.payee = True
+        self.payer = True
+
+    def get_notify_msg(self, request_reference_uuid=None):
+        return NotifyProvider(role.uuid,
+            request_reference_uuid=request_reference_uuid, payer=self.payer,
+            payee=self.payee, msats=self.msatoshis)
 
     def iter_attributes(self):
         for name, attribute in super().iter_attributes():

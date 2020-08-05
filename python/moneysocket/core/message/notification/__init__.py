@@ -10,3 +10,6 @@ from moneysocket.core.message.notification.rendezvous_becoming_ready import (
 from moneysocket.core.message.notification.rendezvous_end import (
     NotifyRendezvousEnd)
 from moneysocket.core.message.notification.rendezvous import NotifyRendezvous
+from moneysocket.core.message.notification.provider import NotifyProvider
+from moneysocket.core.message.notification.provider_becoming_ready import (
+    NotifyProviderBecomingReady)

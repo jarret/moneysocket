@@ -13,7 +13,7 @@ from moneysocket.core.wallet import Wallet
 from moneysocket.persistence.db import PersistenceDb
 
 from moneysocket.core.message.notification.error import NotifyError
-from moneysocket.core.message.notification.wallet import NotifyWallet
+from moneysocket.core.message.notification.provider import NotifyProvider
 
 from moneysocket.beacon.beacon import MoneysocketBeacon
 from moneysocket.beacon.location.websocket import WebsocketLocation
@@ -90,14 +90,15 @@ class Terminus(object):
 
     ##########################################################################
 
-    def request_wallet(self, msg, role):
-        logging.info("requested wallet")
-
-        req_ref_uuid = msg['request_uuid']
-        msg = NotifyWallet(request_reference_uuid=request_ref_uuid)
+    def request_provider(self, msg, role):
+        logging.info("requested provider")
+        # No 'PROVIDER_BECOMING_READY' phase for terminus
+        return role.get_notify_msg(request_reference_uuid=msg['request_uuid'])
 
     def register_hooks(self, role):
-        hooks = {"REQUEST_WALLET": self.request_wallet,
+        hooks = {"REQUEST_PROVIDER": self.request_provider,
+                # REQUEST_INVOICE
+                # REQUEST_PAY
                 }
         role.register_app_hooks(hooks)
 
@@ -118,6 +119,7 @@ class Terminus(object):
 
         socket.register_shared_seed(beacon.shared_seed)
         wallet.add_socket(socket)
+        self.register_hooks(wallet)
         wallet.start_rendezvous(rid)
 
     def handle_request_rendezvous(self, socket, msg):
@@ -137,7 +139,7 @@ class Terminus(object):
         assert rid == brid, "unexpected rid"
         socket.register_shared_seed(beacon.shared_seed)
         wallet.add_socket(socket)
-
+        self.register_hooks(wallet)
         # pass message for wallet role to proceed
         wallet.msg_recv_cb(socket, msg)
 

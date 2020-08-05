@@ -13,6 +13,9 @@ const NotifyRendezvous = require('./rendezvous.js').NotifyRendezvous;
 const NotifyRendezvousBecomingReady = require(
     './rendezvous_becoming_ready.js').NotifyRendezvousBecomingReady;
 const NotifyRendezvousEnd = require('./rendezvous_end.js').NotifyRendezvousEnd;
+const NotifyProvider = require('./provider.js').NotifyProvider;
+const NotifyProviderBecomingReady = require(
+    './provider_becoming_ready.js').NotifyProviderBecomingReady;
 
 class NotificationReceiver {
 }

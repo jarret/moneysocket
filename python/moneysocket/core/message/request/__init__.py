@@ -5,3 +5,4 @@
 # import to register subclasses with superclass
 from moneysocket.core.message.request.ping import RequestPing
 from moneysocket.core.message.request.rendezvous import RequestRendezvous
+from moneysocket.core.message.request.provider import RequestProvider

@@ -90,20 +90,22 @@ class Role(object):
             return
         self.socket.write(NotifyPong(req_ref_uuid))
 
-    def handle_request_wallet(self, msg):
+    def handle_request_provider(self, msg):
         req_ref_uuid = msg['request_uuid']
         if self.state != "ROLE_OPERATE":
             self.socket.write(
-                NotifyError("not in state to handle wallet request",
+                NotifyError("not in state to handle provider request",
                             request_reference_uuid=req_ref_uuid))
             return
 
-        if "REQUEST_WALLET" not in self.hooks:
-            NotifyError("no wallet here",
-                        request_reference_uuid=req_ref_uuid))
+        # TODO can we handle wallet/provider role without touching app code?
+
+        if "REQUEST_PROVIDER" not in self.hooks:
+            NotifyError("no provider here",
+                        request_reference_uuid=req_ref_uuid)
             return
-        wallet_msg = self.hooks['REQUEST_WALLET'](msg, self)
-        self.socket.write(wallet_msg)
+        provider_msg = self.hooks['REQUEST_PROVIDER'](msg, self)
+        self.socket.write(provider_msg)
 
     def handle_request(self, msg):
         n = msg['request_name']
@@ -111,8 +113,8 @@ class Role(object):
             self.handle_request_rendezvous(msg)
         elif n == "REQUEST_PING":
             self.handle_request_ping(msg)
-        elif n == "REQUEST_WALLET":
-            self.handle_request_wallet(msg)
+        elif n == "REQUEST_PROVIDER":
+            self.handle_request_provider(msg)
         else:
             logging.error("unknown request?: %s" % n)
             pass
