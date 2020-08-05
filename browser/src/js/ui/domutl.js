@@ -154,7 +154,7 @@ class DomUtl {
         var p = document.createElement("pre");
         p.setAttribute("style",
                        "height: 105px; overflow-y: scroll; " +
-                       "background-color: #faa;" +
+                       "background-color: #ffccd0;" +
                        "text-align: left;");
         div.appendChild(p);
         return p;
