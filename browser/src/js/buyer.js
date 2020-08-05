@@ -17,22 +17,44 @@ const RequestProvider = require(
     "./moneysocket/core/message/request/provider.js").RequestProvider;
 
 
+
+///////////////////////////////////////////////////////////////////////////////
+
+const MODES = new Set(["BOTH_DISCONNECTED",
+                       "MY_WALLET_DISCONNECTED",
+                       "SELLER_DISCONNECTED",
+                       "OPERATE",
+                      ]);
+
 class BuyerUi {
     constructor(div) {
         this.parent_div = div;
         this.my_div = null;
-        this.my_seller_role_div = null;
-        this.seller_service_role_div = null;
-        this.wallet_counterpart_div = null;
-        this.opinion = "N/A";
+        this.mode = null;
+        this.balance_div = null;
 
-        this.provider_msats = 1000000;
+        this.available_msats = 0;
+        this.opinion = "N/A";
+        this.seller_consumer_connected = false;
+        this.my_seller_connected = false;
     }
 
     draw(style) {
         this.my_div = document.createElement("div");
-        this.my_div.setAttribute("class", style);
+        this.my_div.setAttribute("class", style)
 
+        DomUtl.drawBr(this.my_div);
+        this.buyer_mode_div = DomUtl.emptyDiv(this.my_div);
+        this.buyer_mode_div.setAttribute("class", "app-mode-output");
+
+        this.seller_ui = new DownstreamStatusUi(this.my_div, "Seller");
+        this.seller_ui.draw('downstream-status-left');
+        this.my_ui = new DownstreamStatusUi(this.my_div, "My Wallet");
+        this.my_ui.draw('downstream-status-right');
+
+        this.switchMode("BOTH_DISCONNECTED");
+
+        /*
         this.opinion_div = DomUtl.emptyDiv(this.my_div);
         this.updateCurrentOpinion(this.opinion);
 
@@ -55,8 +77,59 @@ class BuyerUi {
         this.my_ui.draw('downstream-status-right');
 
         DomUtl.drawBr(this.my_div);
+        */
 
         this.parent_div.appendChild(this.my_div);
+    }
+
+    switchMode(new_mode) {
+        console.assert(MODES.has(new_mode));
+        this.mode = new_mode;
+        DomUtl.deleteChildren(this.buyer_mode_div);
+        console.log("new mode");
+        if (new_mode == "BOTH_DISCONNECTED") {
+            var t = DomUtl.drawText(this.buyer_mode_div,
+                "Please connect to downstream Moneysocket wallet provider.");
+            t.setAttribute("style", "padding:5px;");
+        } else if (new_mode == "SELLER_DISCONNECTED") {
+            this.balance_div = DomUtl.emptyDiv(this.buyer_mode_div);
+            DomUtl.drawBigBalance(this.balance_div, this.available_msats);
+            DomUtl.drawBr(this.buyer_mode_div);
+            DomUtl.drawBr(this.buyer_mode_div);
+            var t = DomUtl.drawText(this.buyer_mode_div,
+                "Connect to upstream seller app provider");
+            t.setAttribute("style", "padding:5px;");
+        } else if (new_mode == "MY_WALLET_DISCONNECTED") {
+            var t = DomUtl.drawText(this.buyer_mode_div,
+                "Connect to downstream provider");
+            t.setAttribute("style", "padding:5px;");
+        } else if (new_mode == "OPERATE") {
+            this.balance_div = DomUtl.emptyDiv(this.buyer_mode_div);
+            DomUtl.drawBigBalance(this.balance_div, this.available_msats);
+
+            DomUtl.drawButton(this.my_div, "Start",
+                (function() {this.startBuyingOpinions()}).bind(this));
+            DomUtl.drawBr(this.my_div);
+            DomUtl.drawButton(this.my_div, "Stop",
+                (function() {this.stopBuyingOpinions()}).bind(this));
+        } else {
+            console.error("unhandled mode");
+        }
+    }
+
+    switchToRightMode() {
+        if (! this.seller_consumer_connected && ! this.my_consumer_connected) {
+            this.switchMode("BOTH_DISCONNECTED");
+        } else if (! this.seller_consumer_connected &&
+                   this.my_consumer_connected) {
+            this.switchMode("SELLER_DISCONNECTED");
+        } else if (this.seller_consumer_connected &&
+                   ! this.my_consumer_connected) {
+            this.switchMode("MY_WALLET_DISCONNECTED");
+        } else if (this.seller_consumer_connected &&
+                   this.my_consumer_connected) {
+            this.switchMode("OPERATE");
+        }
     }
 
     startBuyingOpinions(opinion) {
@@ -68,8 +141,8 @@ class BuyerUi {
     }
 
     updateCurrentOpinion(opinion) {
-        this.opinion = opinion
-        DomUtl.deleteChildren(this.opinion_div)
+        this.opinion = opinion;
+        DomUtl.deleteChildren(this.opinion_div);
         DomUtl.drawText(this.opinion_div, "Purchased Opinion: ");
         DomUtl.drawBr(this.opinion_div);
         DomUtl.drawBigText(this.opinion_div, opinion);
@@ -77,9 +150,13 @@ class BuyerUi {
 
     sellerConsumerConnected() {
         this.seller_ui.updateConnected();
+        this.seller_consumer_connected = true;
+        this.switchToRightMode();
     }
     sellerConsumerDisconnected() {
         this.seller_ui.updateDisconnected();
+        this.seller_consumer_connected = false;
+        this.switchToRightMode();
     }
 
     updateSellerConsumerPing(ping_time) {
@@ -88,10 +165,14 @@ class BuyerUi {
 
     myConsumerConnected() {
         this.my_ui.updateConnected();
+        this.my_consumer_connected = true;
+        this.switchToRightMode();
     }
 
     myConsumerDisconnected() {
         this.my_ui.updateDisconnected();
+        this.my_consumer_connected = false;
+        this.switchToRightMode();
     }
 
     updateMyConsumerPing(ping_time) {
@@ -99,8 +180,10 @@ class BuyerUi {
     }
 
     updateMyConsumerMsats(msats) {
-        this.provider_msats = msats;
+        this.available_msats = msats;
         this.my_ui.updateProviderMsats(msats);
+        DomUtl.deleteChildren(this.balance_div);
+        DomUtl.drawBigBalance(this.balance_div, this.available_msats);
     }
 }
 
@@ -126,7 +209,7 @@ class BuyerApp {
     drawBuyerUi() {
         this.my_div = document.createElement("div");
         this.my_div.setAttribute("class", "bordered");
-        DomUtl.drawTitle(this.my_div, "Opinion Buyer App", "h1");
+        DomUtl.drawTitle(this.my_div, "Opinion Buyer", "h2");
 
         this.buyer_ui = new BuyerUi(this.my_div);
         this.buyer_ui.draw("center");
@@ -269,7 +352,7 @@ class BuyerApp {
             role.setState("PROVIDER_SETUP")
         } else if (role.name == "my_consumer") {
             this.my_consumer_ui.switchMode("WAITING_FOR_PROVIDER");
-            this.buyer_ui.buyerConsumerDisconnected();
+            this.buyer_ui.myConsumerDisconnected();
             this.stopPinging("my_consumer")
             role.setState("PROVIDER_SETUP")
         } else {

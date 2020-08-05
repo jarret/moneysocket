@@ -63,7 +63,7 @@ class WalletUi {
         this.my_div.setAttribute("class", style);
 
         this.wallet_mode_div = DomUtl.emptyDiv(this.my_div);
-        this.wallet_mode_div.setAttribute("class", "wallet-mode-output");
+        this.wallet_mode_div.setAttribute("class", "app-mode-output");
 
         DomUtl.drawBr(this.my_div);
         this.upstream_ui = new UpstreamStatusUi(this.my_div, "Upstream");
