@@ -15,6 +15,10 @@ const DownstreamStatusUi = require(
     './ui/downstream_status.js').DownstreamStatusUi;
 const RequestProvider = require(
     "./moneysocket/core/message/request/provider.js").RequestProvider;
+const RequestInvoice = require(
+    "./moneysocket/core/message/request/invoice.js").RequestInvoice;
+const RequestPay = require(
+    "./moneysocket/core/message/request/pay.js").RequestPay;
 
 
 
@@ -26,9 +30,15 @@ const MODES = new Set(["BOTH_DISCONNECTED",
                        "OPERATE",
                       ]);
 
+const GOOD_OPINIONS = new Set(["Bullish",
+                               "Bearish",
+                              ]);
+
+
 class BuyerUi {
-    constructor(div) {
+    constructor(div, app) {
         this.parent_div = div;
+        this.app = app;
         this.my_div = null;
         this.mode = null;
         this.balance_div = null;
@@ -36,7 +46,6 @@ class BuyerUi {
         this.log = null;
 
         this.available_msats = 0;
-        this.opinion = "N/A";
         this.seller_consumer_connected = false;
         this.my_seller_connected = false;
         this.buying_running = false;
@@ -122,21 +131,10 @@ class BuyerUi {
         if (! this.buying_running) {
             return;
         }
-        this.logPrint("buying stub");
-
-        // REQUEST_INVOICE 1 sat
-        // NOTIFY_INVOICE bolt11
-        // save payment hash (bolt11 lib)
-        // REQUEST_PAY to my_consumer role
-        // NOTIFY_PREIMAGE - from my_consumer
-        //   -> ignore
-        // NOTIFY_PREIMAGE - from seller_consumer
-        //   -> collect opinion
-        // -> if good reschedule
-        // -> if not stop
-
-        this.scheduleBuyOpinion();
+        this.logPrint("buying opinion for 10 sats");
+        this.app.sendRequestInvoice("seller_consumer", 10000);
     }
+
     scheduleBuyOpinion() {
         setTimeout(function() { this.buyOpinion(); }.bind(this), 3000);
     }
@@ -162,20 +160,13 @@ class BuyerUi {
             }).bind(this));
     }
 
-    updateCurrentOpinion(opinion) {
-        this.opinion = opinion;
-        DomUtl.deleteChildren(this.opinion_div);
-        DomUtl.drawText(this.opinion_div, "Purchased Opinion: ");
-        DomUtl.drawBr(this.opinion_div);
-        DomUtl.drawBigText(this.opinion_div, opinion);
-    }
-
     sellerConsumerConnected() {
         this.seller_ui.updateConnected();
         this.seller_consumer_connected = true;
         this.switchToRightMode();
     }
     sellerConsumerDisconnected() {
+        this.buying_running = false;
         this.seller_ui.updateDisconnected();
         this.seller_consumer_connected = false;
         this.switchToRightMode();
@@ -192,6 +183,7 @@ class BuyerUi {
     }
 
     myConsumerDisconnected() {
+        this.buying_running = false;
         this.my_ui.updateDisconnected();
         this.my_consumer_connected = false;
         this.switchToRightMode();
@@ -206,6 +198,16 @@ class BuyerUi {
         this.my_ui.updateProviderMsats(msats);
         DomUtl.deleteChildren(this.balance_div);
         DomUtl.drawBigBalance(this.balance_div, this.available_msats);
+    }
+
+    postOpinion(opinion) {
+        if ((opinion == null) || (! GOOD_OPINIONS.has(opinion))) {
+            this.logPrint("got nonsense opinion. stopping.");
+            this.stopBuyingOpinions();
+            return;
+        }
+        this.logPrint("got opinion: " + opinion);
+        this.scheduleBuyOpinion();
     }
 
     logPrint(text) {
@@ -240,7 +242,7 @@ class BuyerApp {
         this.my_div.setAttribute("class", "bordered");
         DomUtl.drawTitle(this.my_div, "Opinion Buyer App", "h2");
 
-        this.buyer_ui = new BuyerUi(this.my_div);
+        this.buyer_ui = new BuyerUi(this.my_div, this);
         this.buyer_ui.draw("center");
         DomUtl.drawBr(this.my_div);
 
@@ -261,6 +263,20 @@ class BuyerApp {
 
 
  //////////////////////////////////////////////////////////////////////////
+    sendRequestInvoice(role_name, msats) {
+        if (role_name == "seller_consumer") {
+            if ((this.seller_consumer_role != null) &&
+                (this.seller_consumer_role.state != "ROLE_OPERATE"))
+            {
+                console.log("can't pay - seller not ready")
+                return;
+            }
+            var msg = new RequestInvoice(msats);
+            this.seller_consumer_role.socket.write();
+        } else {
+            console.error("cannot request invoice from my wallet");
+        }
+    }
 
     sendPing(role_name) {
         console.log("ping");
@@ -369,7 +385,7 @@ class BuyerApp {
             this.my_consumer_ui.switchMode("REQUESTING_PROVIDER");
             role.socket.write(new RequestProvider());
         } else {
-            console.log("unknown cb param");
+            console.log("unknown role");
         }
     }
 
@@ -385,7 +401,7 @@ class BuyerApp {
             this.stopPinging("my_consumer")
             role.setState("PROVIDER_SETUP")
         } else {
-            console.log("unknown cb param");
+            console.log("unknown role");
         }
     }
 
@@ -400,7 +416,37 @@ class BuyerApp {
             this.buyer_ui.updateMyConsumerMsats(msg['msats']);
             this.startPinging("my_consumer");
         } else {
-            console.log("unknown cb param");
+            console.log("unknown role");
+        }
+    }
+
+    notifyInvoiceHook(msg, role) {
+        // if we are buying and if rom seller consumer, pass along to be paid
+        if (role.name == "seller_consumer") {
+            if ((this.my_consumer_role != null) &&
+                (this.my_consumer_role.state != "ROLE_OPERATE"))
+            {
+                console.log("can't pay - don't have wallet")
+                return;
+            }
+            var msg = new RequestPay(msg['bolt11']);
+            this.my_consumer.role.socket.write(msg);
+        } else if (role.name == "my_consumer") {
+            console.log("got invoice from my wallet?: " + msg['bolt11']);
+        } else {
+            console.log("unknown role");
+        }
+    }
+
+    notifyPreimageHook(msg, role) {
+        if (role.name == "seller_consumer") {
+            var ext = msg['extension']
+            this.buyer_ui.postOpinion(ext);
+        } else if (role.name == "my_consumer") {
+            console.log("got preimage from my wallet?: " + msg['preimage']);
+            return;
+        } else {
+            console.log("unknown role");
         }
     }
 
@@ -424,24 +470,23 @@ class BuyerApp {
             }.bind(this),
             'NOTIFY_INVOICE': function (msg) {
                 console.log("notify invoice stub");
-                // if from seller consumer, pass along
+                this.notifyInvoiceHook(msg, role);
             }.bind(this),
             'NOTIFY_PREIMAGE': function (msg) {
                 console.log("notify preimage stub");
-                // ignore from my consumer
-                // if from seller consumer, check extension
+                this.notifyPreimageHook(msg, role);
             }.bind(this),
             'REQUEST_PROVIDER': function (msg) {
                 return this.requestProviderHook(msg, role);
             }.bind(this),
             'REQUEST_INVOICE': function (msg) {
                 // should not get
-                console.log("request invoice stub");
+                console.log("request invoice to buyer?");
                 return null;
             }.bind(this),
             'REQUEST_PAY': function (msg) {
                 // should not get
-                console.log("request pay stub");
+                console.log("request pay to buyer?");
                 return null;
             }.bind(this),
         }
