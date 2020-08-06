@@ -17,11 +17,20 @@ const DownstreamStatusUi = require(
 const RequestProvider = require(
     "./moneysocket/core/message/request/provider.js").RequestProvider;
 
+const RequestInvoice = require(
+    "./moneysocket/core/message/request/invoice.js").RequestInvoice;
+const RequestPay = require(
+    "./moneysocket/core/message/request/pay.js").RequestPay;
+
 const NotifyProvider = require(
     "./moneysocket/core/message/notification/provider.js").NotifyProvider;
 const NotifyProviderBecomingReady = require(
     "./moneysocket/core/message/notification/provider_becoming_ready.js"
     ).NotifyProviderBecomingReady;
+const NotifyInvoice = require(
+    "./moneysocket/core/message/notification/invoice.js").NotifyInvoice;
+const NotifyPreimage = require(
+    "./moneysocket/core/message/notification/preimage.js").NotifyPreimage;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -53,8 +62,11 @@ class WalletUi {
 
         this.balance_div = null;
         this.slider_input = null;
+        this.slider_val = 100;
 
         this.send_input_div = null;
+        this.receive_div = null;
+        this.bolt11 = "";
 
     }
 
@@ -104,7 +116,7 @@ class WalletUi {
             var t = DomUtl.drawText(this.wallet_mode_div,
                                     "Provide Upstream Balance:");
             t.setAttribute("style", "padding:5px;");
-            var s = DomUtl.drawSlider(this.wallet_mode_div);
+            var s = DomUtl.drawSlider(this.wallet_mode_div, this.slider_val);
             DomUtl.drawBr(this.wallet_mode_div);
             this.slider_input = s.firstChild;
             this.slider_input.oninput = (function () {
@@ -138,15 +150,19 @@ class WalletUi {
             this.balance_div = DomUtl.emptyDiv(this.wallet_mode_div);
             DomUtl.drawBigBalance(this.balance_div, this.provide_msats);
             DomUtl.drawBr(this.wallet_mode_div);
-            var t = DomUtl.drawText(this.wallet_mode_div, "Request sats:");
+
+            this.receive_div = DomUtl.emptyDiv(this.wallet_mode_div);
+
+            var t = DomUtl.drawText(this.receive_div, "Request sats:");
             t.setAttribute("style", "padding:5px;");
-            this.input_div = DomUtl.drawTextInput(this.wallet_mode_div, "0");
+            this.input_div = DomUtl.drawTextInput(this.receive_div, "10");
             this.input_div.firstChild.setAttribute("size", "8");
-            DomUtl.drawBr(this.wallet_mode_div);
-            DomUtl.drawButton(this.wallet_mode_div, "Request Bolt11",
+            DomUtl.drawBr(this.receive_div);
+            DomUtl.drawButton(this.receive_div, "Request Bolt11",
                 (function() {
                     this.requestBolt11();
                 }).bind(this));
+
             DomUtl.drawBr(this.wallet_mode_div);
             DomUtl.drawButton(this.wallet_mode_div, "Back",
                 (function() {
@@ -156,8 +172,8 @@ class WalletUi {
     }
 
     updateProvideMsats() {
-        var slider_val = this.slider_input.value;
-        this.provide_msats = this.provider_msats * (slider_val / 100);
+        this.slider_val = this.slider_input.value;
+        this.provide_msats = this.provider_msats * (this.slider_val / 100);
         DomUtl.deleteChildren(this.balance_div);
         DomUtl.drawBigBalance(this.balance_div, this.provide_msats);
         this.app.doUpstreamNotifyProvider();
@@ -165,12 +181,39 @@ class WalletUi {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    drawBolt11(bolt11){
+        this.bolt11 = bolt11;
+        DomUtl.deleteChildren(this.receive_div);
+        DomUtl.qrCode(this.receive_div, bolt11);
+        DomUtl.drawBr(this.receive_div);
+        DomUtl.drawButton(this.receive_div, "Copy Bolt11",
+            (function() {
+                navigator.clipboard.writeText(this.bolt11);
+                var t = DomUtl.drawText(this.receive_div, "Copied Bolt11")
+                t.setAttribute("style", "padding:10px;");
+            }).bind(this));
+    }
+
+    notifyInvoice(bolt11) {
+        console.log("got bolt11: " + bolt11);
+        this.drawBolt11(bolt11);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     payBolt11() {
         console.log("pay bolt11 stub")
+        var bolt11 = this.input_div.firstChild.value
+        // TODO - validate bolt11 parses
+        var msg = new RequestPay(bolt11);
+        this.app.consumer_role.socket.write(msg);
     }
 
     requestBolt11() {
         console.log("request bolt11 stub")
+        var msats = parseInt(this.input_div.firstChild.value) * 1000;
+        var msg = new RequestInvoice(msats);
+        this.app.consumer_role.socket.write(msg);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -229,6 +272,8 @@ class WebWalletApp {
         this.outstanding_pings = {};
 
         this.wi = new WebsocketInterconnect(this);
+
+        this.forward_references = {};
     }
 
     drawWalletAppUi() {
@@ -417,14 +462,65 @@ class WebWalletApp {
                 this.wallet_ui.providerConnected();
             }
         } else {
-            console.log("unknown cb param");
+            console.log("unknown role");
+        }
+    }
+
+    notifyInvoiceHook(msg, role) {
+        var req_ref_uuid = msg['request_reference_uuid'];
+        console.log("notify invoice stub");
+        if (role.name == 'provider') {
+            console.error("unexpected notification");
+            return;
+        } else if (role.name == 'consumer') {
+            if (req_ref_uuid in this.forward_references) {
+                var fwd_req_ref_uuid = this.forward_references[req_ref_uuid];
+                delete this.forward_references[req_ref_uuid];
+                if ((this.provider_role == null) ||
+                    (this.provider_role.state != "ROLE_OPERATE"))
+                {
+                    console.error("requesting provider gone offline?");
+                    return
+                }
+                // TODO save payment_hash -> fwd_req_ref_uuid association
+                var fwd_msg = new NotifyInvoice(msg['bolt11'],
+                                                fwd_req_ref_uuid);
+                this.provider_role.socket.write(fwd_msg);
+
+            } else {
+                this.wallet_ui.notifyInvoice(msg['bolt11']);
+            }
+        } else {
+            console.log("unknown role");
+        }
+    }
+
+    notifyPreimageHook(msg, role) {
+        var req_ref_uuid = msg['request_reference_uuid'];
+        if (role.name == 'provider') {
+            console.error("unexpected notification");
+            return;
+        } else if (role.name == 'consumer') {
+            if ((this.provider_role == null) ||
+                (this.provider_role.state != "ROLE_OPERATE"))
+            {
+                // no provider
+                return
+            }
+            // TODO calc payment hash - if has upstream assoction, set ref req
+            // uuid. If not, check if matches wallet GUI preimage and refresh?
+            var fwd_msg = new NotifyPreimage(msg['preimage'], msg['ext'],
+                                             null);
+            this.provider_role.socket.write(fwd_msg);
+        } else {
+            console.log("unknown role");
         }
     }
 
     requestProviderHook(msg, role) {
+        var req_ref_uuid = msg['request_uuid'];
         if (role.name == "provider") {
             // if consumer is connected, notify ourselves as provider
-            var req_ref_uuid = msg['request_uuid'];
             if ((this.consumer_role != null) &&
                 (this.consumer_role.state == "ROLE_OPERATE"))
             {
@@ -435,8 +531,45 @@ class WebWalletApp {
                 return new NotifyProvider(uuid, req_ref_uuid,
                                           true, true, msats);
             }
-            // else notifiy becoming ready
             return new NotifyProviderBecomingReady(req_ref_uuid);
+        } else if (role.name == "consumer") {
+            return NotifyError("no provider here", req_ref_uuid);
+        }
+    }
+
+    requestInvoiceHook(msg, role) {
+        var req_ref_uuid = msg['request_uuid'];
+        if (role.name == "provider") {
+            if ((this.consumer_role == null) ||
+                (this.consumer_role.state != "ROLE_OPERATE"))
+            {
+                console.error("request race?");
+                return
+            }
+            var fwd_msg = new RequestInvoice(msg['msats']);
+            var fwd_req_ref_uuid = fwd_msg['request_uuid'];
+            this.forward_references[fwd_req_ref_uuid] = req_ref_uuid;
+            this.consumer_role.socket.write(fwd_msg);
+            return null;
+        } else if (role.name == "consumer") {
+            return NotifyError("no provider here", req_ref_uuid);
+        }
+    }
+
+    requestPayHook(msg, role) {
+        var req_ref_uuid = msg['request_uuid'];
+        if (role.name == "provider") {
+            if ((this.consumer_role == null) ||
+                (this.consumer_role.state != "ROLE_OPERATE"))
+            {
+                console.error("request race?");
+                return
+            }
+            var fwd_msg = new RequestPay(msg['bolt11']);
+            var fwd_req_ref_uuid = fwd_msg['request_uuid'];
+            this.forward_references[fwd_req_ref_uuid] = req_ref_uuid;
+            this.consumer_role.socket.write(fwd_msg);
+            return null;
         } else if (role.name == "consumer") {
             return NotifyError("no provider here", req_ref_uuid);
         }
@@ -462,22 +595,19 @@ class WebWalletApp {
                 this.notifyProviderBecomingReadyHook(msg, role);
             }.bind(this),
             'NOTIFY_INVOICE': function (msg) {
-                console.log("notify invoice stub");
+                this.notifyInvoiceHook(msg, role);
             }.bind(this),
             'NOTIFY_PREIMAGE': function (msg) {
-                console.log("notify preimage stub");
+                this.notifyPreimageHook(msg, role);
             }.bind(this),
             'REQUEST_PROVIDER': function (msg) {
                 return this.requestProviderHook(msg, role);
             }.bind(this),
             'REQUEST_INVOICE': function (msg) {
-                // if from provider role  pass along to consumer role
-                console.log("request invoice stub");
-                return null;
+                return this.requestInvoiceHook(msg, role);
             }.bind(this),
             'REQUEST_PAY': function (msg) {
-                console.log("request pay stub");
-                return null;
+                return this.requestPayHook(msg, role);
             }.bind(this),
         }
         role.registerAppHooks(hooks);

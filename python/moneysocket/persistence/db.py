@@ -78,8 +78,11 @@ class PersistenceDb(object):
         self.db['wallets'][wallet_name]['connect_beacons'] = []
         self.persist()
 
+    def decrement_msatoshis(self, wallet_name, msatoshi_delta):
+        self.db['wallets'][wallet_name]['msatoshis'] -= msatoshi_delta
+        self.persist()
 
-    def adjust_msatoshis(self, wallet_name, msatoshi_delta):
+    def increment_msatoshis(self, wallet_name, msatoshi_delta):
         self.db['wallets'][wallet_name]['msatoshis'] += msatoshi_delta
         self.persist()
 

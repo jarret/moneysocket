@@ -11,7 +11,7 @@ from moneysocket.core.message.notification.notification import (
 class NotifyPreimage(MoneysocketNotification):
     MUST_BE_CLEARTEXT = False
 
-    def __init__(self, preimage, ext, request_reference_uuid):
+    def __init__(self, preimage, ext=None, request_reference_uuid=None):
         super().__init__("NOTIFY_PREIMAGE",
                          request_reference_uuid=request_reference_uuid)
         self['preimage'] = preimage

@@ -119,7 +119,7 @@ class DomUtl {
         return s;
     }
 
-    static qrCode(div, bech32str, protocol_prefix) {
+    static qrCode(div, bech32str) {
         var copy_str = bech32str;
         var b32 = bech32str.toUpperCase();
         var b = document.createElement("div");
@@ -137,13 +137,13 @@ class DomUtl {
         div.appendChild(b);
     }
 
-    static drawSlider(div) {
+    static drawSlider(div, slider_val) {
         var d = document.createElement("div");
         var i = document.createElement("input");
         i.setAttribute("type", "range");
         i.setAttribute("min", "0");
         i.setAttribute("max", "100");
-        i.setAttribute("value", "50");
+        i.setAttribute("value", slider_val.toString());
         i.setAttribute("class", "slider");
         d.appendChild(i);
         div.appendChild(d);

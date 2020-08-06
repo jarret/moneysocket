@@ -95,6 +95,30 @@ class Role {
         this.socket.write(provider_msg);
     }
 
+    handleRequestInvoice(msg) {
+        if (this.state != "ROLE_OPERATE") {
+            // drop on floor in not operating
+            return;
+        }
+        var provider_msg = this.hooks['REQUEST_INVOICE'](msg, this);
+        if (provider_msg == null) {
+            return;
+        }
+        this.socket.write(provider_msg);
+    }
+
+    handleRequestPay(msg) {
+        if (this.state != "ROLE_OPERATE") {
+            // drop on floor in not operating
+            return;
+        }
+        var provider_msg = this.hooks['REQUEST_PAY'](msg, this);
+        if (provider_msg == null) {
+            return;
+        }
+        this.socket.write(provider_msg);
+    }
+
     handleRequest(msg) {
         var name = msg['request_name']
         if (name == "REQUEST_RENDEZVOUS") {
@@ -103,6 +127,10 @@ class Role {
             this.handleRequestPing(msg);
         } else if (name == "REQUEST_PROVIDER") {
             this.handleRequestProvider(msg);
+        } else if (name == "REQUEST_INVOICE") {
+            this.handleRequestInvoice(msg);
+        } else if (name == "REQUEST_PAY") {
+            this.handleRequestPay(msg);
         } else {
             console.error("unknown request?: " + name);
         }
@@ -175,6 +203,22 @@ class Role {
         }
     }
 
+    handleNotifyPreimage(msg) {
+        if ("NOTIFY_PREIMAGE" in this.hooks) {
+            this.hooks['NOTIFY_PREIMAGE'](msg, this);
+        } else {
+            logging.error("unexpected notify preimage?");
+        }
+    }
+
+    handleNotifyInvoice(msg) {
+        if ("NOTIFY_INVOICE" in this.hooks) {
+            this.hooks['NOTIFY_INVOICE'](msg, this);
+        } else {
+            logging.error("unexpected notify image?");
+        }
+    }
+
     handleNotifyError(msg) {
         console.error("got error: " + msg['error_msg']);
     }
@@ -193,6 +237,10 @@ class Role {
             this.handleNotifyProvider(msg);
         } else if (n == "NOTIFY_PROVIDER_BECOMING_READY") {
             this.handleNotifyProviderBecomingReady(msg);
+        } else if (n == "NOTIFY_PREIMAGE") {
+            this.handleNotifyPreimage(msg);
+        } else if (n == "NOTIFY_INVOICE") {
+            this.handleNotifyInvoice(msg);
         } else if (n == "NOTIFY_ERROR") {
             this.handleNotifyError(msg);
         } else {

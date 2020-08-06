@@ -14,6 +14,8 @@ from moneysocket.persistence.db import PersistenceDb
 
 from moneysocket.core.message.notification.error import NotifyError
 from moneysocket.core.message.notification.provider import NotifyProvider
+from moneysocket.core.message.notification.invoice import NotifyInvoice
+from moneysocket.core.message.notification.preimage import NotifyPreimage
 
 from moneysocket.beacon.beacon import MoneysocketBeacon
 from moneysocket.beacon.location.websocket import WebsocketLocation
@@ -26,6 +28,8 @@ class Terminus(object):
     def __init__(self, config, lightning):
         self.config = config
         self.lightning = lightning
+
+
         self.db = PersistenceDb(self.config['App']['WalletPersistFile'])
 
         self.match = Match()
@@ -36,8 +40,11 @@ class Terminus(object):
                                                   self.socket_close_cb)
         TerminusTelnetInterface.APP = self
 
+        self.lightning.register_paid_recv_cb(self.node_received_payment_cb)
+
     def set_telnet_interface(self, telnet_interface):
         self.telnet_interface = telnet_interface
+
 
     ###########################################################################
 
@@ -88,6 +95,21 @@ class Terminus(object):
         wallet.remove_attribute("beacon")
 
 
+    ###########################################################################
+
+    def node_received_payment_cb(self, preimage, msats):
+        logging.info("node received payment: %s %s" % (preimage, msats))
+        for wallet in self.wallets.values():
+            if wallet.is_pending(preimage):
+                msg1 = NotifyPreimage(preimage, ext=None,
+                                      request_reference_uuid=None)
+                wallet.increment_msats(msats)
+                self.db.increment_msatoshis(wallet.name, msats)
+                msg2 = wallet.get_notify_msg()
+                wallet.socket.write(msg1)
+                wallet.socket.write(msg2)
+                return
+
     ##########################################################################
 
     def request_provider(self, msg, role):
@@ -95,10 +117,31 @@ class Terminus(object):
         # No 'PROVIDER_BECOMING_READY' phase for terminus
         return role.get_notify_msg(request_reference_uuid=msg['request_uuid'])
 
+    def request_invoice(self, msg, role):
+        logging.info("requested invoice")
+        msats = msg['msats']
+        req_ref_uuid = msg['request_uuid']
+        bolt11 = self.lightning.get_invoice(msats)
+        role.add_pending(bolt11)
+        # TODO persist pending
+        # TODO should we persist request uuid for NOTIFY_PREIMAGE?
+        return NotifyInvoice(bolt11, request_reference_uuid=req_ref_uuid)
+
+    def request_pay(self, msg, role):
+        logging.info("requested pay")
+        bolt11 = msg['bolt11']
+        req_ref_uuid = msg['request_uuid']
+        preimage, msats = self.lightning.pay_invoice(bolt11)
+        msg1 = NotifyPreimage(preimage, ext=None)
+        role.decrement_msats(msats)
+        self.db.decrement_msatoshis(role.name, msats)
+        msg2 = role.get_notify_msg()
+        return [msg1, msg2]
+
     def register_hooks(self, role):
         hooks = {"REQUEST_PROVIDER": self.request_provider,
-                # REQUEST_INVOICE
-                # REQUEST_PAY
+                 "REQUEST_INVOICE":  self.request_invoice,
+                 "REQUEST_PAY":      self.request_pay,
                 }
         role.register_app_hooks(hooks)
 
@@ -145,7 +188,9 @@ class Terminus(object):
 
     ##########################################################################
 
-    def recv_cb(self, socket, msg):
+    def setup_rendezvous_recv_cb(self, socket, msg):
+        # only for setting up rendezvous, then the socket cb will be
+        # re-registered
         logging.info("got msg: %s" % msg.to_json())
 
         if not self.is_request_rendezvous(msg):
@@ -163,7 +208,7 @@ class Terminus(object):
             self.start_rendezvous(socket, beacon_str)
         else:
             logging.info("waiting until other side requests rendezvous")
-            socket.register_recv_cb(self.recv_cb)
+            socket.register_recv_cb(self.setup_rendezvous_recv_cb)
 
     def socket_close_cb(self, socket):
         logging.info("app got socket closed: %s" % socket)

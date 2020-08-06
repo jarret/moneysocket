@@ -111,6 +111,37 @@ class Role(object):
             self.set_state("ROLE_OPERATE")
         self.socket.write(provider_msg)
 
+    def handle_request_invoice(self, msg):
+        req_ref_uuid = msg['request_uuid']
+        if self.state != "ROLE_OPERATE":
+            self.socket.write(
+                NotifyError("not in state to handle provider request",
+                            request_reference_uuid=req_ref_uuid))
+            return
+
+        if "REQUEST_INVOICE" not in self.hooks:
+            self.socket.write(NotifyError("no provider here",
+                                          request_reference_uuid=req_ref_uuid))
+            return
+        provider_msg = self.hooks['REQUEST_INVOICE'](msg, self)
+        self.socket.write(provider_msg)
+
+    def handle_request_pay(self, msg):
+        req_ref_uuid = msg['request_uuid']
+        if self.state != "ROLE_OPERATE":
+            self.socket.write(
+                NotifyError("not in state to handle provider request",
+                            request_reference_uuid=req_ref_uuid))
+            return
+
+        if "REQUEST_PAY" not in self.hooks:
+            self.socket.write(NotifyError("no provider here",
+                                          request_reference_uuid=req_ref_uuid))
+            return
+        provider_msgs = self.hooks['REQUEST_PAY'](msg, self)
+        for msg in provider_msgs:
+            self.socket.write(msg)
+
     def handle_request(self, msg):
         n = msg['request_name']
         if n == "REQUEST_RENDEZVOUS":
@@ -119,6 +150,10 @@ class Role(object):
             self.handle_request_ping(msg)
         elif n == "REQUEST_PROVIDER":
             self.handle_request_provider(msg)
+        elif n == "REQUEST_INVOICE":
+            self.handle_request_invoice(msg)
+        elif n == "REQUEST_PAY":
+            self.handle_request_pay(msg)
         else:
             logging.error("unknown request?: %s" % n)
             pass
