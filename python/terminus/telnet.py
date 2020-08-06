@@ -44,14 +44,13 @@ class TerminusTelnetInterface(AppTelnetInterface):
         parser_ls = subparsers.add_parser('ls', help='list summary')
         parser_ls.set_defaults(cmd_func=self.APP.ls)
 
-        parser_new_wallet = subparsers.add_parser("newwallet")
-        parser_new_wallet.set_defaults(cmd_func=self.APP.newwallet)
+        parser_new_wallet = subparsers.add_parser("create")
+        parser_new_wallet.set_defaults(cmd_func=self.APP.create)
         parser_new_wallet.add_argument("msatoshis", type=str,
                                        help="spending amount in wallet")
 
-        parser_rm_wallet = subparsers.add_parser("rmwallet",
-            help="remove wallet")
-        parser_rm_wallet.set_defaults(cmd_func=self.APP.rmwallet)
+        parser_rm_wallet = subparsers.add_parser("rm", help="remove wallet")
+        parser_rm_wallet.set_defaults(cmd_func=self.APP.rm)
         parser_rm_wallet.add_argument("wallet", type=str,
                                       help="wallet to remove")
 
@@ -84,8 +83,8 @@ class TerminusTelnetInterface(AppTelnetInterface):
                                  help="get usage of command")
 
         self.subparsers = {'ls':               parser_ls,
-                           'newwallet':        parser_new_wallet,
-                           'rmwallet':         parser_rm_wallet,
+                           'new':              parser_new_wallet,
+                           'rm':               parser_rm_wallet,
                            'connect':          parser_connect,
                            'listen':           parser_listen,
                            'clearconnection':  parser_clear,

@@ -195,7 +195,7 @@ class Terminus(object):
             i += 1
         return wallet_name(i)
 
-    def newwallet(self, args):
+    def create(self, args):
         if args.msatoshis.endswith("msat"):
             try:
                 msats = int(args.msatoshis[:-4])
@@ -228,12 +228,12 @@ class Terminus(object):
         wallet = Wallet(wallet_name, msats)
         self.wallets[wallet_name] = wallet
         self.db.add_wallet(wallet_name, msats)
-        return "added wallet: %s  msatoshis: %.03f" % (wallet_name,
-                                                       wallet.msatoshis)
+        return "created wallet: %s  msatoshis: %d" % (wallet_name,
+                                                      wallet.msatoshis)
 
     ##########################################################################
 
-    def rmwallet(self, args):
+    def rm(self, args):
         wallets = set(self.wallets.keys())
         if args.wallet not in self.wallets.keys():
             return "*** unknown wallet: %s" % args.wallet
