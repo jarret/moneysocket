@@ -46,7 +46,7 @@ class TerminusTelnetInterface(AppTelnetInterface):
 
         parser_new_wallet = subparsers.add_parser("newwallet")
         parser_new_wallet.set_defaults(cmd_func=self.APP.newwallet)
-        parser_new_wallet.add_argument("msatoshis", type=int,
+        parser_new_wallet.add_argument("msatoshis", type=str,
                                        help="spending amount in wallet")
 
         parser_rm_wallet = subparsers.add_parser("rmwallet",

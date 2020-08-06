@@ -196,13 +196,38 @@ class Terminus(object):
         return wallet_name(i)
 
     def newwallet(self, args):
-        if args.msatoshis <= 0:
+        if args.msatoshis.endswith("msat"):
+            try:
+                msats = int(args.msatoshis[:-4])
+            except:
+                return "*** could not parse msat value"
+        elif args.msatoshis.endswith("msats"):
+            try:
+                msats = int(args.msatoshis[:-5])
+            except:
+                return "*** could not parse msat value"
+        elif args.msatoshis.endswith("sat"):
+            try:
+                msats = 1000 * int(args.msatoshis[:-3])
+            except:
+                return "*** could not parse msat value"
+        elif args.msatoshis.endswith("sats"):
+            try:
+                msats = 1000 * int(args.msatoshis[:-4])
+            except:
+                return "*** could not parse msat value"
+        else:
+            try:
+                msats = 1000 * int(args.msatoshis)
+            except:
+                return "*** could not parse msat value"
+        if msats <= 0:
             return "*** invalid msatoshis value"
 
         wallet_name = self.gen_wallet_name()
-        wallet = Wallet(wallet_name, args.msatoshis)
+        wallet = Wallet(wallet_name, msats)
         self.wallets[wallet_name] = wallet
-        self.db.add_wallet(wallet_name, args.msatoshis)
+        self.db.add_wallet(wallet_name, msats)
         return "added wallet: %s  msatoshis: %.03f" % (wallet_name,
                                                        wallet.msatoshis)
 
