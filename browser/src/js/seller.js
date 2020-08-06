@@ -17,11 +17,19 @@ const DownstreamStatusUi = require(
 const RequestProvider = require(
     "./moneysocket/core/message/request/provider.js").RequestProvider;
 
+const RequestInvoice = require(
+    "./moneysocket/core/message/request/invoice.js").RequestInvoice;
+
 const NotifyProvider = require(
     "./moneysocket/core/message/notification/provider.js").NotifyProvider;
 const NotifyProviderBecomingReady = require(
     "./moneysocket/core/message/notification/provider_becoming_ready.js"
     ).NotifyProviderBecomingReady;
+
+const NotifyPreimage = require(
+    "./moneysocket/core/message/notification/preimage.js").NotifyPreimage;
+const NotifyInvoice = require(
+    "./moneysocket/core/message/notification/invoice.js").NotifyInvoice;
 
 class SellerUi {
     constructor(div) {
@@ -48,7 +56,7 @@ class SellerUi {
         DomUtl.drawButton(this.my_div, "Bearish",
             (function() {this.updateCurrentOpinion("Bearish")}).bind(this));
         DomUtl.drawBr(this.my_div);
-        DomUtl.drawButton(this.my_div, "ETH is Scaling",
+        DomUtl.drawButton(this.my_div, "ETH will Scale",
             (function() {this.updateCurrentOpinion("ETH is Scaling")}
             ).bind(this));
         DomUtl.drawBr(this.my_div);
@@ -70,11 +78,15 @@ class SellerUi {
     }
 
     updateCurrentOpinion(opinion) {
-        this.opinion = opinion
-        DomUtl.deleteChildren(this.opinion_div)
+        this.opinion = opinion;
+        DomUtl.deleteChildren(this.opinion_div);
         DomUtl.drawText(this.opinion_div, "Current Opinion: ");
         DomUtl.drawBr(this.opinion_div);
         DomUtl.drawBigText(this.opinion_div, opinion);
+    }
+
+    getCurrentOpinion() {
+        return this.opinion;
     }
 
     updateProviderPing(ping_time) {
@@ -119,6 +131,8 @@ class SellerApp {
         this.outstanding_pings = {};
 
         this.wi = new WebsocketInterconnect(this);
+
+        this.forward_references = {};
     }
 
 
@@ -149,7 +163,7 @@ class SellerApp {
     //////////////////////////////////////////////////////////////////////////
 
     sendPing() {
-        console.log("ping");
+        //console.log("ping");
         var msg = this.consumer_role.sendPing();
         var req_ref_uuid = msg['request_uuid'];
         this.outstanding_pings[req_ref_uuid] = Timestamp.getNowTimestamp();
@@ -283,6 +297,56 @@ class SellerApp {
         }
     }
 
+    notifyInvoiceHook(msg, role) {
+        var req_ref_uuid = msg['request_reference_uuid'];
+        // if from consumer role, pass along upstream
+        if (role.name == 'consumer') {
+            if (req_ref_uuid in this.forward_references) {
+                var fwd_req_ref_uuid = this.forward_references[req_ref_uuid];
+                delete this.forward_references[req_ref_uuid];
+                if ((this.provider_role == null) ||
+                    (this.provider_role.state != "ROLE_OPERATE"))
+                {
+                    console.error("requesting provider gone offline?");
+                    return
+                }
+                // TODO save payment_hash -> fwd_req_ref_uuid association
+                var fwd_msg = new NotifyInvoice(msg['bolt11'],
+                                                fwd_req_ref_uuid);
+                this.provider_role.socket.write(fwd_msg);
+            } else {
+                console.error("got an invoice not requested?");
+            }
+        } else if (role.name == 'provider') {
+            console.error("unexpected notification");
+            return;
+        } else {
+            console.log("unknown role");
+        }
+    }
+
+    notifyPreimageHook(msg, role) {
+        if (role.name == "consumer") {
+                // add opinion and pass to provider role
+            if ((this.provider_role == null) ||
+                (this.provider_role.state != "ROLE_OPERATE"))
+            {
+                console.error("buyer not ready?");
+                return
+            }
+            // TODO - track and set request reference uuid?
+            var ext = this.seller_ui.getCurrentOpinion();
+            if (ext != "(Renege)") {
+                var fwd_msg = new NotifyPreimage(msg['preimage'], ext, null);
+                this.provider_role.socket.write(fwd_msg);
+            }
+        } else if (role.name == "provider") {
+            console.error("got a preimage from buyer?");
+        } else {
+            console.log("unknown role");
+        }
+    }
+
     requestProviderHook(msg, role) {
         if (role.name == "consumer") {
             return NotifyError("no provider here", req_ref_uuid);
@@ -300,6 +364,25 @@ class SellerApp {
             }
             // else notifiy becoming ready
             return new NotifyProviderBecomingReady(req_ref_uuid);
+        }
+    }
+
+    requestInvoiceHook(msg, role) {
+        var req_ref_uuid = msg['request_uuid'];
+        if (role.name == "consumer") {
+            return NotifyError("no provider here", req_ref_uuid);
+        } else if (role.name == "provider") {
+            if ((this.consumer_role == null) ||
+                (this.consumer_role.state != "ROLE_OPERATE"))
+            {
+                console.error("request race?");
+                return
+            }
+            var fwd_msg = new RequestInvoice(msg['msats']);
+            var fwd_req_ref_uuid = fwd_msg['request_uuid'];
+            this.forward_references[fwd_req_ref_uuid] = req_ref_uuid;
+            this.consumer_role.socket.write(fwd_msg);
+            return null;
         }
     }
 
@@ -322,21 +405,16 @@ class SellerApp {
                 this.notifyProviderBecomingReadyHook(msg, role);
             }.bind(this),
             'NOTIFY_INVOICE': function (msg) {
-                console.log("notify invoice stub");
-                // if from prvider role, pass along terminus
+                this.notifyInvoiceHook(msg, role);
             }.bind(this),
             'NOTIFY_PREIMAGE': function (msg) {
-                console.log("notify preimage stub");
-                // if from terminus consumer,
-                // add opinion and pass to provider role
+                this.notifyPreimageHook(msg, role);
             }.bind(this),
             'REQUEST_PROVIDER': function (msg) {
                 return this.requestProviderHook(msg, role);
             }.bind(this),
             'REQUEST_INVOICE': function (msg) {
-                // if from provider, pass along
-                console.log("request invoice stub");
-                return null;
+                return this.requestInvoiceHook(msg, role);
             }.bind(this),
             'REQUEST_PAY': function (msg) {
                 // should not get

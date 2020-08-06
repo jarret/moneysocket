@@ -6,6 +6,12 @@ const Uuid = require('../utl/uuid.js').Uuid;
 
 const MoneysocketCrypt = require('../core/message/crypt.js').MoneysocketCrypt;
 
+
+const QUIET_LOG = new Set(["REQUEST_PING",
+                           "NOTIFY_PONG",
+                          ]);
+
+
 class MoneysocketSocket {
     constructor(initiate_cb_obj) {
         this.uuid = Uuid.uuidv4();
@@ -70,7 +76,10 @@ class MoneysocketSocket {
         }
         var name = ((msg['message_class'] == "NOTIFICATION") ?
                      msg['notification_name'] : msg['request_name']);
-        console.log("decoded wire msg: " + name + " len: " + msg_bytes.length);
+        if (! QUIET_LOG.has(name)) {
+            console.log("decoded wire msg: " + name + " len: " +
+                        msg_bytes.length);
+        }
         this.msg_recv_cb_obj.msgRecvCb(this, msg);
     }
 }

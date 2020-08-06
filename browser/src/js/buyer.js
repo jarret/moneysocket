@@ -201,6 +201,8 @@ class BuyerUi {
     }
 
     postOpinion(opinion) {
+        console.log("opinion: " + opinion);
+        console.log("has: " + GOOD_OPINIONS.has(opinion));
         if ((opinion == null) || (! GOOD_OPINIONS.has(opinion))) {
             this.logPrint("got nonsense opinion. stopping.");
             this.stopBuyingOpinions();
@@ -272,14 +274,14 @@ class BuyerApp {
                 return;
             }
             var msg = new RequestInvoice(msats);
-            this.seller_consumer_role.socket.write();
+            this.seller_consumer_role.socket.write(msg);
         } else {
             console.error("cannot request invoice from my wallet");
         }
     }
 
     sendPing(role_name) {
-        console.log("ping");
+        //console.log("ping");
         var msg;
         if (role_name == "seller_consumer") {
             msg = this.seller_consumer_role.sendPing();
@@ -430,7 +432,7 @@ class BuyerApp {
                 return;
             }
             var msg = new RequestPay(msg['bolt11']);
-            this.my_consumer.role.socket.write(msg);
+            this.my_consumer_role.socket.write(msg);
         } else if (role.name == "my_consumer") {
             console.log("got invoice from my wallet?: " + msg['bolt11']);
         } else {
@@ -440,7 +442,7 @@ class BuyerApp {
 
     notifyPreimageHook(msg, role) {
         if (role.name == "seller_consumer") {
-            var ext = msg['extension']
+            var ext = msg['ext'];
             this.buyer_ui.postOpinion(ext);
         } else if (role.name == "my_consumer") {
             console.log("got preimage from my wallet?: " + msg['preimage']);

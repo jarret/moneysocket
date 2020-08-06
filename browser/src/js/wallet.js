@@ -328,7 +328,7 @@ class WebWalletApp {
     //////////////////////////////////////////////////////////////////////////
 
     sendPing() {
-        console.log("ping");
+        //console.log("ping");
         var msg = this.consumer_role.sendPing();
         var req_ref_uuid = msg['request_uuid'];
         this.outstanding_pings[req_ref_uuid] = Timestamp.getNowTimestamp();
