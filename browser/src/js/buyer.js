@@ -61,6 +61,9 @@ class BuyerUi {
 
     switchMode(new_mode) {
         console.assert(MODES.has(new_mode));
+        if (this.mode == new_mode) {
+            return;
+        }
         this.mode = new_mode;
         DomUtl.deleteChildren(this.buyer_mode_div);
         console.log("new mode");
