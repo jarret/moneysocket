@@ -4,6 +4,7 @@
 
 import logging
 import uuid
+import hashlib
 
 from base64 import b64encode
 
@@ -17,7 +18,7 @@ class Lnd(Lightning):
     def __init__(self, lnd_client):
         super().__init__()
         self.lnd_client = lnd_client
-        self.pending_payment_hashes = []
+        self.pending_payment_hashes = set()
         reactor.callLater(1.0, self.check_for_paid)
 
     def log(self, s):
@@ -31,7 +32,7 @@ class Lnd(Lightning):
         i = self.lnd_client.add_invoice("", sat_amount)
         logging.info("got: %s" % i)
         payment_hash = Bolt11.to_dict(i.payment_request)['payment_hash']
-        self.pending_payment_hashes.append(payment_hash)
+        self.pending_payment_hashes.add(payment_hash)
         # TODO persist and also periodically prune pending hashes.
         return i.payment_request
 
@@ -45,14 +46,20 @@ class Lnd(Lightning):
 
     ###########################################################################
 
+    def preimage2ph(self, preimage):
+        return hashlib.sha256(preimage).hexdigest()
+
     def check_for_paid(self):
         # TODO - this polling sucks, figure out how to subscribe to grpc for
         # notifications.
-        for p in self.pending_payment_hashes:
+        for p in list(self.pending_payment_hashes):
             l = self.lnd_client.lookup_invoice(r_hash_str=p)
             if l.state == 1:
-                preimage = l.r_preimage.hex(),
+                preimage = l.r_preimage.hex()
                 msats = l.amt_paid
+                print("preimage: %s msats %s" % (preimage, msats))
+                payment_hash = self.preimage2ph(bytes.fromhex(preimage))
+                self.pending_payment_hashes.remove(payment_hash)
                 reactor.callFromThread(self._recv_paid, preimage, msats)
 
-        reactor.callLater(1.0, self.check_for_paid)
+        reactor.callLater(0.25, self.check_for_paid)
